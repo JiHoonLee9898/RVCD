@@ -1,12 +1,12 @@
 
-## Glimpse
+# Glimpse
 If your goal here is to briefly verify the implementation of RVCD's overall concept, observe the following file:
 
 ```plaintext
 RVCD/MAIN_CODES/rvcd_generation_chair_bleu.py
 ```
 
-## Install
+# Install
 ```bash
 git clone https://github.com/JiHoonLee9898/RVCD.git
 cd RVCD
@@ -16,19 +16,19 @@ cd MAIN_CODES
 ```
 
 ### LVLM backbones setting
-Specify https://huggingface.co/liuhaotian/llava-v1.5-7b on **line 14** of the following files:
+Download https://huggingface.co/liuhaotian/llava-v1.5-7b and specify it on **line 14** of the following files:
 ```plaintext
 MAIN_CODES/eval_configs/prior_decoding_yamls/not_rvcd_llava.yaml
 MAIN_CODES/eval_configs/llava-1.5_eval.yaml
 ```
 
-Specify https://huggingface.co/Vision-CAIR/vicuna-7b on **line 18** of the following files:
+Download https://huggingface.co/Vision-CAIR/vicuna-7b and specify it on **line 18** of the following files:
 ```plaintext
 MAIN_CODES/minigpt4/configs/models/minigpt4_vicuna0.yaml
 MAIN_CODES/minigpt4/configs/models/not_rvcd_minigpt4_vicuna0.yaml
 ```
 
-Specify https://huggingface.co/MAGAer13/mplug-owl2-llama2-7b on **line 14** of the following files:
+Download https://huggingface.co/MAGAer13/mplug-owl2-llama2-7b and specify it on **line 14** of the following files:
 ```plaintext
 MAIN_CODES/eval_configs/mplug-owl2_eval.yaml
 MAIN_CODES/eval_configs/prior_decoding_yamls/not_rvcd_mplug_owl2.yaml
@@ -55,7 +55,7 @@ to:
 MAIN_CODES/decoder_zoo/GroundingDINO/weights/groundingdino_swint_ogc.pth
 ```
 
-## Arguments
+# Arguments
 Refer to the example in `RVCD/MAIN_CODES/run_example.sh`. Each block in the file (a total of 6) generates output captions for evaluating CHAIR/BLEU, POPE, and MME for RVCD and prior methods.
 Please note that this is just an example; in practice, you need to provide the **absolute paths** specific to your environment for each argument.
 
@@ -83,16 +83,15 @@ Note that `[COCO_DIR]` is expected to contain both images and annotation files w
 
 ```plaintext
 COCO_DIR (val2014 for example)
-  - annotations
-    - captions_val2014.json
-    - captions_val2014.json
-    - instances_train2014.json
-    - instances_val2014.json
-    - person_keypoints_train2014.json
-    - person_keypoints_val2014.json
-  - COCO_val2014_000000000042.jpg
-  - COCO_val2014_000000000073.jpg
-  ...
+├── annotations
+│   ├── captions_val2014.json
+│   ├── instances_train2014.json
+│   ├── instances_val2014.json
+│   ├── person_keypoints_train2014.json
+│   ├── person_keypoints_val2014.json
+├── COCO_val2014_000000000042.jpg
+├── COCO_val2014_000000000073.jpg
+...
 ```
 
 `--coco_path`<br>
@@ -149,7 +148,7 @@ Note the difference from `--data_path`. Provide the **absolute path** to the MME
 | `--noise-step`  | 500     | Number of steps to add diffusion noise.        
 
 
-## EVALUATION
+# EVALUATION
 Refer to the specific examples in `RVCD/MAIN_CODES/run_example.sh`. Each block within the file (a total of 6) generates output captions for evaluating CHAIR/BLEU, POPE, and MME for both RVCD and prior methods. The evaluation assumes the existence of the generated captions.
 
 ### CHAIR/BLEU EVALUATION
@@ -176,5 +175,5 @@ Run the following command to perform the evaluation:
 python eval/mme_tool/calculation.py --results_dir [absolute path to MAIN_CODES/eval/mme_tool/my_final_results] --captions_dir[mme_path]
 ```
 
-## License
+# License
 This repository is under BSD 3-Clause License. Many codes are based on Lavis(https://github.com/salesforce/LAVIS) with BSD 3-Clause License, and https://github.com/BillChan226/HALC.
