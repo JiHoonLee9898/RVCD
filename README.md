@@ -1,12 +1,12 @@
 
-##### Glimpse
+### Glimpse
 If your goal here is to briefly verify the implementation of RVCD's overall concept, observe the following file:
 
 ```plaintext
 RVCD/MAIN_CODES/rvcd_generation_chair_bleu.py
 ```
 
-##### Install
+### Install
 ```bash
 git clone https://github.com/JiHoonLee9898/RVCD.git
 cd RVCD
@@ -15,7 +15,7 @@ conda activate RVCD
 cd MAIN_CODES
 ```
 
-##### LVLM backbones setting
+### LVLM backbones setting
 Specify https://huggingface.co/liuhaotian/llava-v1.5-7b on **line 14** of the following files:
 ```plaintext
 MAIN_CODES/eval_configs/prior_decoding_yamls/not_rvcd_llava.yaml
@@ -34,13 +34,13 @@ MAIN_CODES/eval_configs/mplug-owl2_eval.yaml
 MAIN_CODES/eval_configs/prior_decoding_yamls/not_rvcd_mplug_owl2.yaml
 ```
 
-Specify `RVCD/MAIN_CODES/prerained_minigpt4_7b.pth` on **line 8** of the following files:
+Specify the **absolute path** to `RVCD/MAIN_CODES/prerained_minigpt4_7b.pth` on **line 8** of the following files:
 ```plaintext
 MAIN_CODES/eval_configs/minigpt4_eval.yaml
 MAIN_CODES/eval_configs/prior_decoding_yamls/not_rvcd_mini_gpt4_vicuna0.yaml
 ```
 
-##### DINO for HALC
+### DINO for HALC
 ```bash
 export CUDA_HOME=$CONDA_PREFIX
 cd decoder_zoo/GroundingDINO
@@ -55,9 +55,9 @@ to:
 MAIN_CODES/decoder_zoo/GroundingDINO/weights/groundingdino_swint_ogc.pth
 ```
 
-##### Arguments
-Refer to the detailed example in RVCD/MAIN_CODES/run_example.sh. Each block in the file (a total of 6) generates output captions for evaluating CHAIR/BLEU, POPE, and MME for RVCD and prior methods.
-Please note that this is just an example; in practice, you need to provide the absolute paths specific to your environment for each argument.
+### Arguments
+Refer to the detailed example in `RVCD/MAIN_CODES/run_example.sh`. Each block in the file (a total of 6) generates output captions for evaluating CHAIR/BLEU, POPE, and MME for RVCD and prior methods.
+Please note that this is just an example; in practice, you need to provide the `absolute paths` specific to your environment for each argument.
 
 ### RVCD Arguments detail
 | Argument       | Default    | Description                                                |
@@ -65,21 +65,21 @@ Please note that this is just an example; in practice, you need to provide the a
 | `--model`      | llava-1.5  | Model to use. Options: [`llava-1.5`, `minigpt4`, `mplug-owl2`]. |
 
 
-`--ref_folder_path` 
+`--ref_folder_path`<br>
 The absolute path to:
 ```plaintext
 RVCD/DB_single_concept_images_flux_generated/generated_images
 ```
 
-`--data_path` 
+`--data_path` <br>
 The absolute path to:
 ```plaintext
-coco2014 
+/coco2014 
 ```
 
-This is `[COCO_DIR]`.
+`--data_path` is `[COCO_DIR]`.
 
-Note that `[COCO_DIR]` is expected to contain both images and annotation files within the annotations subfolder. In other words, `[COCO_DIR]` should the the following structure:
+Note that `[COCO_DIR]` is expected to contain both images and annotation files within the annotations subfolder. In other words, `[COCO_DIR]` must follow the structure:
 
 ```plaintext
 COCO_DIR (val2014 for example)
@@ -95,16 +95,16 @@ COCO_DIR (val2014 for example)
   ...
 ```
 
-`--coco_path` 
+`--coco_path`<br>
 For required case (rvcd & mme), likewise, the absolute path to coco2014 (`[COCO_DIR]`).
 
-`--chair_cache_path`
+`--chair_cache_path`<br>
 The absolute path to:
 ```plaintext
 RVCD/MAIN_CODES/eval/CHAIR_CACHE/chair.pkl
 ```
 
-`--yolo_version`
+`--yolo_version`<br>
 The default detector is 'yolov8x.pt' from ultralytics(https://github.com/ultralytics).
 
 | Argument        | Default | Description                                        |
