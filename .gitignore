@@ -1,0 +1,16 @@
+MAIN_CODES/optimal_views/*.jpg
+MAIN_CODES/optimal_views/*.png
+MAIN_CODES/optimal_views/*.gif
+MAIN_CODES/optimal_views/*.jpeg
+MAIN_CODES/optimal_views/*.bmp
+MAIN_CODES/optimal_views/*.svg
+MAIN_CODES/yolov8x.ptyolov8x.pt
+MAIN_CODES/yolov8x.pt
+*yolo*.pt
+
+MAIN_CODES/generated_captions/*
+**/slurm-*.out
+
+# *.sh
+
+**/__pycache__/
