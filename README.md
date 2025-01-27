@@ -4,7 +4,7 @@ If your goal here is to briefly verify the implementation of RVCD's overall conc
 
 ```plaintext
 RVCD/MAIN_CODES/rvcd_generation_chair_bleu.py
-
+```
 
 ##### Install
 ```bash
@@ -13,27 +13,32 @@ cd RVCD
 conda env create -f environment.yml
 conda activate RVCD
 cd MAIN_CODES
+```
 
 ##### LVLM backbones setting
 Specify https://huggingface.co/liuhaotian/llava-v1.5-7b on **line 14** of the following files:
 ```plaintext
 MAIN_CODES/eval_configs/prior_decoding_yamls/not_rvcd_llava.yaml
 MAIN_CODES/eval_configs/llava-1.5_eval.yaml
+```
 
 Specify https://huggingface.co/Vision-CAIR/vicuna-7b on **line 18** of the following files:
 ```plaintext
 MAIN_CODES/minigpt4/configs/models/minigpt4_vicuna0.yaml
 MAIN_CODES/minigpt4/configs/models/not_rvcd_minigpt4_vicuna0.yaml
+```
 
 Specify https://huggingface.co/MAGAer13/mplug-owl2-llama2-7b on **line 14** of the following files:
 ```plaintext
 MAIN_CODES/eval_configs/mplug-owl2_eval.yaml
 MAIN_CODES/eval_configs/prior_decoding_yamls/not_rvcd_mplug_owl2.yaml
+```
 
 Specify RVCD/MAIN_CODES/prerained_minigpt4_7b.pth on **line 8** of the following files:
 ```plaintext
 MAIN_CODES/eval_configs/minigpt4_eval.yaml
 MAIN_CODES/eval_configs/prior_decoding_yamls/not_rvcd_mini_gpt4_vicuna0.yaml
+```
 
 ##### DINO for HALC
 ```bash
@@ -41,12 +46,14 @@ export CUDA_HOME=$CONDA_PREFIX
 cd decoder_zoo/GroundingDINO
 pip install -e .
 cd ../..
+```
 
 Save the file downloaded from
 https://drive.google.com/drive/folders/1UaMJga-BKju88CXAdonbiQujBKkdcVGX
 to: 
 ```plaintext
 MAIN_CODES/decoder_zoo/GroundingDINO/weights/groundingdino_swint_ogc.pth.
+```
 
 ##### Arguments
 Refer to the detailed example in RVCD/MAIN_CODES/run_example.sh. Each block in the file (a total of 6) generates output captions for evaluating CHAIR/BLEU, POPE, and MME for RVCD and prior methods.
@@ -57,16 +64,19 @@ Please note that this is just an example; in practice, you need to provide the a
 Choose one from:
 ```plaintext
 'llava-1.5', 'minigpt4', 'mplug-owl2'
+```
 
 `--ref_folder_path` 
 The absolute path to:
 ```plaintext
 RVCD/DB_single_concept_images_flux_generated/generated_images
+```
 
 `--data_path` 
 The absolute path to:
 ```plaintext
 coco2014 
+```
 
 This is [COCO_DIR].
 
@@ -84,6 +94,7 @@ COCO_DIR (val2014 for example)
   - COCO_val2014_000000000042.jpg
   - COCO_val2014_000000000073.jpg
   ...
+```
 
 `--coco_path` 
 For required case (rvcd & mme), likewise, the absolute path to coco2014 ([COCO_DIR]).
@@ -92,6 +103,7 @@ For required case (rvcd & mme), likewise, the absolute path to coco2014 ([COCO_D
 The absolute path to:
 ```plaintext
 RVCD/MAIN_CODES/eval/CHAIR_CACHE/chair.pkl
+```
 
 `--yolo_version`
 The default detector is 'yolov8x.pt' from ultralytics(https://github.com/ultralytics).
@@ -146,12 +158,14 @@ Place the generated CHAIR/BLEU caption JSONL file under the [absolute path of ev
 Then, run the following command to generate the _chair.json file.
 ```plaintext
 python eval/caption_to_chair2.py --gt-caption-path [absolute path to coco2014/annotations/captions_val2014.json] -c [absolute path of eval/test_folder]
+```
 
 Let the path to the generated _chair.json file be referred to as [chair_path].
 
 Finally, perform the evaluation by running:
 ```plaintext
 python eval/eval_hallucination.py -v --metric chair --chair_input_path [chair_path]
+```
 
 ### POPE EVALUATION
 The evaluation results are saved alongside the path where the POPE captions are generated.
@@ -161,6 +175,7 @@ Let the folder location where the generated MME captions are stored be referred 
 Run the following command to perform the evaluation:
 ```plaintext
 python eval/mme_tool/calculation.py --results_dir [absolute path to MAIN_CODES/eval/mme_tool/my_final_results] --captions_dir [mme_path]
+```
 
 ### License
 This repository is under BSD 3-Clause License. Many codes are based on Lavis(https://github.com/salesforce/LAVIS) with BSD 3-Clause License, and https://github.com/BillChan226/HALC.
