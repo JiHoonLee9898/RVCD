@@ -423,7 +423,7 @@ for idx, img_id in tqdm(enumerate(range(len(img_files))), total=len(img_files)):
     img_anns = set(img_info["anns"])
     img_save = {}
     img_save["image_id"] = img_id
-    image_path = args.data_path + img_file
+    image_path = os.path.join(args.data_path, img_file)
     image = process_before_norm(image_path)
 
     # CHAIR, BLEU default image captioning propmt. 

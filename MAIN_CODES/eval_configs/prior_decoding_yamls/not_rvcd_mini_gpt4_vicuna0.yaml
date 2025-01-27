@@ -5,7 +5,7 @@ model:
   end_sym: "###"
   low_resource: False
   prompt_template: '###Human: {} ###Assistant: '
-  ckpt: '/home/donut2024/JIHOON/RVCD/MAIN_CODES/prerained_minigpt4_7b.pth'
+  ckpt: ""
 
 
 datasets:

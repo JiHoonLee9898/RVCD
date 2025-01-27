@@ -11,7 +11,7 @@ model:
   # prompt_path: "prompts/alignment.txt"
   prompt_template: 'USER: {} ASSISTANT: '
   system_message: "A chat between a curious human and an artificial intelligence assistant. The assistant gives helpful, detailed, and polite answers to the human's questions." 
-  merged_ckpt: "/home/donut2024/JIHOON/RVCD/MAIN_CODES/prerained_minigpt4_7b.pth"
+  merged_ckpt: ""
 
 
 datasets:

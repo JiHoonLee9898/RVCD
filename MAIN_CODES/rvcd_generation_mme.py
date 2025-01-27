@@ -385,7 +385,7 @@ for data_path in data_paths_folders:
         img_save = {}
         img_save["image_id"] = img_id
 
-        image_path = data_path + img_file
+        image_path = os.path.join(data_path, img_file)
         raw_image = Image.open(image_path).convert('RGB')
 
         if model_name == "mplug-owl2":

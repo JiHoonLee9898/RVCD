@@ -211,8 +211,8 @@ if __name__ == "__main__":
             if mme_type in input_json_file:
                 now_mme_type = mme_type
                 break
-        input_text_file = f'./Your_Results/{now_mme_type}.txt'
-        output_file = f"./my_final_results/{now_mme_type}.txt"
+        input_text_file = f'./eval/mme_tool/Your_Results/{now_mme_type}.txt'
+        output_file = f"./eval/mme_tool/my_final_results/{now_mme_type}.txt"
 
         # 파일 로드
         json_data = load_json(input_json_file)

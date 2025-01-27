@@ -110,7 +110,7 @@ RVCD/MAIN_CODES/run_example.sh의 구체적 예시를 참고. bash 파일 안의
 
 ### CHAIR/BLEU EVALUATION
 생성한 CHIAR/BLEU 캡션 jsonl파일을 [eval/test_folder의 절대경로] 아래에 넣고,
-python eval/caption_to_chair2.py -c [eval/test_folder의 절대경로]
+python eval/caption_to_chair2.py --gt-caption-path [coco2014/annotations/captions_val2014.json의 절대경로] -c [eval/test_folder의 절대경로]
 를 통해서 _chair.json 파일을 생성. 그 파일의 경로를 [chair_path]라고 하자.
 python eval/eval_hallucination.py -v --metric chair --chair_input_path [chair_path]
 를 통해 평가 
@@ -120,7 +120,7 @@ pope캡션이 생성된 경로에 평가 결과가 함께 저장되어 있습니
 
 ### MME EVALUATION
 생성된 mme캡션들을 저장한 폴더 위치를 [mme_path]라고 하자.
-RVCD/MAIN_CODES/eval/mme_tool/calculation.py --captions_dir [mme_path]
+python eval/mme_tool/calculation.py --results_dir [MAIN_CODES/eval/mme_tool/my_final_results의 절대경로] --captions_dir [mme_path]
 를 통해 평가
 
 ### License

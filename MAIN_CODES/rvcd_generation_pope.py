@@ -158,7 +158,6 @@ def parse_args():
         help="Input json file that contains ground truth objects in the image.",
     )
     parser.add_argument(
-        "-n",
         "--num_images",
         type=int,
         default=100,

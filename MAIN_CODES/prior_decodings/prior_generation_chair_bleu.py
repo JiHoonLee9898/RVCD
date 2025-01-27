@@ -434,7 +434,7 @@ for idx, img_id in tqdm(enumerate(range(len(img_files))), total=len(img_files)):
     img_save = {}
     img_save["image_id"] = img_id
 
-    image_path = args.data_path + img_file
+    image_path = os.path.join(args.data_path, img_file)
     raw_image = Image.open(image_path).convert('RGB')
 
     if model_name == "mplug-owl2":
