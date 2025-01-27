@@ -104,7 +104,7 @@ RVCD/MAIN_CODES/eval/CHAIR_CACHE/chair.pkl
 ```
 
 `--yolo_version`<br>
-The default detector is 'yolov8x.pt' from ultralytics(https://github.com/ultralytics).
+The default detector is `'yolov8x.pt'` from ultralytics(https://github.com/ultralytics).
 
 | Argument        | Default | Description                                        |
 |-----------------|---------|----------------------------------------------------|
@@ -112,7 +112,7 @@ The default detector is 'yolov8x.pt' from ultralytics(https://github.com/ultraly
 | `--rvcd_beta`   | 0.1     | Positive logits recovery parameter. default: 0.1   |
 
 
-### Prior decoding methods Arguments detail
+## Prior decoding methods Arguments detail
 | Argument   | Description                                                       |
 |------------|-------------------------------------------------------------------|
 | `--model`  | Choose one from: [`not_rvcd_llava`, `not_rvcd_mini_gpt4`, `not_rvcd_mplug_owl2`]. |
@@ -158,7 +158,7 @@ Then, run the following command to generate the _chair.json file.
 python eval/caption_to_chair2.py --gt-caption-path [absolute path to coco2014/annotations/captions_val2014.json] -c [absolute path of eval/test_folder]
 ```
 
-Let the path to the generated _chair.json file be referred to as `[chair_path]`.
+Let the path to the generated `_chair.json` file be referred to as `[chair_path]`.
 
 Finally, perform the evaluation by running:
 ```plaintext
@@ -166,14 +166,14 @@ python eval/eval_hallucination.py -v --metric chair --chair_input_path `[chair_p
 ```
 
 ### POPE EVALUATION
-The evaluation results are saved alongside the path where the POPE captions are generated.
+The POPE evaluation results are saved alongside the path where the POPE captions are generated.
 
 ### MME EVALUATION
 Let the folder location where the generated MME captions are stored be referred to as `[mme_path]`.
 Run the following command to perform the evaluation:
 ```plaintext
-python eval/mme_tool/calculation.py --results_dir [absolute path to MAIN_CODES/eval/mme_tool/my_final_results] --captions_dir[mme_path]
+python eval/mme_tool/calculation.py --results_dir [absolute path to MAIN_CODES/eval/mme_tool/my_final_results] --captions_dir [mme_path]
 ```
 
 # License
-This repository is under BSD 3-Clause License. Many codes are based on Lavis(https://github.com/salesforce/LAVIS) with BSD 3-Clause License, and https://github.com/BillChan226/HALC.
+This repository is under BSD 3-Clause License(https://github.com/salesforce/LAVIS/blob/main/LICENSE.txt). Many codes are based on Lavis(https://github.com/salesforce/LAVIS), and https://github.com/BillChan226/HALC.
