@@ -6,18 +6,6 @@ conda env create -f environment.yml
 conda activate RVCD 
 cd MAIN_CODES
 
-##### 다른 메소드들
-cd MAIN_CODES
-export CUDA_HOME=$CONDA_PREFIX
-cd decoder_zoo/GroundingDINO
-pip install -e .
-cd ../..
-##### To download pre-trained model weights for DINO
-https://drive.google.com/drive/folders/1UaMJga-BKju88CXAdonbiQujBKkdcVGX 
-다운받은 파일을
-MAIN_CODES/decoder_zoo/GroundingDINO/weights/groundingdino_swint_ogc.pth
-에 저장.
-
 ##### LVLM backbones
 https://huggingface.co/liuhaotian/llava-v1.5-7b 를, 
 MAIN_CODES/eval_configs/prior_decoding_yamls/not_rvcd_llava.yaml,
@@ -34,6 +22,17 @@ MAIN_CODES/eval_configs/prior_decoding_yamls/not_rvcd_mplug_owl2.yaml의 14번�
 RVCD/MAIN_CODES/prerained_minigpt4_7b.pth 를,
 MAIN_CODES/eval_configs/minigpt4_eval.yaml,
 MAIN_CODES/eval_configs/prior_decoding_yamls/not_rvcd_mini_gpt4_vicuna0.yaml의 8번째줄에 specify.
+
+##### DINO for HALC
+cd MAIN_CODES
+export CUDA_HOME=$CONDA_PREFIX
+cd decoder_zoo/GroundingDINO
+pip install -e .
+cd ../..
+https://drive.google.com/drive/folders/1UaMJga-BKju88CXAdonbiQujBKkdcVGX 
+다운받은 파일을
+MAIN_CODES/decoder_zoo/GroundingDINO/weights/groundingdino_swint_ogc.pth
+에 저장.
 
 ##### Arguments
 RVCD/MAIN_CODES/run_example.sh의 구체적 예시를 참고. bash 파일 안의 각 블록들(총6개)은
@@ -105,26 +104,21 @@ data_path와 다름. data_paths는 MME벤치마크 데이터셋의 경로 제공
 --cd-beta	0.1	Truncation factor for adaptive plausibility constraint. Default: 0.1.
 --noise-step	500	Number of steps to add diffusion noise. Default: 500.
 
-
 ### EVALUATION
 RVCD/MAIN_CODES/run_example.sh의 구체적 예시를 참고. bash 파일 안의 각 블록들(총6개)은
 각각 RVCD와 prior methods들의 CHIAR/BLEU,POPE,MME 평가를 위한 출력 캡션을 생성하게 함.
 
 ### CHAIR/BLEU EVALUATION
-cd MAIN_CODES
+생성한 CHIAR/BLEU 캡션 jsonl파일을 [eval/test_folder의 절대경로] 아래에 넣고,
 python eval/caption_to_chair2.py -c [eval/test_folder의 절대경로]
 를 통해서 _chair.json 파일을 생성. 그 파일의 경로를 [chair_path]라고 하자.
 python eval/eval_hallucination.py -v --metric chair --chair_input_path [chair_path]
 를 통해 평가 
 
 ### POPE EVALUATION
-RVCD/MAIN_CODES/run_example.sh의 구체적 예시를 참고. bash 파일 안의 각 블록들(총6개)은
-각각 RVCD와 prior methods들의 CHIAR/BLEU,POPE,MME 평가를 위한 출력 캡션을 생성하게 함.
 pope캡션이 생성된 경로에 평가 결과가 함께 저장되어 있습니다. 
 
 ### MME EVALUATION
-RVCD/MAIN_CODES/run_example.sh의 구체적 예시를 참고. bash 파일 안의 각 블록들(총6개)은
-각각 RVCD와 prior methods들의 CHIAR/BLEU,POPE,MME 평가를 위한 출력 캡션을 생성하게 함.
 생성된 mme캡션들을 저장한 폴더 위치를 [mme_path]라고 하자.
 RVCD/MAIN_CODES/eval/mme_tool/calculation.py --captions_dir [mme_path]
 를 통해 평가
