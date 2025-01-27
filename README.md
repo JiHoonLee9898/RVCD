@@ -57,7 +57,7 @@ MAIN_CODES/decoder_zoo/GroundingDINO/weights/groundingdino_swint_ogc.pth
 ```
 
 # Arguments
-Refer to the example in `RVCD/MAIN_CODES/run_example.sh`. Each block in the file (a total of 6) generates output captions for evaluating CHAIR/BLEU, POPE, and MME for RVCD and prior methods.
+Refer to the example in [`RVCD/MAIN_CODES/run_example.sh`](/MAIN_CODES/run_example.sh). Each block in the file (a total of 6) generates output captions for evaluating CHAIR/BLEU, POPE, and MME for RVCD and prior methods.
 Please note that this is just an example; in practice, you need to provide the **absolute paths** specific to your environment for each argument.
 
 ### RVCD Arguments detail
