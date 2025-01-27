@@ -5,6 +5,9 @@ from sklearn.metrics import accuracy_score, precision_score, recall_score, confu
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--results_dir', default='./my_final_results', type=str)
+parser.add_argument('--captions_dir', default='/home/donut2024/JIHOON/MAIN_CODES/generated_captions/mme/llava-1.5', type=str)
+
+
 
 eval_type_dict = {
     "Perception": ["existence", "count", "position", "color", "posters", "celebrity", "scene", "landmark", "artwork", "OCR"],
@@ -194,11 +197,10 @@ def expand_text_file(input_lines, response_dict):
     return expanded_lines
 
 
-
-
 if __name__ == "__main__":
     # 폴더 경로
-    input_json_files_folder = '/home/donut2024/JIHOON/Halc_modified_for_compare/generated_captions/mme/llava-1.5'  # 폴더 경로
+    args = parser.parse_args()
+    input_json_files_folder = args.captions_dir  # 폴더 경로
 
     # 폴더 안의 모든 파일을 리스트에 담기
     all_files = [os.path.join(input_json_files_folder, file) for file in os.listdir(input_json_files_folder) if os.path.isfile(os.path.join(input_json_files_folder, file))]
@@ -229,7 +231,7 @@ if __name__ == "__main__":
         print(f"Expanded results saved to {output_file}")
 
     cal = calculate_metrics()
-    args = parser.parse_args()
+    
     results_dir = args.results_dir
     cal.process_result(results_dir)
 
