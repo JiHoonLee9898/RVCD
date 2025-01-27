@@ -34,7 +34,7 @@ MAIN_CODES/eval_configs/mplug-owl2_eval.yaml
 MAIN_CODES/eval_configs/prior_decoding_yamls/not_rvcd_mplug_owl2.yaml
 ```
 
-Specify RVCD/MAIN_CODES/prerained_minigpt4_7b.pth on **line 8** of the following files:
+Specify `RVCD/MAIN_CODES/prerained_minigpt4_7b.pth` on **line 8** of the following files:
 ```plaintext
 MAIN_CODES/eval_configs/minigpt4_eval.yaml
 MAIN_CODES/eval_configs/prior_decoding_yamls/not_rvcd_mini_gpt4_vicuna0.yaml
@@ -52,7 +52,7 @@ Save the file downloaded from
 https://drive.google.com/drive/folders/1UaMJga-BKju88CXAdonbiQujBKkdcVGX
 to: 
 ```plaintext
-MAIN_CODES/decoder_zoo/GroundingDINO/weights/groundingdino_swint_ogc.pth.
+MAIN_CODES/decoder_zoo/GroundingDINO/weights/groundingdino_swint_ogc.pth
 ```
 
 ##### Arguments
@@ -60,11 +60,10 @@ Refer to the detailed example in RVCD/MAIN_CODES/run_example.sh. Each block in t
 Please note that this is just an example; in practice, you need to provide the absolute paths specific to your environment for each argument.
 
 ### RVCD Arguments detail
-`--model`  
-Choose one from:
-```plaintext
-'llava-1.5', 'minigpt4', 'mplug-owl2'
-```
+| Argument       | Default    | Description                                                |
+|----------------|------------|------------------------------------------------------------|
+| `--model`      | llava-1.5  | Model to use. Options: [`llava-1.5`, `minigpt4`, `mplug-owl2`]. |
+
 
 `--ref_folder_path` 
 The absolute path to:
@@ -78,9 +77,9 @@ The absolute path to:
 coco2014 
 ```
 
-This is [COCO_DIR].
+This is `[COCO_DIR]`.
 
-Note that [COCO_DIR] is expected to contain both images and annotation files within the annotations subfolder. In other words, [COCO_DIR] should the the following structure:
+Note that `[COCO_DIR]` is expected to contain both images and annotation files within the annotations subfolder. In other words, `[COCO_DIR]` should the the following structure:
 
 ```plaintext
 COCO_DIR (val2014 for example)
@@ -97,7 +96,7 @@ COCO_DIR (val2014 for example)
 ```
 
 `--coco_path` 
-For required case (rvcd & mme), likewise, the absolute path to coco2014 ([COCO_DIR]).
+For required case (rvcd & mme), likewise, the absolute path to coco2014 (`[COCO_DIR]`).
 
 `--chair_cache_path`
 The absolute path to:
@@ -108,21 +107,21 @@ RVCD/MAIN_CODES/eval/CHAIR_CACHE/chair.pkl
 `--yolo_version`
 The default detector is 'yolov8x.pt' from ultralytics(https://github.com/ultralytics).
 
-`--rvcd_alpha`
-Negative logits regulatory parameter. default: 1
+| Argument        | Default | Description                                        |
+|-----------------|---------|----------------------------------------------------|
+| `--rvcd_alpha`  | 1       | Negative logits regulatory parameter. default: 1   |
+| `--rvcd_beta`   | 0.1     | Positive logits recovery parameter. default: 0.1   |
 
-`--rvcd_beta`
-Positive logits recovery parameter. default: 0.1
 
 ### Prior decoding methods Arguments detail
-`--model`
-Choose one from 'not_rvcd_llava', 'not_rvcd_mini_gpt4', 'not_rvcd_mplug_owl2' 
+| Argument   | Description                                                       |
+|------------|-------------------------------------------------------------------|
+| `--model`  | Choose one from: [`not_rvcd_llava`, `not_rvcd_mini_gpt4`, `not_rvcd_mplug_owl2`]. |
+| `-d`       | Choose one from: [`greedy`, `dola`, `halc`, `opera`, `vcd`, `beam`]. |
 
--d 
-Choose one from 'greedy', 'dola', 'halc', 'opera', 'vcd', 'beam' 
 
---data_paths 
-!Note the difference from data_path. Provide the absolute path to the MME benchmark dataset downloaded from (https://github.com/BradyFU/Awesome-Multimodal-Large-Language-Models/tree/Evaluation).
+`--data_paths` 
+!Note the difference from `data_path`. Provide the absolute path to the MME benchmark dataset downloaded from (https://github.com/BradyFU/Awesome-Multimodal-Large-Language-Models/tree/Evaluation).
 
 ### HALC Additional Arguments
 | Argument            | Default | Description                                                |
@@ -160,21 +159,21 @@ Then, run the following command to generate the _chair.json file.
 python eval/caption_to_chair2.py --gt-caption-path [absolute path to coco2014/annotations/captions_val2014.json] -c [absolute path of eval/test_folder]
 ```
 
-Let the path to the generated _chair.json file be referred to as [chair_path].
+Let the path to the generated _chair.json file be referred to as `[chair_path]`.
 
 Finally, perform the evaluation by running:
 ```plaintext
-python eval/eval_hallucination.py -v --metric chair --chair_input_path [chair_path]
+python eval/eval_hallucination.py -v --metric chair --chair_input_path `[chair_path]`
 ```
 
 ### POPE EVALUATION
 The evaluation results are saved alongside the path where the POPE captions are generated.
 
 ### MME EVALUATION
-Let the folder location where the generated MME captions are stored be referred to as [mme_path].
+Let the folder location where the generated MME captions are stored be referred to as `[mme_path]`.
 Run the following command to perform the evaluation:
 ```plaintext
-python eval/mme_tool/calculation.py --results_dir [absolute path to MAIN_CODES/eval/mme_tool/my_final_results] --captions_dir [mme_path]
+python eval/mme_tool/calculation.py --results_dir [absolute path to MAIN_CODES/eval/mme_tool/my_final_results] --captions_dir[mme_path]
 ```
 
 ### License
