@@ -46,7 +46,7 @@ CUDA_VISIBLE_DEVICES=0 python rvcd_generation_mme.py \
 #########################################################
 
 
-### models : not_rvcd_llava, not_rvcd_mini_gpt4, not_rvcd_mplug_owl2
+### --model : not_rvcd_llava, not_rvcd_mini_gpt4, not_rvcd_mplug_owl2
 ### Prior SOTA methods for CHAIR/BLEU ###
 CUDA_VISIBLE_DEVICES=0 python prior_decodings/prior_generation_chair_bleu.py \
     --model not_rvcd_llava \
