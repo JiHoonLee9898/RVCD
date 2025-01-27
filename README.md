@@ -24,7 +24,6 @@ MAIN_CODES/eval_configs/minigpt4_eval.yaml,
 MAIN_CODES/eval_configs/prior_decoding_yamls/not_rvcd_mini_gpt4_vicuna0.yaml의 8번째줄에 specify.
 
 ##### DINO for HALC
-cd MAIN_CODES
 export CUDA_HOME=$CONDA_PREFIX
 cd decoder_zoo/GroundingDINO
 pip install -e .
