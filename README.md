@@ -1,56 +1,78 @@
 
-##### RVCD
+##### Glimpse
+If your goal here is to briefly verify the implementation of RVCD's overall concept, observe the following file:
+
+```plaintext
+RVCD/MAIN_CODES/rvcd_generation_chair_bleu.py
+
+
+##### Install
+```bash
 git clone https://github.com/JiHoonLee9898/RVCD.git
 cd RVCD
 conda env create -f environment.yml
-conda activate RVCD 
+conda activate RVCD
 cd MAIN_CODES
 
-##### LVLM backbones
-https://huggingface.co/liuhaotian/llava-v1.5-7b 를, 
-MAIN_CODES/eval_configs/prior_decoding_yamls/not_rvcd_llava.yaml,
-MAIN_CODES/eval_configs/llava-1.5_eval.yaml의 14번째줄에 specify.
+##### LVLM backbones setting
+Specify https://huggingface.co/liuhaotian/llava-v1.5-7b on **line 14** of the following files:
+```plaintext
+MAIN_CODES/eval_configs/prior_decoding_yamls/not_rvcd_llava.yaml
+MAIN_CODES/eval_configs/llava-1.5_eval.yaml
 
-https://huggingface.co/Vision-CAIR/vicuna-7b 를,
-MAIN_CODES/minigpt4/configs/models/minigpt4_vicuna0.yaml,
-MAIN_CODES/minigpt4/configs/models/not_rvcd_minigpt4_vicuna0.yaml의 18번째줄에 specify.
+Specify https://huggingface.co/Vision-CAIR/vicuna-7b on **line 18** of the following files:
+```plaintext
+MAIN_CODES/minigpt4/configs/models/minigpt4_vicuna0.yaml
+MAIN_CODES/minigpt4/configs/models/not_rvcd_minigpt4_vicuna0.yaml
 
-https://huggingface.co/MAGAer13/mplug-owl2-llama2-7b 를,
-MAIN_CODES/eval_configs/mplug-owl2_eval.yaml,
-MAIN_CODES/eval_configs/prior_decoding_yamls/not_rvcd_mplug_owl2.yaml의 14번째줄에 specify. 
+Specify https://huggingface.co/MAGAer13/mplug-owl2-llama2-7b on **line 14** of the following files:
+```plaintext
+MAIN_CODES/eval_configs/mplug-owl2_eval.yaml
+MAIN_CODES/eval_configs/prior_decoding_yamls/not_rvcd_mplug_owl2.yaml
 
-RVCD/MAIN_CODES/prerained_minigpt4_7b.pth 를,
-MAIN_CODES/eval_configs/minigpt4_eval.yaml,
-MAIN_CODES/eval_configs/prior_decoding_yamls/not_rvcd_mini_gpt4_vicuna0.yaml의 8번째줄에 specify.
+Specify RVCD/MAIN_CODES/prerained_minigpt4_7b.pth on **line 8** of the following files:
+```plaintext
+MAIN_CODES/eval_configs/minigpt4_eval.yaml
+MAIN_CODES/eval_configs/prior_decoding_yamls/not_rvcd_mini_gpt4_vicuna0.yaml
 
 ##### DINO for HALC
+```bash
 export CUDA_HOME=$CONDA_PREFIX
 cd decoder_zoo/GroundingDINO
 pip install -e .
 cd ../..
-https://drive.google.com/drive/folders/1UaMJga-BKju88CXAdonbiQujBKkdcVGX 
-다운받은 파일을
-MAIN_CODES/decoder_zoo/GroundingDINO/weights/groundingdino_swint_ogc.pth
-에 저장.
+
+Save the file downloaded from
+https://drive.google.com/drive/folders/1UaMJga-BKju88CXAdonbiQujBKkdcVGX
+to: 
+```plaintext
+MAIN_CODES/decoder_zoo/GroundingDINO/weights/groundingdino_swint_ogc.pth.
 
 ##### Arguments
-RVCD/MAIN_CODES/run_example.sh의 구체적 예시를 참고. bash 파일 안의 각 블록들(총6개)은
-각각 RVCD와 prior methods들의 CHIAR/BLEU,POPE,MME 평가를 위한 출력 캡션을 생성하게 함.
+Refer to the detailed example in RVCD/MAIN_CODES/run_example.sh. Each block in the file (a total of 6) generates output captions for evaluating CHAIR/BLEU, POPE, and MME for RVCD and prior methods.
+Please note that this is just an example; in practice, you need to provide the absolute paths specific to your environment for each argument.
 
 ### RVCD Arguments detail
---model 
-RVCD : llava-1.5, minigpt4, mplug-owl2
-prior decoding methods : not_rvcd_llava, not_rvcd_mini_gpt4, not_rvcd_mplug_owl2
+`--model`  
+Choose one from:
+```plaintext
+'llava-1.5', 'minigpt4', 'mplug-owl2'
 
---ref_folder_path
-절대경로 of 
+`--ref_folder_path` 
+The absolute path to:
+```plaintext
 RVCD/DB_single_concept_images_flux_generated/generated_images
 
---data_path
-coco2014의 절대 경로. 
+`--data_path` 
+The absolute path to:
+```plaintext
+coco2014 
+
+This is [COCO_DIR].
 
 Note that [COCO_DIR] is expected to contain both images and annotation files within the annotations subfolder. In other words, [COCO_DIR] should the the following structure:
 
+```plaintext
 COCO_DIR (val2014 for example)
   - annotations
     - captions_val2014.json
@@ -63,65 +85,82 @@ COCO_DIR (val2014 for example)
   - COCO_val2014_000000000073.jpg
   ...
 
---coco_path
-필요한 케이스(rvcd,mme)이면, 마찬가지로 coco2014의 절대 경로. 
+`--coco_path` 
+For required case (rvcd & mme), likewise, the absolute path to coco2014 ([COCO_DIR]).
 
---chair_cache_path
-RVCD/MAIN_CODES/eval/CHAIR_CACHE/chair.pkl 의 절대 경로.
+`--chair_cache_path`
+The absolute path to:
+```plaintext
+RVCD/MAIN_CODES/eval/CHAIR_CACHE/chair.pkl
 
---yolo_version 
-ultralytics의 'yolov8x.pt' 가 default detector.
+`--yolo_version`
+The default detector is 'yolov8x.pt' from ultralytics(https://github.com/ultralytics).
 
---rvcd_alpha 1 Negative logits 제거 parameter
---rvcd_beta 0.1 Positive logits 회복 parameter
+`--rvcd_alpha`
+Negative logits regulatory parameter. default: 1
+
+`--rvcd_beta`
+Positive logits recovery parameter. default: 0.1
 
 ### Prior decoding methods Arguments detail
---model 
-RVCD : llava-1.5, minigpt4, mplug-owl2
-prior decoding methods : not_rvcd_llava, not_rvcd_mini_gpt4, not_rvcd_mplug_owl2
+`--model`
+Choose one from 'not_rvcd_llava', 'not_rvcd_mini_gpt4', 'not_rvcd_mplug_owl2' 
 
 -d 
-greedy, dola, halc, opera, vcd, beam
+Choose one from 'greedy', 'dola', 'halc', 'opera', 'vcd', 'beam' 
 
 --data_paths 
-data_path와 다름. data_paths는 MME벤치마크 데이터셋의 경로 제공
+!Note the difference from data_path. Provide the absolute path to the MME benchmark dataset downloaded from (https://github.com/BradyFU/Awesome-Multimodal-Large-Language-Models/tree/Evaluation).
 
-### halc additional arguments
---k-candidate-num	4	Number of generative focal fields for local search. Default: 4.
---expand-ratio	0.6	The growing factor of focal fields. Default: 0.6.
---detector	dino	Detector to use in [dino, owlv2]. Default: dino.
---box_threshold	0.4	The threshold for bounding box in GroundingDino. Default: 0.4.
+### HALC Additional Arguments
+| Argument            | Default | Description                                                |
+|---------------------|---------|------------------------------------------------------------|
+| `--k-candidate-num` | 4       | Number of generative focal fields for local search.        |
+| `--expand-ratio`    | 0.6     | The growing factor of focal fields.                       |
+| `--detector`        | dino    | Detector to use. Options: [`dino`, `owlv2`].              |
+| `--box_threshold`   | 0.4     | The threshold for bounding box in GroundingDino.          |
 
-### OPERA additional arguments
---scale_factor	50	The scale factor to scale up the self-attention weights. Default: 50.
---threshold	15	The threshold for attending retrospection. Default: 15.
---num_attn_candidates	5	The number of candidates per beam. Default: 5.
---penalty_weights	1	The weight of penalty term in decoding. Default: 1.
 
-### VCD additional arguments
---cd-alpha	1	Amplification factor. Default: 1.
---cd-beta	0.1	Truncation factor for adaptive plausibility constraint. Default: 0.1.
---noise-step	500	Number of steps to add diffusion noise. Default: 500.
+### OPERA Additional Arguments
+| Argument               | Default | Description                                      |
+|------------------------|---------|--------------------------------------------------|
+| `--scale_factor`       | 50      | The scale factor to scale up the self-attention weights. |
+| `--threshold`          | 15      | The threshold for attending retrospection.       |
+| `--num_attn_candidates`| 5       | The number of candidates per beam.               |
+| `--penalty_weights`    | 1       | The weight of penalty term in decoding.          |
+
+
+### VCD Additional Arguments
+| Argument        | Default | Description                                                     |
+|-----------------|---------|-----------------------------------------------------------------|
+| `--cd-alpha`    | 1       | Amplification factor.                                           |
+| `--cd-beta`     | 0.1     | Truncation factor for adaptive plausibility constraint.         |
+| `--noise-step`  | 500     | Number of steps to add diffusion noise.        
+
 
 ### EVALUATION
-RVCD/MAIN_CODES/run_example.sh의 구체적 예시를 참고. bash 파일 안의 각 블록들(총6개)은
-각각 RVCD와 prior methods들의 CHIAR/BLEU,POPE,MME 평가를 위한 출력 캡션을 생성하게 함.
+Refer to the specific examples in RVCD/MAIN_CODES/run_example.sh. Each block within the file (a total of 6) generates output captions for evaluating CHAIR/BLEU, POPE, and MME for both RVCD and prior methods. The evaluation assumes the existence of the generated captions.
 
 ### CHAIR/BLEU EVALUATION
-생성한 CHIAR/BLEU 캡션 jsonl파일을 [eval/test_folder의 절대경로] 아래에 넣고,
-python eval/caption_to_chair2.py --gt-caption-path [coco2014/annotations/captions_val2014.json의 절대경로] -c [eval/test_folder의 절대경로]
-를 통해서 _chair.json 파일을 생성. 그 파일의 경로를 [chair_path]라고 하자.
+Place the generated CHAIR/BLEU caption JSONL file under the [absolute path of eval/test_folder].
+Then, run the following command to generate the _chair.json file.
+```plaintext
+python eval/caption_to_chair2.py --gt-caption-path [absolute path to coco2014/annotations/captions_val2014.json] -c [absolute path of eval/test_folder]
+
+Let the path to the generated _chair.json file be referred to as [chair_path].
+
+Finally, perform the evaluation by running:
+```plaintext
 python eval/eval_hallucination.py -v --metric chair --chair_input_path [chair_path]
-를 통해 평가 
 
 ### POPE EVALUATION
-pope캡션이 생성된 경로에 평가 결과가 함께 저장되어 있습니다. 
+The evaluation results are saved alongside the path where the POPE captions are generated.
 
 ### MME EVALUATION
-생성된 mme캡션들을 저장한 폴더 위치를 [mme_path]라고 하자.
-python eval/mme_tool/calculation.py --results_dir [MAIN_CODES/eval/mme_tool/my_final_results의 절대경로] --captions_dir [mme_path]
-를 통해 평가
+Let the folder location where the generated MME captions are stored be referred to as [mme_path].
+Run the following command to perform the evaluation:
+```plaintext
+python eval/mme_tool/calculation.py --results_dir [absolute path to MAIN_CODES/eval/mme_tool/my_final_results] --captions_dir [mme_path]
 
 ### License
-This repository is under BSD 3-Clause License. Many codes are based on Lavis with BSD 3-Clause License here, and 
-https://github.com/BillChan226/HALC.
+This repository is under BSD 3-Clause License. Many codes are based on Lavis(https://github.com/salesforce/LAVIS) with BSD 3-Clause License, and https://github.com/BillChan226/HALC.
