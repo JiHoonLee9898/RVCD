@@ -1,12 +1,12 @@
 
-### Glimpse
+## Glimpse
 If your goal here is to briefly verify the implementation of RVCD's overall concept, observe the following file:
 
 ```plaintext
 RVCD/MAIN_CODES/rvcd_generation_chair_bleu.py
 ```
 
-### Install
+## Install
 ```bash
 git clone https://github.com/JiHoonLee9898/RVCD.git
 cd RVCD
@@ -55,9 +55,9 @@ to:
 MAIN_CODES/decoder_zoo/GroundingDINO/weights/groundingdino_swint_ogc.pth
 ```
 
-### Arguments
-Refer to the detailed example in `RVCD/MAIN_CODES/run_example.sh`. Each block in the file (a total of 6) generates output captions for evaluating CHAIR/BLEU, POPE, and MME for RVCD and prior methods.
-Please note that this is just an example; in practice, you need to provide the `absolute paths` specific to your environment for each argument.
+## Arguments
+Refer to the example in `RVCD/MAIN_CODES/run_example.sh`. Each block in the file (a total of 6) generates output captions for evaluating CHAIR/BLEU, POPE, and MME for RVCD and prior methods.
+Please note that this is just an example; in practice, you need to provide the **absolute paths** specific to your environment for each argument.
 
 ### RVCD Arguments detail
 | Argument       | Default    | Description                                                |
@@ -96,7 +96,7 @@ COCO_DIR (val2014 for example)
 ```
 
 `--coco_path`<br>
-For required case (rvcd & mme), likewise, the absolute path to coco2014 (`[COCO_DIR]`).
+For required case (rvcd for mme), likewise, the **absolute path** to `/coco2014` (`[COCO_DIR]`).
 
 `--chair_cache_path`<br>
 The absolute path to:
@@ -121,7 +121,7 @@ The default detector is 'yolov8x.pt' from ultralytics(https://github.com/ultraly
 
 
 `--data_paths` 
-!Note the difference from `data_path`. Provide the absolute path to the MME benchmark dataset downloaded from (https://github.com/BradyFU/Awesome-Multimodal-Large-Language-Models/tree/Evaluation).
+Note the difference from `--data_path`. Provide the **absolute path** to the MME benchmark dataset downloaded from (https://github.com/BradyFU/Awesome-Multimodal-Large-Language-Models/tree/Evaluation).
 
 ### HALC Additional Arguments
 | Argument            | Default | Description                                                |
@@ -149,11 +149,11 @@ The default detector is 'yolov8x.pt' from ultralytics(https://github.com/ultraly
 | `--noise-step`  | 500     | Number of steps to add diffusion noise.        
 
 
-### EVALUATION
-Refer to the specific examples in RVCD/MAIN_CODES/run_example.sh. Each block within the file (a total of 6) generates output captions for evaluating CHAIR/BLEU, POPE, and MME for both RVCD and prior methods. The evaluation assumes the existence of the generated captions.
+## EVALUATION
+Refer to the specific examples in `RVCD/MAIN_CODES/run_example.sh`. Each block within the file (a total of 6) generates output captions for evaluating CHAIR/BLEU, POPE, and MME for both RVCD and prior methods. The evaluation assumes the existence of the generated captions.
 
 ### CHAIR/BLEU EVALUATION
-Place the generated CHAIR/BLEU caption JSONL file under the [absolute path of eval/test_folder].
+Place the generated CHAIR/BLEU caption JSONL file under the `[absolute path of eval/test_folder]`.
 Then, run the following command to generate the _chair.json file.
 ```plaintext
 python eval/caption_to_chair2.py --gt-caption-path [absolute path to coco2014/annotations/captions_val2014.json] -c [absolute path of eval/test_folder]
@@ -176,5 +176,5 @@ Run the following command to perform the evaluation:
 python eval/mme_tool/calculation.py --results_dir [absolute path to MAIN_CODES/eval/mme_tool/my_final_results] --captions_dir[mme_path]
 ```
 
-### License
+## License
 This repository is under BSD 3-Clause License. Many codes are based on Lavis(https://github.com/salesforce/LAVIS) with BSD 3-Clause License, and https://github.com/BillChan226/HALC.
