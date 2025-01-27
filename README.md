@@ -1,3 +1,5 @@
+![Main](./assets/main_pipeline.png)
+![DB](./assets/single_concept_db.png)
 
 # Glimpse
 If your goal here is to briefly verify the implementation of RVCD's overall concept, observe the following file:
