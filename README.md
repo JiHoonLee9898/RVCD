@@ -150,7 +150,7 @@ Note the difference from `--data_path`. Provide the **absolute path** to the MME
 
 
 # EVALUATION
-Refer to the specific examples in `RVCD/MAIN_CODES/run_example.sh`. Each block within the file (a total of 6) generates output captions for evaluating CHAIR/BLEU, POPE, and MME for both RVCD and prior methods. The evaluation assumes the existence of the generated captions.
+Refer to the specific examples in [`RVCD/MAIN_CODES/run_example.sh`](/MAIN_CODES/run_example.sh). Each block within the file (a total of 6) generates output captions for evaluating CHAIR/BLEU, POPE, and MME for both RVCD and prior methods. The evaluation assumes the existence of the generated captions.
 
 ### CHAIR/BLEU EVALUATION
 Place the generated CHAIR/BLEU caption JSONL file under the `[absolute path of eval/test_folder]`.
