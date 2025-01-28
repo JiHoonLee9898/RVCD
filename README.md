@@ -176,3 +176,5 @@ Run the following command to perform the evaluation:
 python eval/mme_tool/calculation.py --results_dir [absolute path to MAIN_CODES/eval/mme_tool/my_final_results] --captions_dir [mme_path]
 ```
 
+# License
+This repository is under BSD 3-Clause License(https://github.com/salesforce/LAVIS/blob/main/LICENSE.txt). Many codes are based on Lavis(https://github.com/salesforce/LAVIS), and https://github.com/BillChan226/HALC.
