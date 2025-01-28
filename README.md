@@ -1,11 +1,8 @@
 ![main](./assets/main.png)
 
 # Glimpse
-If your goal here is to briefly verify the implementation of RVCD's overall concept, observe the following file:
-
-```plaintext
-RVCD/MAIN_CODES/rvcd_generation_chair_bleu.py
-```
+If your goal here is to briefly verify the implementation of RVCD's overall concept, observe the following file:<br>
+[`/MAIN_CODES/rvcd_generation_chair_bleu.py`](/MAIN_CODES/rvcd_generation_chair_bleu.py)
 
 # Install
 ```bash
