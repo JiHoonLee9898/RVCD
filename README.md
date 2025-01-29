@@ -26,6 +26,12 @@ MAIN_CODES/minigpt4/configs/models/minigpt4_vicuna0.yaml
 MAIN_CODES/minigpt4/configs/models/not_rvcd_minigpt4_vicuna0.yaml
 ```
 
+Download https://huggingface.co/meta-llama/Llama-2-7b-chat-hf and specify it on **line 15** of the following files:
+```plaintext
+MAIN_CODES/minigpt4/configs/models/mplug_owl2_llama2.yaml
+MAIN_CODES/minigpt4/configs/models/not_rvcd_mplug_owl2_llama2.yaml
+```
+
 Download https://huggingface.co/MAGAer13/mplug-owl2-llama2-7b and specify it on **line 14** of the following files:
 ```plaintext
 MAIN_CODES/eval_configs/mplug-owl2_eval.yaml
