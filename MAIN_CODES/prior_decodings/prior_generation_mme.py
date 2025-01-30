@@ -464,7 +464,7 @@ for data_path in data_paths_folders:
         image_path = data_path + img_file
         raw_image = Image.open(image_path).convert('RGB')
 
-        if model_name == "mplug-owl2":
+        if model_name == "mplug-owl2" or model_name == 'not_rvcd_mplug_owl2':
             max_edge = max(raw_image.size) # We recommand you to resize to squared image for BEST performance.
             image = raw_image.resize((max_edge, max_edge))
             image_tensor = process_images([image], model.image_processor)
