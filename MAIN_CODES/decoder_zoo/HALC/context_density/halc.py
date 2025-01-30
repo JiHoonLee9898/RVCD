@@ -482,7 +482,7 @@ class halc_assistant:
 
     def get_model_embeds(self, image):
 
-        if self.model_backbone == "minigpt4":
+        if self.model_backbone == "minigpt4" or self.model_backbone =='not_rvcd_mini_gpt4':
             max_new_tokens = self.max_new_tokens
             max_length = 512
 
@@ -505,10 +505,10 @@ class halc_assistant:
             begin_idx = max(0, current_max_len - max_length)
             embs = embs[:, begin_idx:]
 
-        elif self.model_backbone == "llava-1.5":
+        elif self.model_backbone == "llava-1.5" or self.model_backbone =='not_rvcd_llava':
             # image_emb = self.model.prepare_inputs_labels_for_multimodal(input_ids, attention_mask, past_key_values, labels, image)
             embs = self.vis_processor(image).unsqueeze(0).to(self.device)
-        elif self.model_backbone == "mplug-owl2":
+        elif self.model_backbone == "mplug-owl2" or self.model_backbone =='not_rvcd_mplug_owl2':
             # image_emb = self.model.prepare_inputs_labels_for_multimodal(input_ids, attention_mask, past_key_values, labels, image)
             max_edge = max(
                 image.size
@@ -1164,13 +1164,16 @@ class halc_assistant:
             ) in candidate_intermediate_token_lists_array:
                 # print("candidate_intermediate_token_lists[0]", candidate_intermediate_token_lists[0])
                 if (
-                    self.model_backbone == "minigpt4"
+                    self.model_backbone == "minigpt4" or \
+                    self.model_backbone == "not_rvcd_mini_gpt4" \
                     or self.model_backbone == "instructblip"
                 ):
                     skip_token_length = 0
                 elif (
                     self.model_backbone == "llava-1.5"
-                    or self.model_backbone == "mplug-owl2"
+                    or self.model_backbone == "mplug-owl2" or \
+                    self.model_backbone == "not_rvcd_llava" or \
+                    self.model_backbone == "not_rvcd_mplug_owl2"
                 ):
                     skip_token_length = skip_token_length
 
