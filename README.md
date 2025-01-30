@@ -138,6 +138,7 @@ Note the difference from `--data_path`. Provide the **absolute path** to the MME
 | `--threshold`          | 15      | The threshold for attending retrospection.       |
 | `--num_attn_candidates`| 5       | The number of candidates per beam.               |
 | `--penalty_weights`    | 1       | The weight of penalty term in decoding.          |
+| `--beam`    | 3       | beam size.          |
 
 
 ### VCD Additional Arguments
