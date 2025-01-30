@@ -4539,13 +4539,16 @@ class GenerationMixin:
 
         min_length = len(initial_input_ids[0]) + 8
 
-        if self.halc_assistant.model_backbone == "minigpt4":
+        if self.halc_assistant.model_backbone == "minigpt4" or \
+            self.halc_assistant.model_backbone == "not_rvcd_mini_gpt4":
             valid_length_max = min(max_new_tokens, max_length)
-        elif self.halc_assistant.model_backbone == "llava-1.5":
+        elif self.halc_assistant.model_backbone == "llava-1.5" or \
+            self.halc_assistant.model_backbone == "not_rvcd_llava":
             valid_length_max = min(max_new_tokens, max_length) + len(initial_input_ids[0]) - 1
         elif self.halc_assistant.model_backbone == "instructblip":
             valid_length_max = min(max_new_tokens, max_length) + len(initial_input_ids[0]) - 1
-        elif self.halc_assistant.model_backbone == "mplug-owl2":
+        elif self.halc_assistant.model_backbone == "mplug-owl2" or \
+            self.halc_assistant.model_backbone == "not_rvcd_mplug_owl2":
             valid_length_max = min(max_new_tokens, max_length) + len(initial_input_ids[0]) - 1
         else:
             raise ValueError("You must specify a valid model backbone")
@@ -4753,11 +4756,13 @@ class GenerationMixin:
                                 # sub_model_kwargs = deep_copy_tensor_structure(initial_model_kwargs)
                                 sub_model_kwargs = copy.deepcopy(initial_model_kwargs)
 
-                                if self.halc_assistant.model_backbone == "minigpt4" or self.halc_assistant.model_backbone == "instructblip":
+                                if self.halc_assistant.model_backbone == "minigpt4" or self.halc_assistant.model_backbone == "instructblip" or \
+                                    self.halc_assistant.model_backbone == "not_rvcd_mini_gpt4":
                                     sub_model_kwargs['inputs_embeds'] = context_embed
                                     teacher_forcing_tokens = beam_intermediate_token_lists[bs]
     
-                                elif self.halc_assistant.model_backbone == "llava-1.5" or self.halc_assistant.model_backbone == "mplug-owl2":
+                                elif self.halc_assistant.model_backbone == "llava-1.5" or self.halc_assistant.model_backbone == "mplug-owl2" or \
+                                    self.halc_assistant.model_backbone == "not_rvcd_llava" or self.halc_assistant.model_backbone == "not_rvcd_mplug_owl2":
                                     sub_model_kwargs['images'] = context_embed
                                     # print("beam_intermediate_token_lists[bs]", beam_intermediate_token_lists[bs])
                                     teacher_forcing_tokens = beam_intermediate_token_lists[bs][:, len(initial_input_ids[0])-1:]
