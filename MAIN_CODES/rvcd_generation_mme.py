@@ -399,12 +399,6 @@ for data_path in data_paths_folders:
 
         # print("image device", norm(image).device)
 
-        # qu = "Please describe this image in detail."
-        # # qu = "Please provide a very detailed description of the image."
-        # # qu = "Please provide a very long and detailed description of the image."
-        # # qu = "Generate a one sentence caption of the image."
-        # # qu = "Generate a short caption of the image."
-
         #################33
         # Is there a train in this image? Please answer yes or no.	
         original_qu = qu[:]

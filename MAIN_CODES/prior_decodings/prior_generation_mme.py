@@ -474,18 +474,10 @@ for data_path in data_paths_folders:
             image = image.to(device)
 
 
-        # qu = "Please describe this image in detail."
-        # # qu = "Please provide a very detailed description of the image."
-        # # qu = "Please provide a very long and detailed description of the image."
-        # # qu = "Generate a one sentence caption of the image."
-        # # qu = "Generate a short caption of the image."
-
 
         # Is there a train in this image? Please answer yes or no.	
         original_qu = qu[:]
         print(f"MME의 원본 qu : {original_qu}")
-        # qu = f"Provide the reasoning for the following question's answer. {original_qu.split(' Please')[0]}"
-        # qu =  f'Describe this image and then answer: {original_qu.split(' Please')[0]}'
         qu = f"Please describe this image and then answer the question. {original_qu.split(' Please')[0]}"
         print(f"MME의 qu : {qu}")
 
