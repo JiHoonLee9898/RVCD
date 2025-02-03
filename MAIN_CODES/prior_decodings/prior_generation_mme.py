@@ -486,7 +486,7 @@ for data_path in data_paths_folders:
         print(f"MME의 원본 qu : {original_qu}")
         # qu = f"Provide the reasoning for the following question's answer. {original_qu.split(' Please')[0]}"
         # qu =  f'Describe this image and then answer: {original_qu.split(' Please')[0]}'
-        qu = f"Describe this image and then answer: {original_qu.split(' Please')[0]}"
+        qu = f"Please describe this image and then answer the question. {original_qu.split(' Please')[0]}"
         print(f"MME의 qu : {qu}")
 
         template = INSTRUCTION_TEMPLATE[args.model]
