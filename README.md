@@ -161,8 +161,8 @@ Then, navigate to the following path by appending the output path with:
 ```plaintext
 /lib/python3.9/site-packages/pycocoevalcap/eval.py
 ```
-Once you have opened eval.py, modify lines 40 to 46 as follows.
-This modification is intended to evaluate only CHair and BLEU, reducing the evaluation time:
+Once you have opened eval.py, modify **lines 40 ~ 46** as follows.
+This modification is intended to evaluate only Chair and BLEU, reducing the evaluation time:
 ```plaintext
 scorers = [
             (Bleu(4), ["Bleu_1", "Bleu_2", "Bleu_3", "Bleu_4"]),
