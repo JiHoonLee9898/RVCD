@@ -153,6 +153,26 @@ Note the difference from `--data_path`. Provide the **absolute path** to the MME
 Refer to the specific examples in [`RVCD/MAIN_CODES/run_example.sh`](/MAIN_CODES/run_example.sh). Each block within the file (a total of 6) generates output captions for evaluating CHAIR/BLEU, POPE, and MME for both RVCD and prior methods. The evaluation assumes the existence of the generated captions.
 
 ### CHAIR/BLEU EVALUATION
+First, run the following command to check the path of your activated RVCD virtual environment:
+```plaintext
+echo $CONDA_PREFIX
+```
+Then, navigate to the following path by appending the output path with:
+```plaintext
+/lib/python3.9/site-packages/pycocoevalcap/eval.py
+```
+Once you have opened eval.py, modify lines 40 to 46 as follows.
+This modification is intended to evaluate only CHair and BLEU, reducing the evaluation time:
+```plaintext
+scorers = [
+            (Bleu(4), ["Bleu_1", "Bleu_2", "Bleu_3", "Bleu_4"]),
+            # (Meteor(),"METEOR"),
+            # (Rouge(), "ROUGE_L"),
+            # (Cider(), "CIDEr"),
+            # (Spice(), "SPICE")
+        ]
+```
+
 Place the generated CHAIR/BLEU caption JSONL file under the `[absolute path of eval/test_folder]`.
 Then, run the following command to generate the _chair.json file.
 ```plaintext
