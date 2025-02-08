@@ -496,7 +496,7 @@ for idx, img_id in tqdm(enumerate(range(len(img_files))), total=len(img_files)):
         cd_beta = cd_beta
         print("image_cd", image_cd.shape)
         print(cd_alpha, cd_beta, args.noise_step)
-        if model_name == "minigpt4":
+        if model_name == "minigpt4" or model_name == "not_rvcd_mini_gpt4":
             image_cd = image_cd.squeeze(0)
 
     with torch.inference_mode():

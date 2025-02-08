@@ -580,7 +580,7 @@ def main():
             cd_beta = cd_beta
             print("image_cd", image_cd.shape)
             print(cd_alpha, cd_beta, args.noise_step)
-            if model_name == "minigpt4":
+            if model_name == "minigpt4" or model_name == "not_rvcd_mini_gpt4":
                 image_cd = image_cd.squeeze(0)
 
         print("image_path", image_path)
