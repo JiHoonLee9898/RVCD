@@ -609,3 +609,10 @@ if __name__ == '__main__':
 # --image_id_key image_id --caption_key caption \
 # --coco_path /mnt/petrelfs/share_data/wangjiaqi/mllm-data-alg/COCO_2014/ori/annotations_trainval2014/annotations/ \
 # --save_path ../POPE-Adv/text_feat/chair-eval/instructblip/ours_outputs.json
+
+# python chair.py \
+# --cap_file /home/work/jihoon_wombat_storage/CODES/llava-1.5-7b-hf_captions_Please_describe_this_image_in_detail.jsonl \
+# --image_id_key image_id --caption_key caption \
+# --coco_path /home/work/jihoon_wombat_storage/COCO_DIR/annotations/ \
+# --save_path /home/work/jihoon_wombat_storage/CODES/ours_outputs.json \
+# --cache /home/work/jihoon_wombat_storage/RVCD/MAIN_CODES/eval/CHAIR_CACHE/chair.pkl 
