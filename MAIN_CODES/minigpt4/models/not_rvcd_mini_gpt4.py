@@ -447,6 +447,11 @@ class MiniGPT4_prior(Blip2Base):
         outputs[outputs == 1] = 2 # convert output id 1 to 2 (eos_token_id)
         output_text = self.llama_tokenizer.batch_decode(outputs, skip_special_tokens=True)
         output_text = [text.split('###')[0].split('Assistant:')[-1].strip() for text in output_text]
+
+        # # token count
+        # generated_token_count = output_ids[:, input_token_len:].numel()
+        # output_text.append(generated_token_count)
+        
         return output_text
 
     def embed_tokens(self, token_ids):

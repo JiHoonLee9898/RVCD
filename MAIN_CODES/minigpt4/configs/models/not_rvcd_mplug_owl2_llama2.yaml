@@ -11,7 +11,7 @@ model:
 
   # generation configs
   prompt: ""
-  llama_model: ""
+  llama_model: "/home/work/jihoon_wombat_storage/MODELS/mplug-owl2-llama2-7b"
   # llama_model: "meta-llama/Llama-2-7b-chat-hf"
 preprocess:
     vis_processor:

@@ -7,39 +7,39 @@ import os
 import numpy as np
 
 # Download necessary files if not present
-def download_darknet_file(url, filename):
-    if not os.path.exists(filename):
-        print(f"Downloading {filename}...")
-        urllib.request.urlretrieve(url, filename)
+# def download_darknet_file(url, filename):
+#     if not os.path.exists(filename):
+#         print(f"Downloading {filename}...")
+#         urllib.request.urlretrieve(url, filename)
 
-# URLs for YOLOv3 files
-YOLO_WEIGHTS_URL = "https://pjreddie.com/media/files/yolov3.weights"
-YOLO_CFG_URL = "https://github.com/pjreddie/darknet/raw/master/cfg/yolov3.cfg"
-COCO_NAMES_URL = "https://github.com/pjreddie/darknet/raw/master/data/coco.names"
+# # URLs for YOLOv3 files
+# YOLO_WEIGHTS_URL = "https://pjreddie.com/media/files/yolov3.weights"
+# YOLO_CFG_URL = "https://github.com/pjreddie/darknet/raw/master/cfg/yolov3.cfg"
+# COCO_NAMES_URL = "https://github.com/pjreddie/darknet/raw/master/data/coco.names"
 
-# File names
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-WEIGHTS_FILE = os.path.join(BASE_DIR, "yolov3.weights")
-CFG_FILE = os.path.join(BASE_DIR, "yolov3.cfg")
-NAMES_FILE = os.path.join(BASE_DIR, "coco.names")
+# # File names
+# BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+# WEIGHTS_FILE = os.path.join(BASE_DIR, "yolov3.weights")
+# CFG_FILE = os.path.join(BASE_DIR, "yolov3.cfg")
+# NAMES_FILE = os.path.join(BASE_DIR, "coco.names")
 
-# Download files if they don't exist
-download_darknet_file(YOLO_WEIGHTS_URL, WEIGHTS_FILE)
-download_darknet_file(YOLO_CFG_URL, CFG_FILE)
-download_darknet_file(COCO_NAMES_URL, NAMES_FILE)
+# # Download files if they don't exist
+# download_darknet_file(YOLO_WEIGHTS_URL, WEIGHTS_FILE)
+# download_darknet_file(YOLO_CFG_URL, CFG_FILE)
+# download_darknet_file(COCO_NAMES_URL, NAMES_FILE)
 
-# Load YOLOv3 Model
-def load_yolo3_model():
-    net = cv2.dnn.readNet(WEIGHTS_FILE, CFG_FILE)
-    layer_names = net.getLayerNames()
-    output_layers = [layer_names[i - 1] for i in net.getUnconnectedOutLayers()]
-    return net, output_layers
+# # Load YOLOv3 Model
+# def load_yolo3_model():
+#     net = cv2.dnn.readNet(WEIGHTS_FILE, CFG_FILE)
+#     layer_names = net.getLayerNames()
+#     output_layers = [layer_names[i - 1] for i in net.getUnconnectedOutLayers()]
+#     return net, output_layers
 
-# Load COCO Class Names
-def load_yolo3_classes():
-    with open(NAMES_FILE, "r") as f:
-        classes = [line.strip() for line in f.readlines()]
-    return classes
+# # Load COCO Class Names
+# def load_yolo3_classes():
+#     with open(NAMES_FILE, "r") as f:
+#         classes = [line.strip() for line in f.readlines()]
+#     return classes
 
 # Perform Object Detection
 def detect_yolo3_objects(image, net, output_layers, classes):

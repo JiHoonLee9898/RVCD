@@ -468,6 +468,7 @@ class CHAIR(object):
                         'mscoco_gt_words': list(gt_objects),
                         'mscoco_generated_words': list(node_words),
                         'hallucination_idxs': [], 
+                        'gt_idxs': [],
                         'words': raw_words 
                         }
 
@@ -493,6 +494,7 @@ class CHAIR(object):
                     cap_dict['hallucination_idxs'].append(idx)
                     hallucinated = True
                 else:
+                    cap_dict['gt_idxs'].append(idx)
                     recall_gt_objects.add(node_word)
     
             #count hallucinated caps
@@ -611,8 +613,8 @@ if __name__ == '__main__':
 # --save_path ../POPE-Adv/text_feat/chair-eval/instructblip/ours_outputs.json
 
 # python chair.py \
-# --cap_file /home/work/jihoon_wombat_storage/CODES/llava-1.5-7b-hf_captions_Please_describe_this_image_in_detail.jsonl \
+# --cap_file /home/work/jihoon_wombat_storage/CODES/llava-1.5-7b-hf_captions_Please_max_256.jsonl \
 # --image_id_key image_id --caption_key caption \
 # --coco_path /home/work/jihoon_wombat_storage/COCO_DIR/annotations/ \
-# --save_path /home/work/jihoon_wombat_storage/CODES/ours_outputs.json \
+# --save_path /home/work/jihoon_wombat_storage/CODES/llava-1.5-7b-hf_chair_Please_max_256.json \
 # --cache /home/work/jihoon_wombat_storage/RVCD/MAIN_CODES/eval/CHAIR_CACHE/chair.pkl 
