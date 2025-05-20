@@ -107,6 +107,7 @@ parser.add_argument("--check_draft_chair", type=str2bool, default=True, help="�
 parser.add_argument("--ablation_rvcd_all", type=str2bool, default=False, help="기본 False, True로 바꾸면 nvcd에서 draft의 모든 객체를 제거")
 parser.add_argument("--ablation_rvcd_gt", type=str2bool, default=False, help="기본 False, True로 바꾸면 nvcd에서 draft의 gt를 제거, gt는 chair를 매 draft마다 체크해서 산출")
 parser.add_argument("--ablation_rvcd_hal", type=str2bool, default=False, help="기본 False, True로 바꾸면 nvcd에서 draft의 hal를 제거, hal는 chair를 매 draft마다 체크해서 산출")
+
 parser.add_argument("--rvcd_alpha", type=float, default=1, help='기본 1, rvcd의 negative logits 규제율') 
 parser.add_argument("--rvcd_beta", type=float, default=0.1, help='기본 0.1, rvcd의 positive logits 회복률') 
 parser.add_argument("--rvcd_gamma", type=float, default=0, help='선행 연구들에서 제시하는 패널티 term. 이 연구에서는 0') 
@@ -486,20 +487,19 @@ for idx, img_id in tqdm(enumerate(range(len(img_files))), total=len(img_files)):
     # draft에 chair를 돌리고, gt와 hal을 찾아냄. 이게 정답지 역할.
     # 이후 all, gt, hal ablation 중 하나가 true이면 이 정답지를 기반으로 수행.
 
-    # draft_chair_answer_dict = None
-    # if check_draft_chair: #draft마다 chair check
-    #     draft_chair_answer_dict = evaluate_sentence(draft_output_text, img_id)
-    #     # print(f'draft_chair_answer_dict : {draft_chair_answer_dict}')
-    #     #{"ground_truth": [], "hallucinated": []} 안에 (firstword, synonym) 들이 들어감
-    #     chair_answer_dict = {(cocofirst, cocosynonym): 1 for cocofirst, cocosynonym in draft_chair_answer_dict["ground_truth"]}
-    #     chair_answer_dict.update({(cocofirst, cocosynonym): 0 for cocofirst, cocosynonym in draft_chair_answer_dict["hallucinated"]})
-    #     draft_chair_answer_dict = chair_answer_dict 
-    #     #{("dog", "hound"): 1, ("cat", "feline"): 0, ("traffic light", "signal"): 1, ("chasing", "pursue"): 0} 형태로 변경.
-    #     # 중복 제거된 상태이지만, 첫값은 같고 뒤값은 다른 키는 중복제거 안함
+    draft_chair_answer_dict = None
+    if check_draft_chair: #draft마다 chair check
+        draft_chair_answer_dict = evaluate_sentence(draft_output_text, img_id)
+        # print(f'draft_chair_answer_dict : {draft_chair_answer_dict}')
+        #{"ground_truth": [], "hallucinated": []} 안에 (firstword, synonym) 들이 들어감
+        chair_answer_dict = {(cocofirst, cocosynonym): 1 for cocofirst, cocosynonym in draft_chair_answer_dict["ground_truth"]}
+        chair_answer_dict.update({(cocofirst, cocosynonym): 0 for cocofirst, cocosynonym in draft_chair_answer_dict["hallucinated"]})
+        draft_chair_answer_dict = chair_answer_dict 
+        #{("dog", "hound"): 1, ("cat", "feline"): 0, ("traffic light", "signal"): 1, ("chasing", "pursue"): 0} 형태로 변경.
+        # 중복 제거된 상태이지만, 첫값은 같고 뒤값은 다른 키는 중복제거 안함
 
-    # if check_draft_chair and draft_chair_answer_dict is not None: # draft의 chair를 체크하는 플래그가 켜지면. 항상 켜야함!
+    if check_draft_chair and draft_chair_answer_dict is not None: # draft의 chair를 체크하는 플래그가 켜지면. 항상 켜야함!
 
-    if True:
         # DETECTOR ABLATION ON. 
         ###########################
         # ablation_rvcd는 셋 중 하나만 true여야 함
@@ -507,25 +507,25 @@ for idx, img_id in tqdm(enumerate(range(len(img_files))), total=len(img_files)):
 
         #draft_chair_answer_dicts는 ->
         #{("dog", "hound"): 1, ("cat", "feline"): 0, ("traffic light", "signal"): 1, ("chasing", "pursue"): 0} 형태
-        # chair_answer_synonym_gt_list = list(set([key[1] for key, value in draft_chair_answer_dict.items() if value == 1]))
-        # chair_answer_synonym_hal_list = list(set([key[1] for key, value in draft_chair_answer_dict.items() if value == 0]))
+        chair_answer_synonym_gt_list = list(set([key[1] for key, value in draft_chair_answer_dict.items() if value == 1]))
+        chair_answer_synonym_hal_list = list(set([key[1] for key, value in draft_chair_answer_dict.items() if value == 0]))
 
-        # if ablation_rvcd_all: # rvcd를, draft에서 모든 탐지된 객체에 적용. 
+        if ablation_rvcd_all: # rvcd를, draft에서 모든 탐지된 객체에 적용. 
             
-        #     hal_detected = chair_answer_synonym_gt_list + chair_answer_synonym_hal_list
-        #     gt_detected = []
+            hal_detected = chair_answer_synonym_gt_list + chair_answer_synonym_hal_list
+            gt_detected = []
 
-        # elif ablation_rvcd_gt: # rvcd를, draft에서 모든 탐지된 gt에 적용. 즉 detector 정확도가 0%
+        elif ablation_rvcd_gt: # rvcd를, draft에서 모든 탐지된 gt에 적용. 즉 detector 정확도가 0%
 
-        #     hal_detected = chair_answer_synonym_gt_list
-        #     gt_detected = chair_answer_synonym_hal_list
+            hal_detected = chair_answer_synonym_gt_list
+            gt_detected = chair_answer_synonym_hal_list
 
-        # elif ablation_rvcd_hal: # rvcd를, draft에서 모든 탐지된 hal에 적용. 즉 detector 정확도가 100%
+        elif ablation_rvcd_hal: # rvcd를, draft에서 모든 탐지된 hal에 적용. 즉 detector 정확도가 100%
 
-        #     hal_detected = chair_answer_synonym_hal_list
-        #     gt_detected = chair_answer_synonym_gt_list
-        # else:
-        if True: # rvcd ablation 안하는경우 (일반적인 rvcd)
+            hal_detected = chair_answer_synonym_hal_list
+            gt_detected = chair_answer_synonym_gt_list
+
+        else: # rvcd ablation 안하는경우 (일반적인 rvcd)
 
             number = img_id
             
@@ -553,31 +553,37 @@ for idx, img_id in tqdm(enumerate(range(len(img_files))), total=len(img_files)):
                 if synonym[0] in yolo_detected_entity_list: detected_info[synonym] = 1
                 else: detected_info[synonym] = 0
 
-            print(f'detected_info : {detected_info}') 
 
+            print(f'detected_info : {detected_info}') 
             #{("dog", "hound"): 1, ("cat", "feline"): 0, ("traffic light", "signal"): 1, ("chasing", "pursue"): 0}
-            # print(f'draft_chair_answer_dict : {draft_chair_answer_dict}')
+            print(f'draft_chair_answer_dict : {draft_chair_answer_dict}')
             #{"ground_truth": [("dog","웰시코기"), ("traffic light", "신호등")], "hallucinated": [("chasing", "pursue"]}
 
-            # for chair_key, infer_value in draft_chair_answer_dict.items():
-            #     chair_first = chair_key[0]  # draft_chair_answer_dict의 키의 첫 번째 값
-            #     for detected_key, gt_value in detected_info.items():
-            #         detected_first = detected_key[0]  # detected_info의 키의 첫 번째 값
-            #         # 첫 번째 값(대표어) 동일한 경우만 기록
-            #         if chair_first == detected_first:
-            #             if gt_value == 1 and infer_value == 1:
-            #                 global_all_info['chair1_detect1'] += 1
-            #             elif gt_value == 1 and infer_value == 0:
-            #                 global_all_info['chair1_detect0'] += 1
-            #             elif gt_value == 0 and infer_value == 1:
-            #                 global_all_info['chair0_detect1'] += 1
-            #             elif gt_value == 0 and infer_value == 0:
-            #                 global_all_info['chair0_detect0'] += 1
-            # accumulated_detector_score = calculate_metrics(global_all_info['chair1_detect1'], 
-            #                                                 global_all_info['chair1_detect0'], 
-            #                                                 global_all_info['chair0_detect1'],
-            #                                                 global_all_info['chair0_detect0'])
-            # print(f'accumulated_detector_score : {accumulated_detector_score}')
+
+            for chair_key, infer_value in draft_chair_answer_dict.items():
+                chair_first = chair_key[0]  # draft_chair_answer_dict의 키의 첫 번째 값
+
+                for detected_key, gt_value in detected_info.items():
+                    detected_first = detected_key[0]  # detected_info의 키의 첫 번째 값
+
+                    # 첫 번째 값(대표어) 동일한 경우만 기록
+                    if chair_first == detected_first:
+                        if gt_value == 1 and infer_value == 1:
+                            global_all_info['chair1_detect1'] += 1
+                        elif gt_value == 1 and infer_value == 0:
+                            global_all_info['chair1_detect0'] += 1
+                        elif gt_value == 0 and infer_value == 1:
+                            global_all_info['chair0_detect1'] += 1
+                        elif gt_value == 0 and infer_value == 0:
+                            global_all_info['chair0_detect0'] += 1
+
+
+            accumulated_detector_score = calculate_metrics(global_all_info['chair1_detect1'], 
+                                                            global_all_info['chair1_detect0'], 
+                                                            global_all_info['chair0_detect1'],
+                                                            global_all_info['chair0_detect0'])
+            
+            print(f'accumulated_detector_score : {accumulated_detector_score}')
 
             hal_detected = []
             for key, value in detected_info.items():
@@ -654,7 +660,7 @@ for idx, img_id in tqdm(enumerate(range(len(img_files))), total=len(img_files)):
             if len(output_tokens) == 0: #최초토큰생성
                 nvcd = False 
                 # False이지만, llava.py와 같은 모델 정의 파일에서 확인가능하듯
-                # 첫 토큰 포함한 모든 디코딩 스텝에서 RVCD 수행
+                # 첫 토큰 포함한 모든 디코딩 스텝에서 RVCD 수행행
             else:
                 nvcd = True
 
@@ -736,8 +742,8 @@ for idx, img_id in tqdm(enumerate(range(len(img_files))), total=len(img_files)):
 
             alpha = args.rvcd_alpha
             beta = args.rvcd_beta
+
             gamma = args.rvcd_gamma # 0, 0.00000001?
-            
             print(f'alpha, beta, gamma : {alpha, beta, gamma}')
             
             negative_logits_count = len(negative_logits)
@@ -753,10 +759,10 @@ for idx, img_id in tqdm(enumerate(range(len(img_files))), total=len(img_files)):
             probabilities = F.softmax(adjusted_logits, dim=-1)
 
             # 선행 연구들의 아이디어 : 원본 로짓의 최대확률 * gamma보다 낮은 확률을 갖는 토큰은 못나오게 규제
-            # 이 연구에서는 큰 효과가 없었음.. 추가적인 하이퍼파라미터 도입을 배제하기 위해 제거. 
-            # abnormal_threshold = gamma * torch.max(original_probabilities)
-            # low_prob_indices = torch.where(original_probabilities < abnormal_threshold)[0]
-            # probabilities[low_prob_indices] = 0
+            # 이 연구에서는 0 이 안정적. 
+            abnormal_threshold = gamma * torch.max(original_probabilities)
+            low_prob_indices = torch.where(original_probabilities < abnormal_threshold)[0]
+            probabilities[low_prob_indices] = 0
 
             max_index = torch.argmax(probabilities, dim=-1)
 
@@ -779,13 +785,13 @@ for idx, img_id in tqdm(enumerate(range(len(img_files))), total=len(img_files)):
 
         print('-'*30)
         print(f"draft_caption : \n{draft_output_text}")
-        # print(f"coco first objects : {global_chair_evaluator.process_sentence_get_coco_objects(draft_output_text)}")
+        print(f"coco first objects : {global_chair_evaluator.process_sentence_get_coco_objects(draft_output_text)}")
         print('-'*30)
         print(f"nnvcd_caption_nl : \n{nnvcd_caption_nl}")
-        # print(f"coco first objects : {global_chair_evaluator.process_sentence_get_coco_objects(nnvcd_caption_nl)}")
+        print(f"coco first objects : {global_chair_evaluator.process_sentence_get_coco_objects(nnvcd_caption_nl)}")
         print('-'*30)
-        # print(f'ablation_rvcd_all, ablation_rvcd_gt, ablation_rvcd_hal')
-        # print(f'{ablation_rvcd_all, ablation_rvcd_gt, ablation_rvcd_hal}')
+        print(f'ablation_rvcd_all, ablation_rvcd_gt, ablation_rvcd_hal')
+        print(f'{ablation_rvcd_all, ablation_rvcd_gt, ablation_rvcd_hal}')
         print(f"hal_detected_synonym: {hal_detected}")
         print(f"gt_detected_synonym: {gt_detected}")
         

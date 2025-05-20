@@ -44,7 +44,8 @@ parser.add_argument(
     "--gt-caption-path",
     type=str,
     required=False,
-    default="/home/donut2024/coco2014/annotations/captions_val2014.json",
+    
+    default="/home/work/jihoon_wombat_storage/COCO_DIR/annotations/captions_val2014.json",
     help="Path to the COCO ground-truth caption",
 )
 

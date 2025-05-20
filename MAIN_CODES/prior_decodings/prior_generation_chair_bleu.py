@@ -384,7 +384,15 @@ for ann_info in coco_anns["annotations"]:
         category_dict[ann_info["category_id"]]
     )
 
+####################
+from datetime import datetime
+current_time = datetime.now()
+formatted_time = current_time.strftime("%Y%m%d%H%M")
 base_dir = os.path.join(output_dir, "chair", args.model)
+result_dir = os.path.join(base_dir,f"{args.decoder}_{formatted_time}_seed_{seed}_samples_{num_samples}_maxtokens_{max_new_tokens}")
+if not os.path.exists(result_dir): os.makedirs(result_dir)
+####################
+
 if not os.path.exists(base_dir):
     os.makedirs(base_dir)
 
@@ -424,6 +432,14 @@ import time
 time.sleep(5)
 #######################################
 
+
+global_all_info = {
+    'latency' : 0,
+    'total_generated_tokens' : 0,
+    'latency_per_token' : 0,
+}
+
+start_time = time.time()
 for idx, img_id in tqdm(enumerate(range(len(img_files))), total=len(img_files)):
     img_file = img_files[img_id]
     img_id = int(img_file.split(".jpg")[0][-6:])
@@ -528,7 +544,7 @@ for idx, img_id in tqdm(enumerate(range(len(img_files))), total=len(img_files)):
                 cd_alpha=cd_alpha,
                 cd_beta=cd_beta,
             )
-
+    output_tokens_count = out[1]
     output_text = out[0]
    
     ####
@@ -561,12 +577,15 @@ for idx, img_id in tqdm(enumerate(range(len(img_files))), total=len(img_files)):
         print("corrected output_text", output_text)
 
     img_save["caption"] = output_text
+    img_save["tokens"] = output_tokens_count
+    global_all_info['total_generated_tokens'] += output_tokens_count
+
 
     print("image_path: ", image_path)
     print("caption: ", output_text)
 
     generated_captions_path = os.path.join(
-        base_dir,
+        result_dir,
         f"{model_name}_{decoding_strategy}_{detector_type}_box_{box_threshold}_beams_{num_beams}_k_{k_candidate_num}_{dataset_name}_expand_ratio_{expand_ratio}_seed_{seed}_max_tokens_{max_new_tokens}_samples_{num_samples}_skip_{skip_num}_generated_captions.json",
     )
     # print("generated_captions_path", generated_captions_path)
@@ -574,3 +593,11 @@ for idx, img_id in tqdm(enumerate(range(len(img_files))), total=len(img_files)):
         json.dump(img_save, f)
         f.write("\n")
 
+global_all_info['latency'] = time.time() - start_time
+global_all_info['latency_per_token'] = global_all_info['latency'] / global_all_info['total_generated_tokens']
+
+global_info_save_path = os.path.join(result_dir,f"{model_name}_{decoding_strategy}_{detector_type}_box_{box_threshold}_beams_{num_beams}_k_{k_candidate_num}_{dataset_name}_expand_ratio_{expand_ratio}_seed_{seed}_max_tokens_{max_new_tokens}_samples_{num_samples}_skip_{skip_num}_INFO.json")
+with open(global_info_save_path, 'w', encoding='utf-8') as json_file:
+    json.dump(global_all_info, json_file, indent=4, ensure_ascii=False)
+
+    

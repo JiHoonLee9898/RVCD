@@ -2,7 +2,7 @@
 import argparse
 import os
 import random
-import sys
+import sys, time
 sys.path.append("mPLUG-Owl/mPLUG-Owl2")
 sys.path.append("mPLUG-Owl/mPLUG-Owl2")
 sys.path.append("./")
@@ -107,10 +107,10 @@ parser.add_argument("--check_draft_chair", type=str2bool, default=True, help="�
 parser.add_argument("--ablation_rvcd_all", type=str2bool, default=False, help="기본 False, True로 바꾸면 nvcd에서 draft의 모든 객체를 제거")
 parser.add_argument("--ablation_rvcd_gt", type=str2bool, default=False, help="기본 False, True로 바꾸면 nvcd에서 draft의 gt를 제거, gt는 chair를 매 draft마다 체크해서 산출")
 parser.add_argument("--ablation_rvcd_hal", type=str2bool, default=False, help="기본 False, True로 바꾸면 nvcd에서 draft의 hal를 제거, hal는 chair를 매 draft마다 체크해서 산출")
+
 parser.add_argument("--rvcd_alpha", type=float, default=1, help='기본 1, rvcd의 negative logits 규제율') 
 parser.add_argument("--rvcd_beta", type=float, default=0.1, help='기본 0.1, rvcd의 positive logits 회복률') 
 parser.add_argument("--rvcd_gamma", type=float, default=0, help='선행 연구들에서 제시하는 패널티 term. 이 연구에서는 0') 
-parser.add_argument("--kv_cache_faster", type=str2bool, default=True, help='generate kv cache.') 
 
 ################################
 args = parser.parse_known_args()[0]
@@ -381,6 +381,9 @@ formatted_time = current_time.strftime("%Y%m%d%H%M")
 result_dir = os.path.join(base_dir, f'a{args.rvcd_alpha}_b{args.rvcd_beta}_{formatted_time}_seed_{seed}_samples_{num_samples}_maxtokens_{max_new_tokens}_{true_flag_name}')
 if not os.path.exists(result_dir): os.makedirs(result_dir)
 
+
+start_time = time.time()
+
 global_all_info = {
     'model_name' : model_name,
     'decoding_strategy' : 'rvcd',
@@ -399,11 +402,8 @@ global_all_info = {
     'chair0_detect1' : 0,
     'total_detector_score' : [],
     'chair_not_yet_doublewords' : [],
-    'latency' : 0,
-    'total_generated_tokens' : 0,
-    'latency_per_token' : 0,
+    'time' : 0,
 }
-
 
 
 
@@ -416,7 +416,6 @@ seed_valid_check = sorted(seed_valid_check)
 print(f'시드 : {seed} / 샘플링된 이미지들 : {seed_valid_check[:20]}')
 import time
 time.sleep(5)
-start_time = time.time()
 #######################################
 for idx, img_id in tqdm(enumerate(range(len(img_files))), total=len(img_files)):
 
@@ -452,11 +451,11 @@ for idx, img_id in tqdm(enumerate(range(len(img_files))), total=len(img_files)):
             )
 
     ####################
-    # print(f'out.keys() : {out.keys()}') # llava.py 참고고
-    # attentions = out['attentions']
-    # print(len(attentions))
-    # print(len(attentions[0]))
-    # print(attentions[0][0].shape)
+    print(f'out.keys() : {out.keys()}') # llava.py 참고고
+    attentions = out['attentions']
+    print(len(attentions))
+    print(len(attentions[0]))
+    print(attentions[0][0].shape)
 
     all_nl_tokens = [model_tokenizer.convert_ids_to_tokens(seq) for seq in out["sequences"].tolist()][0]
 
@@ -478,28 +477,25 @@ for idx, img_id in tqdm(enumerate(range(len(img_files))), total=len(img_files)):
     else:
         draft_output_text = draft_output_text.split('ASSISTANT: ')[-1]
 
-    token_count = len(output_nl_tokens)
-    print(token_count)
     #######################################
 
     # draft의 chair 정답 객체를 알아야 하는 경우
     # draft에 chair를 돌리고, gt와 hal을 찾아냄. 이게 정답지 역할.
     # 이후 all, gt, hal ablation 중 하나가 true이면 이 정답지를 기반으로 수행.
 
-    # draft_chair_answer_dict = None
-    # if check_draft_chair: #draft마다 chair check
-    #     draft_chair_answer_dict = evaluate_sentence(draft_output_text, img_id)
-    #     # print(f'draft_chair_answer_dict : {draft_chair_answer_dict}')
-    #     #{"ground_truth": [], "hallucinated": []} 안에 (firstword, synonym) 들이 들어감
-    #     chair_answer_dict = {(cocofirst, cocosynonym): 1 for cocofirst, cocosynonym in draft_chair_answer_dict["ground_truth"]}
-    #     chair_answer_dict.update({(cocofirst, cocosynonym): 0 for cocofirst, cocosynonym in draft_chair_answer_dict["hallucinated"]})
-    #     draft_chair_answer_dict = chair_answer_dict 
-    #     #{("dog", "hound"): 1, ("cat", "feline"): 0, ("traffic light", "signal"): 1, ("chasing", "pursue"): 0} 형태로 변경.
-    #     # 중복 제거된 상태이지만, 첫값은 같고 뒤값은 다른 키는 중복제거 안함
+    draft_chair_answer_dict = None
+    if check_draft_chair: #draft마다 chair check
+        draft_chair_answer_dict = evaluate_sentence(draft_output_text, img_id)
+        # print(f'draft_chair_answer_dict : {draft_chair_answer_dict}')
+        #{"ground_truth": [], "hallucinated": []} 안에 (firstword, synonym) 들이 들어감
+        chair_answer_dict = {(cocofirst, cocosynonym): 1 for cocofirst, cocosynonym in draft_chair_answer_dict["ground_truth"]}
+        chair_answer_dict.update({(cocofirst, cocosynonym): 0 for cocofirst, cocosynonym in draft_chair_answer_dict["hallucinated"]})
+        draft_chair_answer_dict = chair_answer_dict 
+        #{("dog", "hound"): 1, ("cat", "feline"): 0, ("traffic light", "signal"): 1, ("chasing", "pursue"): 0} 형태로 변경.
+        # 중복 제거된 상태이지만, 첫값은 같고 뒤값은 다른 키는 중복제거 안함
 
-    # if check_draft_chair and draft_chair_answer_dict is not None: # draft의 chair를 체크하는 플래그가 켜지면. 항상 켜야함!
+    if check_draft_chair and draft_chair_answer_dict is not None: # draft의 chair를 체크하는 플래그가 켜지면. 항상 켜야함!
 
-    if True:
         # DETECTOR ABLATION ON. 
         ###########################
         # ablation_rvcd는 셋 중 하나만 true여야 함
@@ -507,25 +503,25 @@ for idx, img_id in tqdm(enumerate(range(len(img_files))), total=len(img_files)):
 
         #draft_chair_answer_dicts는 ->
         #{("dog", "hound"): 1, ("cat", "feline"): 0, ("traffic light", "signal"): 1, ("chasing", "pursue"): 0} 형태
-        # chair_answer_synonym_gt_list = list(set([key[1] for key, value in draft_chair_answer_dict.items() if value == 1]))
-        # chair_answer_synonym_hal_list = list(set([key[1] for key, value in draft_chair_answer_dict.items() if value == 0]))
+        chair_answer_synonym_gt_list = list(set([key[1] for key, value in draft_chair_answer_dict.items() if value == 1]))
+        chair_answer_synonym_hal_list = list(set([key[1] for key, value in draft_chair_answer_dict.items() if value == 0]))
 
-        # if ablation_rvcd_all: # rvcd를, draft에서 모든 탐지된 객체에 적용. 
+        if ablation_rvcd_all: # rvcd를, draft에서 모든 탐지된 객체에 적용. 
             
-        #     hal_detected = chair_answer_synonym_gt_list + chair_answer_synonym_hal_list
-        #     gt_detected = []
+            hal_detected = chair_answer_synonym_gt_list + chair_answer_synonym_hal_list
+            gt_detected = []
 
-        # elif ablation_rvcd_gt: # rvcd를, draft에서 모든 탐지된 gt에 적용. 즉 detector 정확도가 0%
+        elif ablation_rvcd_gt: # rvcd를, draft에서 모든 탐지된 gt에 적용. 즉 detector 정확도가 0%
 
-        #     hal_detected = chair_answer_synonym_gt_list
-        #     gt_detected = chair_answer_synonym_hal_list
+            hal_detected = chair_answer_synonym_gt_list
+            gt_detected = chair_answer_synonym_hal_list
 
-        # elif ablation_rvcd_hal: # rvcd를, draft에서 모든 탐지된 hal에 적용. 즉 detector 정확도가 100%
+        elif ablation_rvcd_hal: # rvcd를, draft에서 모든 탐지된 hal에 적용. 즉 detector 정확도가 100%
 
-        #     hal_detected = chair_answer_synonym_hal_list
-        #     gt_detected = chair_answer_synonym_gt_list
-        # else:
-        if True: # rvcd ablation 안하는경우 (일반적인 rvcd)
+            hal_detected = chair_answer_synonym_hal_list
+            gt_detected = chair_answer_synonym_gt_list
+
+        else: # rvcd ablation 안하는경우 (일반적인 rvcd)
 
             number = img_id
             
@@ -553,31 +549,37 @@ for idx, img_id in tqdm(enumerate(range(len(img_files))), total=len(img_files)):
                 if synonym[0] in yolo_detected_entity_list: detected_info[synonym] = 1
                 else: detected_info[synonym] = 0
 
-            print(f'detected_info : {detected_info}') 
 
+            print(f'detected_info : {detected_info}') 
             #{("dog", "hound"): 1, ("cat", "feline"): 0, ("traffic light", "signal"): 1, ("chasing", "pursue"): 0}
-            # print(f'draft_chair_answer_dict : {draft_chair_answer_dict}')
+            print(f'draft_chair_answer_dict : {draft_chair_answer_dict}')
             #{"ground_truth": [("dog","웰시코기"), ("traffic light", "신호등")], "hallucinated": [("chasing", "pursue"]}
 
-            # for chair_key, infer_value in draft_chair_answer_dict.items():
-            #     chair_first = chair_key[0]  # draft_chair_answer_dict의 키의 첫 번째 값
-            #     for detected_key, gt_value in detected_info.items():
-            #         detected_first = detected_key[0]  # detected_info의 키의 첫 번째 값
-            #         # 첫 번째 값(대표어) 동일한 경우만 기록
-            #         if chair_first == detected_first:
-            #             if gt_value == 1 and infer_value == 1:
-            #                 global_all_info['chair1_detect1'] += 1
-            #             elif gt_value == 1 and infer_value == 0:
-            #                 global_all_info['chair1_detect0'] += 1
-            #             elif gt_value == 0 and infer_value == 1:
-            #                 global_all_info['chair0_detect1'] += 1
-            #             elif gt_value == 0 and infer_value == 0:
-            #                 global_all_info['chair0_detect0'] += 1
-            # accumulated_detector_score = calculate_metrics(global_all_info['chair1_detect1'], 
-            #                                                 global_all_info['chair1_detect0'], 
-            #                                                 global_all_info['chair0_detect1'],
-            #                                                 global_all_info['chair0_detect0'])
-            # print(f'accumulated_detector_score : {accumulated_detector_score}')
+
+            for chair_key, infer_value in draft_chair_answer_dict.items():
+                chair_first = chair_key[0]  # draft_chair_answer_dict의 키의 첫 번째 값
+
+                for detected_key, gt_value in detected_info.items():
+                    detected_first = detected_key[0]  # detected_info의 키의 첫 번째 값
+
+                    # 첫 번째 값(대표어) 동일한 경우만 기록
+                    if chair_first == detected_first:
+                        if gt_value == 1 and infer_value == 1:
+                            global_all_info['chair1_detect1'] += 1
+                        elif gt_value == 1 and infer_value == 0:
+                            global_all_info['chair1_detect0'] += 1
+                        elif gt_value == 0 and infer_value == 1:
+                            global_all_info['chair0_detect1'] += 1
+                        elif gt_value == 0 and infer_value == 0:
+                            global_all_info['chair0_detect0'] += 1
+
+
+            accumulated_detector_score = calculate_metrics(global_all_info['chair1_detect1'], 
+                                                            global_all_info['chair1_detect0'], 
+                                                            global_all_info['chair0_detect1'],
+                                                            global_all_info['chair0_detect0'])
+            
+            print(f'accumulated_detector_score : {accumulated_detector_score}')
 
             hal_detected = []
             for key, value in detected_info.items():
@@ -630,10 +632,9 @@ for idx, img_id in tqdm(enumerate(range(len(img_files))), total=len(img_files)):
     ################################################
 
     if nvcd_operate:
-        image_kv_cache = {} 
-        past_key_values = None 
+        beta = args.rvcd_beta
         output_tokens = []
-        
+
         # 모델의 vocab head. (입력 텐서의 차원 크기, 출력 사전의 모든 토큰 수) 형태의 2차원 매트릭스.
         if model_name == 'mplug-owl2': lm_head_matrix = model.model.lm_head.weight
         else: lm_head_matrix = model.llama_model.lm_head.weight
@@ -644,9 +645,8 @@ for idx, img_id in tqdm(enumerate(range(len(img_files))), total=len(img_files)):
             negative_img_path = hall_ref_list
             positive_img_path = gt_ref_list
 
-
-            if args.rvcd_beta == 0 : positive_img_path = []
-
+            if beta == 0: positive_img_path = []
+            
             original_logit = None
             negative_logits = []
             positive_logits = []
@@ -654,66 +654,54 @@ for idx, img_id in tqdm(enumerate(range(len(img_files))), total=len(img_files)):
             if len(output_tokens) == 0: #최초토큰생성
                 nvcd = False 
                 # False이지만, llava.py와 같은 모델 정의 파일에서 확인가능하듯
-                # 첫 토큰 포함한 모든 디코딩 스텝에서 RVCD 수행
+                # 첫 토큰 포함한 모든 디코딩 스텝에서 RVCD 수행행
             else:
                 nvcd = True
 
             # 원본 이미지 v, negative image N 안의 모든 이미지에 대해
             for path in [original_img_path]+negative_img_path:
-                
                 image = process_before_norm(path) #원본 이미지와 N 이미지들.
-                kv_cache = image_kv_cache.get(path, None)
-                ##############################################################
                 output = model.generate(
-                    {"image": norm(image), "prompt": qu, "img_path": path},
-                    use_nucleus_sampling=args.sample,
-                    num_beams=num_beams,
-                    max_new_tokens=1,
-                    output_hidden_states=True, 
-                    output_attentions=True,
-                    return_dict_in_generate=True,
-                    nvcd=True,
-                    nvcd_previous_last_ids_list=output_tokens, 
-                    past_key_values=kv_cache,
-                )   
-                last_logit = output['hidden_states'][-1][-1][:, -1, :]
-                
-                ##############################################################
-
+                        {"image": norm(image), "prompt":qu, "img_path": path},
+                        use_nucleus_sampling=args.sample,
+                        num_beams=num_beams,
+                        max_new_tokens=1,
+                        output_hidden_states=True, 
+                        output_attentions=True,
+                        return_dict_in_generate=True,
+                        nvcd=nvcd,
+                        nvcd_previous_last_ids_list=output_tokens, 
+                        # llava.py의 모델 정의 참고 
+                    )   
+                hidden_states = output['hidden_states']
+                last_logit = hidden_states[-1][-1][:, -1, :] 
                 if model_name == 'mplug-owl2':
                     last_logit = last_logit.clone()
                     lm_head_matrix = lm_head_matrix.clone()
                 last_logit = torch.matmul(last_logit, lm_head_matrix.T)
-
                 if path == original_img_path : 
                     original_logit = last_logit
                     original_mature_logit = original_logit.clone()
                 else: 
                     negative_logits.append(last_logit)
-
-                if args.kv_cache_faster:
-                    image_kv_cache[path] = output['past_key_values']
             
             # Positive image P 안의 모든 이미지에 대해
             ##############################################################
             for path in positive_img_path:
-                image = process_before_norm(path) #P 이미지들.
-                kv_cache = image_kv_cache.get(path, None)
-                ##############################################################
+                image = process_before_norm(path) #P 이미지들들.
                 output = model.generate(
-                    {"image": norm(image), "prompt": qu, "img_path": path},
-                    use_nucleus_sampling=args.sample,
-                    num_beams=num_beams,
-                    max_new_tokens=1,
-                    output_hidden_states=True, 
-                    output_attentions=True,
-                    return_dict_in_generate=True,
-                    nvcd=True,
-                    nvcd_previous_last_ids_list=output_tokens, 
-                    past_key_values=kv_cache,
-                )   
-                last_logit = output['hidden_states'][-1][-1][:, -1, :]
-                ##############################################################
+                        {"image": norm(image), "prompt":qu, "img_path": path},
+                        use_nucleus_sampling=args.sample,
+                        num_beams=num_beams,
+                        max_new_tokens=1,
+                        output_hidden_states=True, 
+                        output_attentions=True,
+                        return_dict_in_generate=True,
+                        nvcd=nvcd,
+                        nvcd_previous_last_ids_list=output_tokens,  
+                    )   
+                hidden_states = output['hidden_states']
+                last_logit = hidden_states[-1][-1][:, -1, :] 
                 if model_name == 'mplug-owl2':
                     last_logit = last_logit.clone()
                     lm_head_matrix = lm_head_matrix.clone()
@@ -723,9 +711,6 @@ for idx, img_id in tqdm(enumerate(range(len(img_files))), total=len(img_files)):
                     original_mature_logit = original_logit.clone()
                 else: 
                     positive_logits.append(last_logit)
-                
-                if args.kv_cache_faster:
-                    image_kv_cache[path] = output['past_key_values']
 
             print('-'*50)
             print(f'image_count : {idx}')
@@ -735,9 +720,9 @@ for idx, img_id in tqdm(enumerate(range(len(img_files))), total=len(img_files)):
             print(f"gt_detected_synonym: {gt_detected}")
 
             alpha = args.rvcd_alpha
-            beta = args.rvcd_beta
+            beta = beta
+
             gamma = args.rvcd_gamma # 0, 0.00000001?
-            
             print(f'alpha, beta, gamma : {alpha, beta, gamma}')
             
             negative_logits_count = len(negative_logits)
@@ -753,10 +738,10 @@ for idx, img_id in tqdm(enumerate(range(len(img_files))), total=len(img_files)):
             probabilities = F.softmax(adjusted_logits, dim=-1)
 
             # 선행 연구들의 아이디어 : 원본 로짓의 최대확률 * gamma보다 낮은 확률을 갖는 토큰은 못나오게 규제
-            # 이 연구에서는 큰 효과가 없었음.. 추가적인 하이퍼파라미터 도입을 배제하기 위해 제거. 
-            # abnormal_threshold = gamma * torch.max(original_probabilities)
-            # low_prob_indices = torch.where(original_probabilities < abnormal_threshold)[0]
-            # probabilities[low_prob_indices] = 0
+            # 이 연구에서는 0 이 안정적. 
+            abnormal_threshold = gamma * torch.max(original_probabilities)
+            low_prob_indices = torch.where(original_probabilities < abnormal_threshold)[0]
+            probabilities[low_prob_indices] = 0
 
             max_index = torch.argmax(probabilities, dim=-1)
 
@@ -765,11 +750,10 @@ for idx, img_id in tqdm(enumerate(range(len(img_files))), total=len(img_files)):
             print(f'output token, index : {output_first_token_name}, {output_index}')
 
             output_tokens.append(output_first_token_index.squeeze(0))
-
+            print(len(output_tokens))
             if output_first_token_index == model_tokenizer.eos_token_id :
                 break
         
-        token_count = len(output_tokens)
         nnvcd_caption_nl = model_tokenizer.decode(output_tokens, skip_special_tokens=True)
         
         if model_name == 'minigpt4':
@@ -779,13 +763,13 @@ for idx, img_id in tqdm(enumerate(range(len(img_files))), total=len(img_files)):
 
         print('-'*30)
         print(f"draft_caption : \n{draft_output_text}")
-        # print(f"coco first objects : {global_chair_evaluator.process_sentence_get_coco_objects(draft_output_text)}")
+        print(f"coco first objects : {global_chair_evaluator.process_sentence_get_coco_objects(draft_output_text)}")
         print('-'*30)
         print(f"nnvcd_caption_nl : \n{nnvcd_caption_nl}")
-        # print(f"coco first objects : {global_chair_evaluator.process_sentence_get_coco_objects(nnvcd_caption_nl)}")
+        print(f"coco first objects : {global_chair_evaluator.process_sentence_get_coco_objects(nnvcd_caption_nl)}")
         print('-'*30)
-        # print(f'ablation_rvcd_all, ablation_rvcd_gt, ablation_rvcd_hal')
-        # print(f'{ablation_rvcd_all, ablation_rvcd_gt, ablation_rvcd_hal}')
+        print(f'ablation_rvcd_all, ablation_rvcd_gt, ablation_rvcd_hal')
+        print(f'{ablation_rvcd_all, ablation_rvcd_gt, ablation_rvcd_hal}')
         print(f"hal_detected_synonym: {hal_detected}")
         print(f"gt_detected_synonym: {gt_detected}")
         
@@ -809,12 +793,15 @@ for idx, img_id in tqdm(enumerate(range(len(img_files))), total=len(img_files)):
         json.dump(now_draft_result, f)
         f.write("\n")
 
-    now_nvcd_result = {"image_id": int(img_id),"caption": now_datapoint_final_caption,"tokens": token_count}
-    global_all_info['total_generated_tokens'] += token_count
+    now_nvcd_result = {"image_id": int(img_id),"caption": now_datapoint_final_caption}
     nvcd_captions_path = os.path.join(result_dir,f'rvcd_{model_name}_a{args.rvcd_alpha}_b{args.rvcd_beta}_{formatted_time}_seed_{seed}_samples_{num_samples}_maxtokens_{max_new_tokens}_{true_flag_name}_generated_captions.jsonl')
     with open(nvcd_captions_path, "a") as f:
         json.dump(now_nvcd_result, f)
         f.write("\n")
+
+
+end_time = time.time() - start_time
+global_all_info['time'] = end_time
 
 if check_draft_chair:
     total_detector_score = calculate_metrics(global_all_info['chair1_detect1'], 
@@ -822,13 +809,13 @@ if check_draft_chair:
                                             global_all_info['chair0_detect1'],
                                             global_all_info['chair0_detect0'])
     global_all_info['total_detector_score'].append(total_detector_score) 
-    global_all_info['latency'] = time.time()-start_time
-    global_all_info['latency_per_token'] = global_all_info['latency'] / global_all_info['total_generated_tokens']
 
 
 global_info_save_path = os.path.join(result_dir,f"rvcd_{model_name}_a{args.rvcd_alpha}_b{args.rvcd_beta}_{formatted_time}_seed_{seed}_samples_{num_samples}_maxtokens_{max_new_tokens}_{true_flag_name}_DETECTOR_info.json")
 with open(global_info_save_path, 'w', encoding='utf-8') as json_file:
     json.dump(global_all_info, json_file, indent=4, ensure_ascii=False)
+
+
 
 
 # CUDA_VISIBLE_DEVICES=0 \

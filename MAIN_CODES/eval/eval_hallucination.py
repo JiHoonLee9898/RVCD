@@ -41,13 +41,13 @@ def main():
     parser.add_argument(
         "--data_dir",
         type=str,
-        default="/home/onomaai/deeptext_multicaption/jihoon/coco2014/",
+        default="/home/work/jihoon_wombat_storage/COCO_DIR",
         help="coco 2014 annotations의 상위 경로",
     )
     parser.add_argument(
         "--output_dir",
         type=str,
-        default="/home/onomaai/deeptext_multicaption/jihoon/testing/MAIN_CODES/eval/test_folder",
+        default="/home/work/jihoon_wombat_storage/RVCD/MAIN_CODES/eval/test_folder",
         help="결과 저장경경로",
     )
     parser.add_argument(
