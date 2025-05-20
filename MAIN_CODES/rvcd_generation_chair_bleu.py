@@ -111,6 +111,7 @@ parser.add_argument("--ablation_rvcd_hal", type=str2bool, default=False, help="�
 parser.add_argument("--rvcd_alpha", type=float, default=1, help='기본 1, rvcd의 negative logits 규제율') 
 parser.add_argument("--rvcd_beta", type=float, default=0.1, help='기본 0.1, rvcd의 positive logits 회복률') 
 parser.add_argument("--rvcd_gamma", type=float, default=0, help='선행 연구들에서 제시하는 패널티 term. 이 연구에서는 0') 
+parser.add_argument("--kv_cache_faster", type=str2bool, default=True, help='generate kv cache.') 
 
 ################################
 args = parser.parse_known_args()[0]
@@ -399,7 +400,11 @@ global_all_info = {
     'chair0_detect1' : 0,
     'total_detector_score' : [],
     'chair_not_yet_doublewords' : [],
+    'latency' : 0,
+    'total_generated_tokens' : 0,
+    'latency_per_token' : 0,
 }
+
 
 
 
@@ -412,6 +417,7 @@ seed_valid_check = sorted(seed_valid_check)
 print(f'시드 : {seed} / 샘플링된 이미지들 : {seed_valid_check[:20]}')
 import time
 time.sleep(5)
+start_time = time.time()
 #######################################
 for idx, img_id in tqdm(enumerate(range(len(img_files))), total=len(img_files)):
 
@@ -473,6 +479,8 @@ for idx, img_id in tqdm(enumerate(range(len(img_files))), total=len(img_files)):
     else:
         draft_output_text = draft_output_text.split('ASSISTANT: ')[-1]
 
+    token_count = len(output_nl_tokens)
+    print(token_count)
     #######################################
 
     # draft의 chair 정답 객체를 알아야 하는 경우
@@ -629,8 +637,9 @@ for idx, img_id in tqdm(enumerate(range(len(img_files))), total=len(img_files)):
 
     if nvcd_operate:
         
+        past_key_values = None 
         output_tokens = []
-
+        
         # 모델의 vocab head. (입력 텐서의 차원 크기, 출력 사전의 모든 토큰 수) 형태의 2차원 매트릭스.
         if model_name == 'mplug-owl2': lm_head_matrix = model.model.lm_head.weight
         else: lm_head_matrix = model.llama_model.lm_head.weight
@@ -640,6 +649,9 @@ for idx, img_id in tqdm(enumerate(range(len(img_files))), total=len(img_files)):
             original_img_path = image_path
             negative_img_path = hall_ref_list
             positive_img_path = gt_ref_list
+
+
+            if args.rvcd_beta == 0 : positive_img_path = []
 
             original_logit = None
             negative_logits = []
@@ -655,24 +667,29 @@ for idx, img_id in tqdm(enumerate(range(len(img_files))), total=len(img_files)):
             # 원본 이미지 v, negative image N 안의 모든 이미지에 대해
             for path in [original_img_path]+negative_img_path:
                 image = process_before_norm(path) #원본 이미지와 N 이미지들.
+
+                ##############################################################
                 output = model.generate(
-                        {"image": norm(image), "prompt":qu, "img_path": path},
-                        use_nucleus_sampling=args.sample,
-                        num_beams=num_beams,
-                        max_new_tokens=1,
-                        output_hidden_states=True, 
-                        output_attentions=True,
-                        return_dict_in_generate=True,
-                        nvcd=nvcd,
-                        nvcd_previous_last_ids_list=output_tokens, 
-                        # llava.py의 모델 정의 참고 
-                    )   
-                hidden_states = output['hidden_states']
-                last_logit = hidden_states[-1][-1][:, -1, :] 
+                    {"image": norm(image), "prompt": qu, "img_path": path},
+                    use_nucleus_sampling=args.sample,
+                    num_beams=num_beams,
+                    max_new_tokens=1,
+                    output_hidden_states=True, 
+                    output_attentions=True,
+                    return_dict_in_generate=True,
+                    nvcd=True,
+                    nvcd_previous_last_ids_list=output_tokens, 
+                    past_key_values=past_key_values,
+                )   
+                last_logit = output['hidden_states'][-1][-1][:, -1, :]
+                
+                ##############################################################
+
                 if model_name == 'mplug-owl2':
                     last_logit = last_logit.clone()
                     lm_head_matrix = lm_head_matrix.clone()
                 last_logit = torch.matmul(last_logit, lm_head_matrix.T)
+
                 if path == original_img_path : 
                     original_logit = last_logit
                     original_mature_logit = original_logit.clone()
@@ -682,20 +699,22 @@ for idx, img_id in tqdm(enumerate(range(len(img_files))), total=len(img_files)):
             # Positive image P 안의 모든 이미지에 대해
             ##############################################################
             for path in positive_img_path:
-                image = process_before_norm(path) #P 이미지들들.
+                image = process_before_norm(path) #P 이미지들.
+                ##############################################################
                 output = model.generate(
-                        {"image": norm(image), "prompt":qu, "img_path": path},
-                        use_nucleus_sampling=args.sample,
-                        num_beams=num_beams,
-                        max_new_tokens=1,
-                        output_hidden_states=True, 
-                        output_attentions=True,
-                        return_dict_in_generate=True,
-                        nvcd=nvcd,
-                        nvcd_previous_last_ids_list=output_tokens,  
-                    )   
-                hidden_states = output['hidden_states']
-                last_logit = hidden_states[-1][-1][:, -1, :] 
+                    {"image": norm(image), "prompt": qu, "img_path": path},
+                    use_nucleus_sampling=args.sample,
+                    num_beams=num_beams,
+                    max_new_tokens=1,
+                    output_hidden_states=True, 
+                    output_attentions=True,
+                    return_dict_in_generate=True,
+                    nvcd=True,
+                    nvcd_previous_last_ids_list=output_tokens, 
+                    past_key_values=past_key_values,
+                )   
+                last_logit = output['hidden_states'][-1][-1][:, -1, :]
+                ##############################################################
                 if model_name == 'mplug-owl2':
                     last_logit = last_logit.clone()
                     lm_head_matrix = lm_head_matrix.clone()
@@ -744,10 +763,13 @@ for idx, img_id in tqdm(enumerate(range(len(img_files))), total=len(img_files)):
             print(f'output token, index : {output_first_token_name}, {output_index}')
 
             output_tokens.append(output_first_token_index.squeeze(0))
-            print(len(output_tokens))
+
+            if args.kv_cache_faster: past_key_values = output['past_key_values']
+
             if output_first_token_index == model_tokenizer.eos_token_id :
                 break
         
+        token_count = len(output_tokens)
         nnvcd_caption_nl = model_tokenizer.decode(output_tokens, skip_special_tokens=True)
         
         if model_name == 'minigpt4':
@@ -787,7 +809,8 @@ for idx, img_id in tqdm(enumerate(range(len(img_files))), total=len(img_files)):
         json.dump(now_draft_result, f)
         f.write("\n")
 
-    now_nvcd_result = {"image_id": int(img_id),"caption": now_datapoint_final_caption}
+    now_nvcd_result = {"image_id": int(img_id),"caption": now_datapoint_final_caption,"tokens": token_count}
+    global_all_info['total_generated_tokens'] += token_count
     nvcd_captions_path = os.path.join(result_dir,f'rvcd_{model_name}_a{args.rvcd_alpha}_b{args.rvcd_beta}_{formatted_time}_seed_{seed}_samples_{num_samples}_maxtokens_{max_new_tokens}_{true_flag_name}_generated_captions.jsonl')
     with open(nvcd_captions_path, "a") as f:
         json.dump(now_nvcd_result, f)
@@ -799,6 +822,8 @@ if check_draft_chair:
                                             global_all_info['chair0_detect1'],
                                             global_all_info['chair0_detect0'])
     global_all_info['total_detector_score'].append(total_detector_score) 
+    global_all_info['latency'] = time.time()-start_time
+    global_all_info['latency_per_token'] = global_all_info['latency'] / global_all_info['total_generated_tokens']
 
 
 global_info_save_path = os.path.join(result_dir,f"rvcd_{model_name}_a{args.rvcd_alpha}_b{args.rvcd_beta}_{formatted_time}_seed_{seed}_samples_{num_samples}_maxtokens_{max_new_tokens}_{true_flag_name}_DETECTOR_info.json")

@@ -95,7 +95,7 @@ parser.add_argument("--data_path",type=str,default="/home/donut2024/coco2014",he
 parser.add_argument("--sample", action="store_true")
 parser.add_argument("--seed", type=int, default=42)
 parser.add_argument("-n", "--num_samples", type=int, default=500)
-parser.add_argument("-m", "--max_new_tokens", type=int, default=64)
+parser.add_argument("-m", "--max_new_tokens", type=int, default=30)
 parser.add_argument("--output_dir",type=str,default="./generated_chair_inputs/",help="Output ditectory for saving test results. Default is './generated_chair_inputs/'.",)
 parser.add_argument("--options",nargs="+",help="override some settings in the used config, the key-value pair ""in xxx=yyy format will be merged into config file (deprecate), ""change to --cfg-options instead.",)
 parser.add_argument("--chair_cache_path",type=str,default="/home/donut2024/JIHOON/RVCD/MAIN_CODES/eval/CHAIR_CACHE/chair.pkl",help="chair_pickle_path",)
@@ -431,100 +431,47 @@ for idx, img_id in tqdm(enumerate(range(len(img_files))), total=len(img_files)):
     template = INSTRUCTION_TEMPLATE[args.model]
     qu = template.replace("<question>", qu)
 
-
-    # past_key_values = None  # 초기값
-    # input_ids = inputs["input_ids"].to(model.device)
-    # attention_mask = inputs["attention_mask"].to(model.device)
-    # pixel_values = inputs["pixel_values"].to(model.device)
-    # generated = input_ids
-    # max_new_tokens = 100
-    # with torch.inference_mode():
-    #     for token_step in range(max_new_tokens):
-    #         input_this_step = generated if token_step == 0 else next_token_id
-    #         next_token_logits = outputs.logits[:, -1, :]
-    #         next_token_id = torch.argmax(next_token_logits, dim=-1, keepdim=True)
-    #         if next_token_id.item() == processor.tokenizer.eos_token_id:
-    #             break
-    #         generated = torch.cat((generated, next_token_id), dim=1)
-    #         attention_mask = torch.cat((attention_mask, torch.ones_like(next_token_id)), dim=1)
-    #         past_key_values = outputs.past_key_values
-    # output_text = processor.tokenizer.batch_decode(generated[:, input_ids.shape[1]:], skip_special_tokens=True)[0]
-    # print('-'*30)
-
     image = image
     text = qu
     
     if model_name == 'mplug-owl2': lm_head_matrix = model.model.lm_head.weight
     else: lm_head_matrix = model.llama_model.lm_head.weight
 
-
     ###############################################
     start_time = time.time()
     past_key_values = None 
     output_tokens = []
     for output_index in range(max_new_tokens):
-        output = model(
+        output = model.generate(
             {"image": norm(image), "prompt": qu, "img_path": path},
-            # use_nucleus_sampling=args.sample,
-            # num_beams=num_beams,
-            # max_new_tokens=1,
-            # output_hidden_states=True, 
-            # output_attentions=True,
-            # return_dict_in_generate=True,
-            # nvcd=True,
-            # nvcd_previous_last_ids_list=output_tokens, 
-            # past_key_values=past_key_values,
+            use_nucleus_sampling=args.sample,
+            num_beams=num_beams,
+            max_new_tokens=1,
+            output_hidden_states=True, 
+            output_attentions=True,
+            return_dict_in_generate=True,
+            nvcd=True,
+            nvcd_previous_last_ids_list=output_tokens, 
+            past_key_values=past_key_values,
         )   
-        next_token_logits = output.logits[:, -1, :]
-        next_token_index = torch.argmax(next_token_logits, dim=-1, keepdim=True)
-        generated_texts = model_tokenizer.convert_ids_to_tokens([next_token_index], skip_special_tokens=False)[-1]
-        print(generated_texts)
-        exit()
-
+        last_hidden = output['hidden_states'][-1][-1][:, -1, :]
+        logits = torch.matmul(last_hidden.clone() if model_name == 'mplug-owl2' else last_hidden, 
+                            lm_head_matrix.clone().T if model_name == 'mplug-owl2' else lm_head_matrix.T)
+        probs = F.softmax(logits, dim=-1)
+        probs = logits
+        token_id = torch.argmax(probs, dim=-1).item()
+        token_str = model_tokenizer.convert_ids_to_tokens([token_id], skip_special_tokens=False)[-1]
+        print(f'{len(output_tokens)} output token, index: {token_str}, {token_id}')
+        output_tokens.append(token_id)
+        past_key_values = output['past_key_values']
+        if token_id == model_tokenizer.eos_token_id:
+            break
     print('-'*30)
     print(f"Total generation time: {time.time() - start_time:.2f} seconds")
     print('-'*30)
     ###############################################
 
-
-    # ###############################################
-    # start_time = time.time()
-    # past_key_values = None 
-    # output_tokens = []
-    # for output_index in range(max_new_tokens):
-    #     output = model.generate(
-    #         {"image": norm(image), "prompt": qu, "img_path": path},
-    #         use_nucleus_sampling=args.sample,
-    #         num_beams=num_beams,
-    #         max_new_tokens=1,
-    #         output_hidden_states=True, 
-    #         output_attentions=True,
-    #         return_dict_in_generate=True,
-    #         nvcd=True,
-    #         nvcd_previous_last_ids_list=output_tokens, 
-    #         # past_key_values=past_key_values,
-    #     )   
-    #     last_hidden = output['hidden_states'][-1][-1][:, -1, :]
-    #     logits = torch.matmul(last_hidden.clone() if model_name == 'mplug-owl2' else last_hidden, 
-    #                         lm_head_matrix.clone().T if model_name == 'mplug-owl2' else lm_head_matrix.T)
-    #     probs = F.softmax(logits, dim=-1)
-    #     probs = logits
-    #     token_id = torch.argmax(probs, dim=-1).item()
-    #     token_str = model_tokenizer.convert_ids_to_tokens([token_id], skip_special_tokens=False)[-1]
-    #     print(f'{len(output_tokens)} output token, index: {token_str}, {token_id}')
-    #     output_tokens.append(token_id)
-    #     past_key_values = output['past_key_values']
-    #     if token_id == model_tokenizer.eos_token_id:
-    #         break
-    # print('-'*30)
-    # print(f"Total generation time: {time.time() - start_time:.2f} seconds")
-    # print('-'*30)
-    # ###############################################
-
-
-
-
-    ##################################
+    ###############################################
     # DRAFT caption generation 
     start_time = time.time()
     with torch.inference_mode():
@@ -541,15 +488,13 @@ for idx, img_id in tqdm(enumerate(range(len(img_files))), total=len(img_files)):
                 nvcd_previous_last_ids_list=[], 
             )
 
-    ####################
+    ###############################################
     # print(f'out.keys() : {out.keys()}') # llava.py 참고고
     # attentions = out['attentions']
     # print(len(attentions))
     # print(len(attentions[0]))
     # print(attentions[0][0].shape)
-
     all_nl_tokens = [model_tokenizer.convert_ids_to_tokens(seq) for seq in out["sequences"].tolist()][0]
-
     # minigpt4는 예외, input_nl_tokens에도 output_nl_tokens가 들어있음
     # MAIN_CODES/minigpt4/models/mini_gpt4.py 참고
     # input_nl_tokens = [model_tokenizer.convert_ids_to_tokens(seq) for seq in out["input_token_ids"].tolist()][0]
@@ -558,18 +503,15 @@ for idx, img_id in tqdm(enumerate(range(len(img_files))), total=len(img_files)):
     # print(f'input_nl_tokens : {len(input_nl_tokens)}, {input_nl_tokens}')
     # print('-'*30)
     # print(f'output_nl_tokens : {len(output_nl_tokens)}, {output_nl_tokens}')
-
     all_tokens_to_text = model_tokenizer.batch_decode(out["sequences"], skip_special_tokens=True)[0]
     draft_output_text = all_tokens_to_text
     print(f"{img_id} Generated:", draft_output_text)
     print(f"Total generation time: {time.time() - start_time:.2f} seconds")
     exit()
-    
     # if model_name == 'minigpt4':
     #     draft_output_text = draft_output_text.split('###')[0].split('Assistant:')[-1].strip()
     # else:
     #     draft_output_text = draft_output_text.split('ASSISTANT: ')[-1]
-
 #     #######################################
 
 #     # draft의 chair 정답 객체를 알아야 하는 경우

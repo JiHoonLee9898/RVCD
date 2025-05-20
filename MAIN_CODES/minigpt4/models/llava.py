@@ -101,28 +101,23 @@ class LLaVa(BaseModel):
         # if on cpu, don't use autocast
         # if on gpu, use autocast with dtype if provided, otherwise use torch.float16
         enable_autocast = self.device != torch.device("cpu")
-
         if enable_autocast:
             return torch.cuda.amp.autocast(dtype=dtype)
         else:
             return contextlib.nullcontext()
 
-    def forward(self, samples):
+
+    def get_initial_input_ids(self, image, text):
         self.llama_tokenizer.padding_side = "left"
         self.model_name = "llava-1.5"
-        image = samples["image"]
-        instruction = samples["prompt"] if "prompt" in samples else None
         bs = image.size(0)
-
-        if isinstance(instruction, str):
-            instruction = [instruction] * bs
+        if isinstance(text, str):
+            text = [text] * bs
         else:
-            assert len(instruction) == bs, "The number of prompts must be equal to the batch size."
-
-        instruction = [self.system_message + p for p in instruction]
-
+            assert len(text) == bs, "The number of prompts must be equal to the batch size."
+        text = [self.system_message + p for p in text]
         chunks_before, chunks_after = [], []
-        for p in instruction:
+        for p in text:
             chunk_before, chunk_after = p.split('<ImageHere>')
             chunks_before.append(chunk_before)
             chunks_after.append(chunk_after)
@@ -140,27 +135,34 @@ class LLaVa(BaseModel):
             padding="longest",
             add_special_tokens=False
         ).to(image.device).input_ids
-
         bos = torch.ones([bs, 1],
                          dtype=torch.int64,
                          device=image.device) * self.llama_tokenizer.bos_token_id
-
         image_token = torch.ones([bs, 1],
                          dtype=torch.int64,
                          device=image.device) * IMAGE_TOKEN_INDEX
-        
         with self.maybe_autocast():
-       
             input_ids = torch.cat([bos, tokens_before, image_token, tokens_after], dim=1)
-
             vocab_size = self.llama_tokenizer.vocab_size
             input_ids = torch.where(input_ids < 0, input_ids + vocab_size, input_ids)
+        return input_ids
 
-            outputs = self.llama_model(
-                input_ids=input_ids,
+    def forward(self, 
+                input_ids,
+                use_cache=True,
                 return_dict=True,
-            )
-           
+                past_key_values=None,
+                attention_mask=None,
+             
+                ):
+        outputs = self.llama_model(
+            input_ids=input_ids,
+            use_cache=use_cache,
+            return_dict=return_dict,
+            past_key_values=past_key_values,
+            attention_mask=attention_mask,
+   
+        )
         return outputs
 
     @torch.no_grad()
@@ -278,120 +280,120 @@ class LLaVa(BaseModel):
             after_image_token_len = len(torch.cat([tokens_after], dim=1).tolist()[0])
 
 
-        # ######################################################################################
-        #     outputs = self.llama_model.generate(
-        #         input_ids=input_ids,
-        #         use_cache=True,
-        #         past_key_values=past_key_values,
-        #         do_sample=use_nucleus_sampling,
-        #         top_p=top_p,
-        #         temperature=temperature,
-        #         num_beams=num_beams,
-        #         max_new_tokens=max_new_tokens,
-        #         # max_length=max_new_tokens,
-        #         pad_token_id=self.llama_tokenizer.pad_token_id,
-        #         bos_token_id=self.llama_tokenizer.bos_token_id,
-        #         eos_token_id=self.llama_tokenizer.eos_token_id,
-        #         repetition_penalty=repetition_penalty,
-        #         length_penalty=length_penalty,
-        #         num_return_sequences=num_captions,
-        #         images=image,
+        ######################################################################################
+            outputs = self.llama_model.generate(
+                input_ids=input_ids,
+                use_cache=True,
+                past_key_values=past_key_values,
+                do_sample=use_nucleus_sampling,
+                top_p=top_p,
+                temperature=temperature,
+                num_beams=num_beams,
+                max_new_tokens=max_new_tokens,
+                # max_length=max_new_tokens,
+                pad_token_id=self.llama_tokenizer.pad_token_id,
+                bos_token_id=self.llama_tokenizer.bos_token_id,
+                eos_token_id=self.llama_tokenizer.eos_token_id,
+                repetition_penalty=repetition_penalty,
+                length_penalty=length_penalty,
+                num_return_sequences=num_captions,
+                images=image,
 
-        #         output_attentions=output_attentions,
-        #         output_hidden_states=output_hidden_states, 
-        #         return_dict_in_generate=return_dict_in_generate,
+                output_attentions=output_attentions,
+                output_hidden_states=output_hidden_states, 
+                return_dict_in_generate=return_dict_in_generate,
 
-        #         # premature_layer=premature_layer,
-        #         # candidate_premature_layers=candidate_premature_layers,
-        #         # mature_layer=mature_layer,
-        #         # beam_search=beam_search,
-        #         # dola_decoding=dola_decoding,
-        #         # halc_decoding=halc_decoding,
-        #         # opera_decoding=opera_decoding,
-        #         # vcd_decoding=vcd_decoding,
-        #         # halc_assistant=halc_assistant,
-        #         # # opera
-        #         # key_position=key_position,
-        #         # scale_factor=scale_factor,
-        #         # threshold=threshold,
-        #         # num_attn_candidates=num_attn_candidates,
-        #         # penalty_weights=penalty_weights,
-        #         # # VCD
-        #         # images_cd=images_cd,
-        #         # cd_alpha=cd_alpha,
-        #         # cd_beta=cd_beta,
-        #         # LVLM_backbone=self,
-        #     )
+                # premature_layer=premature_layer,
+                # candidate_premature_layers=candidate_premature_layers,
+                # mature_layer=mature_layer,
+                # beam_search=beam_search,
+                # dola_decoding=dola_decoding,
+                # halc_decoding=halc_decoding,
+                # opera_decoding=opera_decoding,
+                # vcd_decoding=vcd_decoding,
+                # halc_assistant=halc_assistant,
+                # # opera
+                # key_position=key_position,
+                # scale_factor=scale_factor,
+                # threshold=threshold,
+                # num_attn_candidates=num_attn_candidates,
+                # penalty_weights=penalty_weights,
+                # # VCD
+                # images_cd=images_cd,
+                # cd_alpha=cd_alpha,
+                # cd_beta=cd_beta,
+                # LVLM_backbone=self,
+            )
 
-        # # print(outputs.keys())
+        # print(outputs.keys())
 
-        # output_ids = outputs['sequences']
-        # output_attentions = outputs['attentions']
-        # output_hidden_states = outputs['hidden_states']
-        # output_past_key_values = outputs['past_key_values']
+        output_ids = outputs['sequences']
+        output_attentions = outputs['attentions']
+        output_hidden_states = outputs['hidden_states']
+        output_past_key_values = outputs['past_key_values']
 
-        # output_ids = output_ids.to(input_ids.device)
-        # input_token_len = input_ids.shape[1]
-        # # print(' inputs_ids.shape모양!!!!!', input_ids.shape)
-        # n_diff_input_output = (input_ids != output_ids[:, :input_token_len]).sum().item()
-        # if n_diff_input_output > 0:
-        #     print(f'[Warning] {n_diff_input_output} output_ids are not the same as the input_ids')
+        output_ids = output_ids.to(input_ids.device)
+        input_token_len = input_ids.shape[1]
+        # print(' inputs_ids.shape모양!!!!!', input_ids.shape)
+        n_diff_input_output = (input_ids != output_ids[:, :input_token_len]).sum().item()
+        if n_diff_input_output > 0:
+            print(f'[Warning] {n_diff_input_output} output_ids are not the same as the input_ids')
 
 
-        # ######
+        ######
         
-        # vocab_size = self.llama_tokenizer.vocab_size
-        # all_output_ids = torch.where(output_ids < 0, output_ids + vocab_size, output_ids)
-        # input_token_ids = all_output_ids[:, :input_token_len]
-        # output_token_ids = all_output_ids[:, input_token_len:]
+        vocab_size = self.llama_tokenizer.vocab_size
+        all_output_ids = torch.where(output_ids < 0, output_ids + vocab_size, output_ids)
+        input_token_ids = all_output_ids[:, :input_token_len]
+        output_token_ids = all_output_ids[:, input_token_len:]
 
-        # # all_input_nl_tokens = [self.llama_tokenizer.convert_ids_to_tokens(seq.tolist()) for seq in input_token_ids]
-        # # all_tokens_to_text = self.llama_tokenizer.batch_decode(output_ids[:, :input_token_len], skip_special_tokens=True)
-        # # print('-'*30)
-        # # print(output_ids.shape)
-        # # print(f'모든 입력 토큰들 : {all_input_nl_tokens}')
-        # # print(f'모든 입력 토큰들을 결합 : {all_tokens_to_text}')
-        # # print('-'*30)
-        # ######  
-        # # # token count
-        # generated_token_count = output_ids[:, input_token_len:].numel()
-        # # output_text.append(generated_token_count)
-        # # output_text = self.llama_tokenizer.batch_decode(output_ids[:, input_token_len:], skip_special_tokens=True)
-        # # output_text = [text.split('###')[0].strip() for text in output_text]
+        # all_input_nl_tokens = [self.llama_tokenizer.convert_ids_to_tokens(seq.tolist()) for seq in input_token_ids]
+        # all_tokens_to_text = self.llama_tokenizer.batch_decode(output_ids[:, :input_token_len], skip_special_tokens=True)
+        # print('-'*30)
+        # print(output_ids.shape)
+        # print(f'모든 입력 토큰들 : {all_input_nl_tokens}')
+        # print(f'모든 입력 토큰들을 결합 : {all_tokens_to_text}')
+        # print('-'*30)
+        ######  
+        # # token count
+        generated_token_count = output_ids[:, input_token_len:].numel()
+        # output_text.append(generated_token_count)
+        # output_text = self.llama_tokenizer.batch_decode(output_ids[:, input_token_len:], skip_special_tokens=True)
+        # output_text = [text.split('###')[0].strip() for text in output_text]
 
-        # return {"sequences" : all_output_ids,
-        #         "attentions" : output_attentions,
-        #         "hidden_states" : output_hidden_states,
-        #         'past_key_values' : output_past_key_values,
-        #         "input_token_ids" : input_token_ids,
-        #         "output_token_ids" : output_token_ids,
-        #         'before_image_token_len' : before_image_token_len,
-        #         'image_token_len' : image_token_len,
-        #         'after_image_token_len' : after_image_token_len,
-        #         'generated_token_count' : generated_token_count,
-        #         }
-        # #################################################################################
+        return {"sequences" : all_output_ids,
+                "attentions" : output_attentions,
+                "hidden_states" : output_hidden_states,
+                'past_key_values' : output_past_key_values,
+                "input_token_ids" : input_token_ids,
+                "output_token_ids" : output_token_ids,
+                'before_image_token_len' : before_image_token_len,
+                'image_token_len' : image_token_len,
+                'after_image_token_len' : after_image_token_len,
+                'generated_token_count' : generated_token_count,
+                }
+        #################################################################################
             
 
-            vocab_size = self.llama_tokenizer.vocab_size
-            input_ids = torch.where(input_ids < 0, input_ids + vocab_size, input_ids)
+        #     vocab_size = self.llama_tokenizer.vocab_size
+        #     input_ids = torch.where(input_ids < 0, input_ids + vocab_size, input_ids)
 
-            print("input_ids shape:", input_ids.shape)
-            print("input_ids min:", input_ids.min().item())
-            print("input_ids max:", input_ids.max().item())
+        #     print("input_ids shape:", input_ids.shape)
+        #     print("input_ids min:", input_ids.min().item())
+        #     print("input_ids max:", input_ids.max().item())
 
-            vocab_size = self.llama_tokenizer.vocab_size
-            print("tokenizer vocab_size:", vocab_size)
+        #     vocab_size = self.llama_tokenizer.vocab_size
+        #     print("tokenizer vocab_size:", vocab_size)
 
-            assert input_ids.min().item() >= 0, "❌ 음수 인덱스 있음"
-            assert input_ids.max().item() < vocab_size, "❌ input_ids에 vocab_size 이상 인덱스 있음"
+        #     assert input_ids.min().item() >= 0, "❌ 음수 인덱스 있음"
+        #     assert input_ids.max().item() < vocab_size, "❌ input_ids에 vocab_size 이상 인덱스 있음"
 
-            outputs = self.llama_model(
-                input_ids=input_ids,
-                return_dict=True,
-            )
+        #     outputs = self.llama_model(
+        #         input_ids=input_ids,
+        #         return_dict=True,
+        #     )
            
-        return outputs
+        # return outputs
 
 
     def embed_tokens(self, token_ids):
