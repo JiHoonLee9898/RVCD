@@ -663,6 +663,7 @@ for idx, img_id in tqdm(enumerate(range(len(img_files))), total=len(img_files)):
                 
                 image = process_before_norm(path) #원본 이미지와 N 이미지들.
                 kv_cache = image_kv_cache.get(path, None)
+
                 ##############################################################
                 output = model.generate(
                     {"image": norm(image), "prompt": qu, "img_path": path},
@@ -693,12 +694,14 @@ for idx, img_id in tqdm(enumerate(range(len(img_files))), total=len(img_files)):
 
                 if args.kv_cache_faster:
                     image_kv_cache[path] = output['past_key_values']
+
             
             # Positive image P 안의 모든 이미지에 대해
             ##############################################################
             for path in positive_img_path:
                 image = process_before_norm(path) #P 이미지들.
                 kv_cache = image_kv_cache.get(path, None)
+
                 ##############################################################
                 output = model.generate(
                     {"image": norm(image), "prompt": qu, "img_path": path},
@@ -711,6 +714,7 @@ for idx, img_id in tqdm(enumerate(range(len(img_files))), total=len(img_files)):
                     nvcd=True,
                     nvcd_previous_last_ids_list=output_tokens, 
                     past_key_values=kv_cache,
+
                 )   
                 last_logit = output['hidden_states'][-1][-1][:, -1, :]
                 ##############################################################

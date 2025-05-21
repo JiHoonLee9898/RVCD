@@ -12,7 +12,7 @@ CUDA_VISIBLE_DEVICES=0 python /home/work/jihoon_wombat_storage/RVCD/MAIN_CODES/r
     --gpu-id 0 \
     --output_dir ./generated_captions/ \
     --rvcd_alpha 1 \
-    --rvcd_beta 0 \
+    --rvcd_beta 0.1 \
     --kv_cache_faster True
 
 # ### RVCD for POPE ###
