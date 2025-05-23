@@ -827,7 +827,9 @@ if check_draft_chair:
                                             global_all_info['chair0_detect0'])
     global_all_info['total_detector_score'].append(total_detector_score) 
     global_all_info['latency'] = time.time()-start_time
-    global_all_info['latency_per_token'] = global_all_info['latency'] / global_all_info['total_generated_tokens']
+
+    if model_name != 'minigpt4':
+        global_all_info['latency_per_token'] = global_all_info['latency'] / global_all_info['total_generated_tokens']
 
 
 global_info_save_path = os.path.join(result_dir,f"rvcd_{model_name}_a{args.rvcd_alpha}_b{args.rvcd_beta}_{formatted_time}_seed_{seed}_samples_{num_samples}_maxtokens_{max_new_tokens}_{true_flag_name}_DETECTOR_info.json")
