@@ -101,69 +101,41 @@ class LLaVa(BaseModel):
         # if on cpu, don't use autocast
         # if on gpu, use autocast with dtype if provided, otherwise use torch.float16
         enable_autocast = self.device != torch.device("cpu")
+
         if enable_autocast:
             return torch.cuda.amp.autocast(dtype=dtype)
         else:
             return contextlib.nullcontext()
 
+    def forward(self, samples):
+        image = samples["image"]
 
-    def get_initial_input_ids(self, image, text):
-        self.llama_tokenizer.padding_side = "left"
-        self.model_name = "llava-1.5"
+        instruction = samples["prompt"] if "prompt" in samples else None
+
         bs = image.size(0)
-        if isinstance(text, str):
-            text = [text] * bs
+
+        if isinstance(instruction, str):
+            instruction = [instruction] * bs
         else:
-            assert len(text) == bs, "The number of prompts must be equal to the batch size."
-        text = [self.system_message + p for p in text]
-        chunks_before, chunks_after = [], []
-        for p in text:
-            chunk_before, chunk_after = p.split('<ImageHere>')
-            chunks_before.append(chunk_before)
-            chunks_after.append(chunk_after)
+            assert len(instruction) == bs, "The number of prompts must be equal to the batch size."
 
-        tokens_before = self.llama_tokenizer(
-            chunks_before,
-            return_tensors="pt",
-            padding="longest",
-            add_special_tokens=False
-        ).to(image.device).input_ids
+        instruction = [p.replace('<ImageHere>', '<image>') for p in instruction]
+        instruction = [self.system_message + p for p in instruction]
 
-        tokens_after = self.llama_tokenizer(
-            chunks_after,
-            return_tensors="pt",
-            padding="longest",
-            add_special_tokens=False
-        ).to(image.device).input_ids
-        bos = torch.ones([bs, 1],
-                         dtype=torch.int64,
-                         device=image.device) * self.llama_tokenizer.bos_token_id
-        image_token = torch.ones([bs, 1],
-                         dtype=torch.int64,
-                         device=image.device) * IMAGE_TOKEN_INDEX
+        input_ids = self.tokenizer_image_token(instruction, IMAGE_TOKEN_INDEX, return_tensors='pt').unsqueeze(0).cuda()
+
+        ###TODO: targets, attention_mask
         with self.maybe_autocast():
-            input_ids = torch.cat([bos, tokens_before, image_token, tokens_after], dim=1)
-            vocab_size = self.llama_tokenizer.vocab_size
-            input_ids = torch.where(input_ids < 0, input_ids + vocab_size, input_ids)
-        return input_ids
-
-    def forward(self, 
-                input_ids,
-                use_cache=True,
+            outputs = self.llm_model(
+                inputs_ids=inputs_ids,
+                attention_mask=attention_mask,
                 return_dict=True,
-                past_key_values=None,
-                attention_mask=None,
-             
-                ):
-        outputs = self.llama_model(
-            input_ids=input_ids,
-            use_cache=use_cache,
-            return_dict=return_dict,
-            past_key_values=past_key_values,
-            attention_mask=attention_mask,
-   
-        )
-        return outputs
+                labels=targets,
+            )
+
+        loss = outputs.loss
+
+        return {"loss": loss}
 
     @torch.no_grad()
     def generate(
@@ -183,6 +155,7 @@ class LLaVa(BaseModel):
         output_attentions=True, 
         output_hidden_states=True, 
         return_dict_in_generate=True,
+
         nvcd=True,  
         nvcd_previous_last_ids_list=[],
 
@@ -207,40 +180,49 @@ class LLaVa(BaseModel):
         # cd_beta=0.1
     ):
         
-        
         self.llama_tokenizer.padding_side = "left"
         self.model_name = "llava-1.5"
         image = samples["image"]
+
         instruction = samples["prompt"] if "prompt" in samples else None
+
         bs = image.size(0)
+
         if isinstance(instruction, str):
             instruction = [instruction] * bs
         else:
             assert len(instruction) == bs, "The number of prompts must be equal to the batch size."
+
         instruction = [self.system_message + p for p in instruction]
+
         chunks_before, chunks_after = [], []
         for p in instruction:
             chunk_before, chunk_after = p.split('<ImageHere>')
             chunks_before.append(chunk_before)
             chunks_after.append(chunk_after)
+
         tokens_before = self.llama_tokenizer(
             chunks_before,
             return_tensors="pt",
             padding="longest",
             add_special_tokens=False
         ).to(image.device).input_ids
+
         tokens_after = self.llama_tokenizer(
             chunks_after,
             return_tensors="pt",
             padding="longest",
             add_special_tokens=False
         ).to(image.device).input_ids
+
         bos = torch.ones([bs, 1],
                          dtype=torch.int64,
                          device=image.device) * self.llama_tokenizer.bos_token_id
+
         image_token = torch.ones([bs, 1],
                          dtype=torch.int64,
                          device=image.device) * IMAGE_TOKEN_INDEX
+        
         # print('이제된다')
         with self.maybe_autocast():
 
@@ -267,8 +249,6 @@ class LLaVa(BaseModel):
             image_token_len = len(torch.cat([image_token], dim=1).tolist()[0])
             after_image_token_len = len(torch.cat([tokens_after], dim=1).tolist()[0])
 
-
-        ######################################################################################
             outputs = self.llama_model.generate(
                 input_ids=input_ids,
                 use_cache=True,
@@ -331,6 +311,7 @@ class LLaVa(BaseModel):
         ######
         
         vocab_size = self.llama_tokenizer.vocab_size
+
         all_output_ids = torch.where(output_ids < 0, output_ids + vocab_size, output_ids)
         input_token_ids = all_output_ids[:, :input_token_len]
         output_token_ids = all_output_ids[:, input_token_len:]
@@ -343,9 +324,12 @@ class LLaVa(BaseModel):
         # print(f'모든 입력 토큰들을 결합 : {all_tokens_to_text}')
         # print('-'*30)
         ######  
+
+
         # # token count
         generated_token_count = output_ids[:, input_token_len:].numel()
         # output_text.append(generated_token_count)
+
         # output_text = self.llama_tokenizer.batch_decode(output_ids[:, input_token_len:], skip_special_tokens=True)
         # output_text = [text.split('###')[0].strip() for text in output_text]
 
@@ -360,28 +344,6 @@ class LLaVa(BaseModel):
                 'after_image_token_len' : after_image_token_len,
                 'generated_token_count' : generated_token_count,
                 }
-        #################################################################################
-            
-
-        #     vocab_size = self.llama_tokenizer.vocab_size
-        #     input_ids = torch.where(input_ids < 0, input_ids + vocab_size, input_ids)
-
-        #     print("input_ids shape:", input_ids.shape)
-        #     print("input_ids min:", input_ids.min().item())
-        #     print("input_ids max:", input_ids.max().item())
-
-        #     vocab_size = self.llama_tokenizer.vocab_size
-        #     print("tokenizer vocab_size:", vocab_size)
-
-        #     assert input_ids.min().item() >= 0, "❌ 음수 인덱스 있음"
-        #     assert input_ids.max().item() < vocab_size, "❌ input_ids에 vocab_size 이상 인덱스 있음"
-
-        #     outputs = self.llama_model(
-        #         input_ids=input_ids,
-        #         return_dict=True,
-        #     )
-           
-        # return outputs
 
 
     def embed_tokens(self, token_ids):

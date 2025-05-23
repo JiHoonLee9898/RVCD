@@ -95,7 +95,7 @@ class MPLUGOWL2(BaseModel):
         output_attentions=True, 
         output_hidden_states=True, 
         return_dict_in_generate=True,
-
+        past_key_values=None,
         nvcd=True,  
         nvcd_previous_last_ids_list=[],
 
@@ -239,6 +239,8 @@ class MPLUGOWL2(BaseModel):
 
             outputs = self.model.generate(
                 input_ids=input_ids,
+                use_cache=True,
+                past_key_values=past_key_values,
                 do_sample=use_nucleus_sampling,
                 top_p=top_p,
                 temperature=temperature,

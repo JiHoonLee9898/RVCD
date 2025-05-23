@@ -354,7 +354,7 @@ class MiniGPT4(Blip2Base):
         length_penalty=1,
         num_captions=1,
         temperature=1,
-
+        past_key_values=None,
         output_attentions=True,
         output_hidden_states=True, 
         return_dict_in_generate=True,
@@ -428,7 +428,9 @@ class MiniGPT4(Blip2Base):
 
             outputs = self.llama_model.generate(
                 inputs_embeds=inputs_embeds,
-                # attention_mask=attention_mask,
+                # minigpt는 input_ids가 아니라 llava와 같은 kv캐싱이 안됨..일단은 캐싱 없이 생성.
+                # use_cache=True,
+                # past_key_values=past_key_values,
                 do_sample=use_nucleus_sampling,
                 top_p=top_p,
                 temperature=temperature,
