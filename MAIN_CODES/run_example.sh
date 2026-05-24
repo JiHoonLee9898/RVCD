@@ -1,11 +1,11 @@
 #!/bin/bash
 
 ### RVCD for CHAIR/BLEU ###
-CUDA_VISIBLE_DEVICES=0 python /home/work/jihoon_wombat_storage/RVCD/MAIN_CODES/rvcd_generation_chair_bleu.py \
+CUDA_VISIBLE_DEVICES=0 python rvcd_generation_chair_bleu.py \
     --model llava-1.5 \
-    --ref_folder_path /home/work/jihoon_wombat_storage/RVCD/DB_single_concept_images_flux_generated/generated_images \
-    --data_path /home/work/jihoon_wombat_storage/COCO_DIR \
-    --chair_cache_path /home/work/jihoon_wombat_storage/RVCD/MAIN_CODES/eval/CHAIR_CACHE/chair.pkl \
+    --ref_folder_path DB_single_concept_images_flux_generated/generated_images \
+    --data_path /home/jihoon/jihoon/DATASETS/coco2014/val2014 \
+    --chair_cache_path eval/CHAIR_CACHE/chair.pkl \
     --yolo_version yolov8x.pt \
     --num_samples 500 \
     --seed 42 \
