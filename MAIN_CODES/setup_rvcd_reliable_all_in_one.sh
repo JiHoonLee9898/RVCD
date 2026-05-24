@@ -798,3 +798,21 @@ main() {
 }
 
 main "$@"
+
+
+conda activate RVCD_BW
+
+conda install -c conda-forge openjdk=11 -y
+
+which java
+java -version
+
+python -m pip install "git+https://github.com/clips/pattern.git"
+
+
+# 잘못 깔린 pattern 제거
+python -m pip uninstall -y pattern Pattern pattern3 PatternLite
+
+# pattern.en 제공하는 패키지 설치
+python -m pip install PatternLite
+
