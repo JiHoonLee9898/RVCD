@@ -17,3 +17,7 @@ MAIN_CODES/generated_captions/*
 
 **/__pycache__/
 **/test_folder/*
+
+groundingdino_swint_ogc.pth
+# GroundingDINO checkpoint
+**/groundingdino_swint_ogc.pth
