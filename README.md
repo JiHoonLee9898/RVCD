@@ -65,7 +65,7 @@ MAIN_CODES/decoder_zoo/GroundingDINO/weights/groundingdino_swint_ogc.pth
 If you encounter any issues while setting up GroundingDINO, please refer to:
 
 ```bash
-setup_rvcd_coco_groundingdino_fix.sh
+MAIN_CODES/setup_rvcd_coco_groundingdino_fix.sh
 ```
 
 # Arguments
