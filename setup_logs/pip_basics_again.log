@@ -1,0 +1,8 @@
++ python -m pip install -U pip<26 setuptools<81 wheel
+Requirement already satisfied: pip<26 in /home/jihoon/temp/miniconda-test/envs/RVCD_BW/lib/python3.10/site-packages (25.3)
+Requirement already satisfied: setuptools<81 in /home/jihoon/temp/miniconda-test/envs/RVCD_BW/lib/python3.10/site-packages (80.10.2)
+Requirement already satisfied: wheel in /home/jihoon/temp/miniconda-test/envs/RVCD_BW/lib/python3.10/site-packages (0.47.0)
+Requirement already satisfied: packaging>=24.0 in /home/jihoon/temp/miniconda-test/envs/RVCD_BW/lib/python3.10/site-packages (from wheel) (26.0)
+
+[notice] A new release of pip is available: 25.3 -> 26.1.1
+[notice] To update, run: pip install --upgrade pip

@@ -1,19 +1,42 @@
 #!/bin/bash
 
 ### RVCD for CHAIR/BLEU ###
-CUDA_VISIBLE_DEVICES=0 python rvcd_generation_chair_bleu.py \
-    --model llava-1.5 \
-    --ref_folder_path DB_single_concept_images_flux_generated/generated_images \
+# CUDA_VISIBLE_DEVICES=0 python rvcd_generation_chair_bleu.py \
+#     --model llava-1.5 \
+#     --ref_folder_path DB_single_concept_images_flux_generated/generated_images \
+#     --data_path /home/jihoon/jihoon/DATASETS/coco2014/val2014 \
+#     --chair_cache_path eval/CHAIR_CACHE/chair.pkl \
+#     --yolo_version yolov8x.pt \
+#     --num_samples 100 \
+#     --seed 42 \
+#     --gpu-id 0 \
+#     --output_dir ./generated_captions/ \
+#     --rvcd_alpha 1 \
+#     --rvcd_beta 0.1 \
+#     --kv_cache_faster True
+
+CUDA_VISIBLE_DEVICES=0 python prior_decodings/prior_generation_chair_bleu.py \
+    --model not_rvcd_llava \
     --data_path /home/jihoon/jihoon/DATASETS/coco2014/val2014 \
-    --chair_cache_path eval/CHAIR_CACHE/chair.pkl \
-    --yolo_version yolov8x.pt \
-    --num_samples 500 \
-    --seed 42 \
+    -d greedy \
+    --num_samples 100 \
+    --seed 43 \
     --gpu-id 0 \
-    --output_dir ./generated_captions/ \
-    --rvcd_alpha 1 \
-    --rvcd_beta 0.1 \
-    --kv_cache_faster True
+    --output_dir ./generated_captions/ 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 # ### RVCD for POPE ###
 # CUDA_VISIBLE_DEVICES=0 python rvcd_generation_pope.py \

@@ -1,0 +1,43 @@
++ python -m pip install -e /home/jihoon/jihoon/RVCD/transformers-4.36.2
+Obtaining file:///home/jihoon/jihoon/RVCD/transformers-4.36.2
+  Installing build dependencies: started
+  Installing build dependencies: finished with status 'done'
+  Checking if build backend supports build_editable: started
+  Checking if build backend supports build_editable: finished with status 'done'
+  Getting requirements to build editable: started
+  Getting requirements to build editable: finished with status 'done'
+  Preparing editable metadata (pyproject.toml): started
+  Preparing editable metadata (pyproject.toml): finished with status 'done'
+Requirement already satisfied: filelock in /home/jihoon/temp/miniconda-test/envs/RVCD_BW/lib/python3.10/site-packages (from transformers==4.36.2) (3.29.0)
+Requirement already satisfied: huggingface-hub<1.0,>=0.19.3 in /home/jihoon/temp/miniconda-test/envs/RVCD_BW/lib/python3.10/site-packages (from transformers==4.36.2) (0.20.2)
+Requirement already satisfied: numpy>=1.17 in /home/jihoon/temp/miniconda-test/envs/RVCD_BW/lib/python3.10/site-packages (from transformers==4.36.2) (1.26.4)
+Requirement already satisfied: packaging>=20.0 in /home/jihoon/temp/miniconda-test/envs/RVCD_BW/lib/python3.10/site-packages (from transformers==4.36.2) (26.0)
+Requirement already satisfied: pyyaml>=5.1 in /home/jihoon/temp/miniconda-test/envs/RVCD_BW/lib/python3.10/site-packages (from transformers==4.36.2) (6.0)
+Requirement already satisfied: regex!=2019.12.17 in /home/jihoon/temp/miniconda-test/envs/RVCD_BW/lib/python3.10/site-packages (from transformers==4.36.2) (2022.10.31)
+Requirement already satisfied: requests in /home/jihoon/temp/miniconda-test/envs/RVCD_BW/lib/python3.10/site-packages (from transformers==4.36.2) (2.34.2)
+Requirement already satisfied: tokenizers<0.19,>=0.14 in /home/jihoon/temp/miniconda-test/envs/RVCD_BW/lib/python3.10/site-packages (from transformers==4.36.2) (0.15.0)
+Requirement already satisfied: safetensors>=0.3.1 in /home/jihoon/temp/miniconda-test/envs/RVCD_BW/lib/python3.10/site-packages (from transformers==4.36.2) (0.7.0)
+Requirement already satisfied: tqdm>=4.27 in /home/jihoon/temp/miniconda-test/envs/RVCD_BW/lib/python3.10/site-packages (from transformers==4.36.2) (4.64.1)
+Requirement already satisfied: fsspec>=2023.5.0 in /home/jihoon/temp/miniconda-test/envs/RVCD_BW/lib/python3.10/site-packages (from huggingface-hub<1.0,>=0.19.3->transformers==4.36.2) (2026.4.0)
+Requirement already satisfied: typing-extensions>=3.7.4.3 in /home/jihoon/temp/miniconda-test/envs/RVCD_BW/lib/python3.10/site-packages (from huggingface-hub<1.0,>=0.19.3->transformers==4.36.2) (4.15.0)
+Requirement already satisfied: charset_normalizer<4,>=2 in /home/jihoon/temp/miniconda-test/envs/RVCD_BW/lib/python3.10/site-packages (from requests->transformers==4.36.2) (3.4.7)
+Requirement already satisfied: idna<4,>=2.5 in /home/jihoon/temp/miniconda-test/envs/RVCD_BW/lib/python3.10/site-packages (from requests->transformers==4.36.2) (3.16)
+Requirement already satisfied: urllib3<3,>=1.26 in /home/jihoon/temp/miniconda-test/envs/RVCD_BW/lib/python3.10/site-packages (from requests->transformers==4.36.2) (2.7.0)
+Requirement already satisfied: certifi>=2023.5.7 in /home/jihoon/temp/miniconda-test/envs/RVCD_BW/lib/python3.10/site-packages (from requests->transformers==4.36.2) (2026.5.20)
+Building wheels for collected packages: transformers
+  Building editable for transformers (pyproject.toml): started
+  Building editable for transformers (pyproject.toml): finished with status 'done'
+  Created wheel for transformers: filename=transformers-4.36.2-0.editable-py3-none-any.whl size=41062 sha256=3538c8c93f6baa937320b129af49a6be3d8595e56144eaccabd8db6b055fcc38
+  Stored in directory: /tmp/pip-ephem-wheel-cache-j6fc88b_/wheels/59/4d/ee/c2d75ab0737cbf9ee3981a3b5c6de06d51af4ed45290212ffe
+Successfully built transformers
+Installing collected packages: transformers
+  Attempting uninstall: transformers
+    Found existing installation: transformers 4.36.2
+    Uninstalling transformers-4.36.2:
+      Successfully uninstalled transformers-4.36.2
+ERROR: pip's dependency resolver does not currently take into account all the packages that are installed. This behaviour is the source of the following dependency conflicts.
+sentence-transformers 3.1.1 requires transformers<5.0.0,>=4.38.0, but you have transformers 4.36.2 which is incompatible.
+Successfully installed transformers-4.36.2
+
+[notice] A new release of pip is available: 25.3 -> 26.1.1
+[notice] To update, run: pip install --upgrade pip
