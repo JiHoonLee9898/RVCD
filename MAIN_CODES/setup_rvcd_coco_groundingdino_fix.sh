@@ -363,3 +363,17 @@ main() {
 }
 
 main "$@"
+
+
+
+conda activate RVCD
+
+cd /home/jihoon/jihoon/RVCD/MAIN_CODES
+
+pip install -U gdown
+
+mkdir -p decoder_zoo/weights
+
+gdown --folder "https://drive.google.com/drive/folders/1UaMJga-BKju88CXAdonbiQujBKkdcVGX" \
+  -O decoder_zoo/weights \
+  --remaining-ok
