@@ -66,7 +66,7 @@ If you encounter any issues while setting up GroundingDINO, please refer to:
 
 ```bash
 setup_rvcd_coco_groundingdino_fix.sh
-
+```
 
 # Arguments
 Refer to the example in [`RVCD/MAIN_CODES/run_example.sh`](/MAIN_CODES/run_example.sh). Each block in the file (a total of 6) generates output captions for evaluating CHAIR/BLEU, POPE, and MME for RVCD and prior methods.
