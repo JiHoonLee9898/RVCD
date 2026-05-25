@@ -1070,12 +1070,57 @@ with open(global_info_save_path, 'w', encoding='utf-8') as json_file:
 # --num_samples 300 \
 # --seed 42 \
 # --gpu-id 0 \
-# --output_dir ./generated_captions_test/ \
+# --output_dir ./generated_captions_test_blackfront/ \
 # --rvcd_alpha 1 \
 # --rvcd_beta 0.1 \
-# --ervcd_grid_fill_mode black_back \
+# --ervcd_grid_fill_mode black_front \
 # --ervcd_logit_scale_mode presence
 
+# CUDA_VISIBLE_DEVICES=0 \
+# python ervcd_generation_chair_bleu.py \
+# --model llava-1.5 \
+# --data_path /home/jihoon/jihoon/DATASETS/coco2014/val2014 \
+# --ref_folder_path DB_single_concept_images_flux_generated/generated_images \
+# --chair_cache_path eval/CHAIR_CACHE/chair.pkl \
+# --num_samples 300 \
+# --seed 42 \
+# --gpu-id 0 \
+# --output_dir ./generated_captions_test_repeat/ \
+# --rvcd_alpha 1 \
+# --rvcd_beta 0.1 \
+# --ervcd_grid_fill_mode repeat \
+# --ervcd_logit_scale_mode presence
+
+
+# CUDA_VISIBLE_DEVICES=0 \
+# python ervcd_generation_chair_bleu.py \
+# --model llava-1.5 \
+# --data_path /home/jihoon/jihoon/DATASETS/coco2014/val2014 \
+# --ref_folder_path DB_single_concept_images_flux_generated/generated_images \
+# --chair_cache_path eval/CHAIR_CACHE/chair.pkl \
+# --num_samples 300 \
+# --seed 42 \
+# --gpu-id 0 \
+# --output_dir ./generated_captions_test_repeatfront/ \
+# --rvcd_alpha 1 \
+# --rvcd_beta 0.1 \
+# --ervcd_grid_fill_mode repeat_front \
+# --ervcd_logit_scale_mode presence
+
+# CUDA_VISIBLE_DEVICES=0 \
+# python ervcd_generation_chair_bleu.py \
+# --model llava-1.5 \
+# --data_path /home/jihoon/jihoon/DATASETS/coco2014/val2014 \
+# --ref_folder_path DB_single_concept_images_flux_generated/generated_images \
+# --chair_cache_path eval/CHAIR_CACHE/chair.pkl \
+# --num_samples 300 \
+# --seed 42 \
+# --gpu-id 0 \
+# --output_dir ./generated_captions_test_repeatlast/ \
+# --rvcd_alpha 1 \
+# --rvcd_beta 0.1 \
+# --ervcd_grid_fill_mode repeat_last \
+# --ervcd_logit_scale_mode presence
 
 
 
