@@ -29,7 +29,7 @@ CUDA_VISIBLE_DEVICES=${GPU_ID} python rvcd_generation_chair_bleu.py \
 CUDA_VISIBLE_DEVICES=0 \
 python ervcd_generation_chair_bleu.py \
 --model llava-1.5 \
---data_path /home/jihoon/jihoon/DATASETS/coco2014/val2014 \
+--data_path ${COMMON_DATA_PATH} \
 --ref_folder_path DB_single_concept_images_flux_generated/generated_images \
 --chair_cache_path eval/CHAIR_CACHE/chair.pkl \
 --num_samples 300 \
