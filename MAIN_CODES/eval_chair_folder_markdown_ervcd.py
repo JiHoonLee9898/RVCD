@@ -1116,3 +1116,10 @@ if __name__ == "__main__":
 #   --folder /home/jihoon/jihoon/RVCD/MAIN_CODES/generated_captions_test_repeatlast \
 #   --only-md \
 #   --md-show-n
+
+
+# python eval_chair_folder_markdown_ervcd.py \
+#   --gt-caption-path /root/DATASETS/coco2014/val2014/annotations/captions_val2014.json \
+#   --folder /root/RVCD/MAIN_CODES/generated_captions \
+#   --only-md \
+#   --md-show-n

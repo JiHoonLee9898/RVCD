@@ -3,7 +3,7 @@
 COMMON_DATA_PATH="/home/jihoon/jihoon/DATASETS/coco2014/val2014"
 OUT_DIR="./generated_captions/"
 NUM_SAMPLES=300
-SEED=42
+SEED=43
 GPU_ID=0
 MAX_NEW_TOKENS=64
 CHAIR_CACHE_PATH="eval/CHAIR_CACHE/chair.pkl"
@@ -31,11 +31,11 @@ python ervcd_generation_chair_bleu.py \
 --model llava-1.5 \
 --data_path ${COMMON_DATA_PATH} \
 --ref_folder_path DB_single_concept_images_flux_generated/generated_images \
---chair_cache_path eval/CHAIR_CACHE/chair.pkl \
---num_samples 300 \
---seed 42 \
---gpu-id 0 \
---output_dir ./generated_captions/ \
+--chair_cache_path ${CHAIR_CACHE_PATH} \
+--num_samples ${NUM_SAMPLES} \
+--seed ${SEED} \
+--gpu-id ${GPU_ID} \
+--output_dir ${OUT_DIR} \
 --rvcd_alpha 1 \
 --rvcd_beta 0.1 \
 --ervcd_grid_fill_mode black_front \
