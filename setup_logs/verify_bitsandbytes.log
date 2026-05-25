@@ -1,0 +1,71 @@
+BNB_CUDA_VERSION: 118
+CUDA_VERSION: 118
+LD_LIBRARY_PATH: /venv/RVCD/lib/python3.9/site-packages/torch/lib:/venv/RVCD/targets/x86_64-linux/lib:/venv/RVCD/lib:/venv/RVCD/targets/x86_64-linux/lib:/venv/RVCD/lib:/venv/RVCD/targets/x86_64-linux/lib:/venv/RVCD/lib:/usr/local/nvidia/lib:/usr/local/nvidia/lib64
+torch: 2.0.0+cu118 torch cuda: 11.8 cuda available: True
+gpu: NVIDIA A100-SXM4-80GB
+/venv/RVCD/lib/python3.9/site-packages/bitsandbytes/cuda_setup/main.py:107: UserWarning: 
+
+================================================================================
+WARNING: Manual override via BNB_CUDA_VERSION env variable detected!
+BNB_CUDA_VERSION=XXX can be used to load a bitsandbytes version that is different from the PyTorch CUDA version.
+If this was unintended set the BNB_CUDA_VERSION variable to an empty string: export BNB_CUDA_VERSION=
+If you use the manual override make sure the right libcudart.so is in your LD_LIBRARY_PATH
+For example by adding the following to your .bashrc: export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:<path_to_cuda_dir/lib64
+Loading CUDA version: BNB_CUDA_VERSION=118
+================================================================================
+
+
+  warn((f'\n\n{"="*80}\n'
+False
+
+===================================BUG REPORT===================================
+/venv/RVCD/lib/python3.9/site-packages/bitsandbytes/cuda_setup/main.py:167: UserWarning: Welcome to bitsandbytes. For bug reports, please run
+
+python -m bitsandbytes
+
+
+  warn(msg)
+================================================================================
+/venv/RVCD/lib/python3.9/site-packages/bitsandbytes/cuda_setup/main.py:167: UserWarning: /venv/RVCD did not contain ['libcudart.so', 'libcudart.so.11.0', 'libcudart.so.12.0'] as expected! Searching further paths...
+  warn(msg)
+The following directories listed in your path were found to be non-existent: {PosixPath('/venv/RVCD/targets/x86_64-linux/lib'), PosixPath('/usr/local/nvidia/lib64'), PosixPath('/usr/local/nvidia/lib')}
+/venv/RVCD/lib/python3.9/site-packages/bitsandbytes/cuda_setup/main.py:167: UserWarning: /venv/RVCD/lib/python3.9/site-packages/torch/lib:/venv/RVCD/targets/x86_64-linux/lib:/venv/RVCD/lib:/venv/RVCD/targets/x86_64-linux/lib:/venv/RVCD/lib:/venv/RVCD/targets/x86_64-linux/lib:/venv/RVCD/lib:/usr/local/nvidia/lib:/usr/local/nvidia/lib64 did not contain ['libcudart.so', 'libcudart.so.11.0', 'libcudart.so.12.0'] as expected! Searching further paths...
+  warn(msg)
+The following directories listed in your path were found to be non-existent: {PosixPath('ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIHD8xx53LIBAWtTNJce83syq32w/kdgn2kPC+wz/Qwup Vastai-mscho2008\nssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAINPoQ3wv/G4b7BP8ilIBZ8o/3+vHxDwws3YJSYKCCG2p vessl-yonseiml3\nssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQDA1qUCjOPSS/vIw0ThBH4hDG+JGD0QParT9IaqQRZqoShfzrQpVEBd5yRyj5fyhW5elb6auyNHyoCmWTZ324Y7L/9+Wndy6eWefMPVAvhU38ECc3TrOZnV3o54wIVbGjD14qdGBrZD0u0vzYKdxJQ+SlYmVap18lIJaYdKnRGsSwgNLISweMyTPRqyonVwR3kDUZKj1bIFBckoInFxRENAD2vhQGXg2BV7yqDj6Ghd6wiA/zX+98ewP8u17nPJG9ytrUdugQHj2YScp4pWZW957tgJm5U+6FxKlQ8S1naIvdbI6ADICrwIZggbx+ZIKQnR1XXEzxVDOUm6dcitupkGUxJx+bVHH5lnLLy9JFugbwGPcdBBh4yCTdcdVq/4MeK2k6Qke1R3yYxIzVZ5gIpnpnKJY0cnxH2woA59OdFWGv89qwlqCGS9KkFTaQXQKgorWZYWJ++dwDCVNzcPsuvodtCm7ibKzpwh1dT/86bIFGVLsoECGTZaCgEKmhx5tuRiOGhtgigpM8wRaBxdjvGlErRx2pQbhmycJv7GlcI3AikSYkMOQhH76fGkrWGJI1dXipiNfrooisAxgalafIgimZnSxa/YAyPwS769+Y1IY2ooxPotkLOXjcFAzlhZqCavT86wsk2jQ7dr3BuKX6EZK7WJwo2emuPy+e/y9ZfeMw== jaehyungk@yonsei.ac.kr\nssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQC1lwaPIZGbGPiPhKAmGJ2tsldZ312r8HZUr7jn1Oj5aw8TguA/G7x+agYZ5gI35AfAm/FTV1dwCCaEsZF7zvIu/I4A1vHDOfPOLnvZF7hoxshxYRXgqHQEhtFDIVFvahWiu6estlaCU3sEtkBFKJq2E3MbixVYB0/PS7vkx17egi8xGC5mUlNB8faPxulKZK+0IKwOkhfqCkRxO+oODAcsgzEZCGyi6ofcsUHDdj/7QKeuwySyFzAczMDIRzRAm6DbL7VBVPKFZOZ/pd6vN1SYut+4G8nHYCIHuNLG35pF4PENKGWjT/iz0lk7l4raKWYvhMyXI6tS1OdSVieYd2lc+y3jJV8A3sRn4d9Dr/rOoxjtR+YQqVpBQ1xjZSrgIsnvMenCMMFn4fH5yHLWxIiEGqfo6LB1o8/qI7YxkzPQcpT3dPSHffzHFUt1o3kOlKYl1aY/H1veOkWc2HODHkWoOrcugk/fNGBYKvCHN3XbeIQhsE1fEbaNdKbnxenJ5cU= kjinh@MacBook-Pro-2.local\nssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCoo+7kbAmxon05FD6JrxHL8E0JyFUrqhqsP5t0+BaSjngUSKv7eQ8DqiJdAnouUMkUIRwnksPH8u1wDX58AsVoRF4Lht2w19mEAu5rYrhV/VdWCJ0qhd5+6iGEV4JYIKP01OC2OKr/LHQ52V245EO5nRu934TYU/4oEvdGTO/l2gVIFJTBOOYKWu9PgFOrHuZmoCscmaozju3ztjyMPJO7WB9haYc+gxwXJSUgTuxO5HKUpPGbrQ7Qo7q2DeKskQTQOeP5ga3wzQYLO469K70SOiRUBLsJ1sOj/TfWzf+Qs80y5T7oqdfE1dvNhQ4vV7cmwP9vyOWIfEPiNILcZoX rsa-key-20250426\nssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQDXYwtKQWuVtRIBa8L+LJ+ja2Nh3DO3WO3dn4GDSlW3WZoZdkjoQuLlxm1dkSohsChoWttTRDXyb63fTtKqvneFySYgvZmTby/k7TUDX0Nwrss1d+kl/I8jy+XFak/ELn5biLZRcw1uqMBxHBHyRiISIgaiCa7VCXFOeqqK1fJail1JTkmLOOY6KnlRYhCPTNf/mFs27/03AsmbdHj3XmOQ0exKhsR7edGu96hXfwqLFOuB6rLsiEPpGcFPM/kGqosN9Pzc4u5b33vSE7yUD3nEXu3+HC5OED0X4AhEx2ecWf0vLLb6GdB4fRf9gZQl/9o5cQdagJ2aTmvl2VsYkNV5RfZl4N3CBAgJz5GuUv3IygBTvLBd+TY6L/KyfsHFuXdNgjemdsZUwe879dxjKAaSObOQ5pzspjratw7Hr4PWQwa9lmqJNNKqDKxLK5kSQRnn0dU3CEFJK1kT8jZOfsBdZ7FNoH6qAz5XxDvuVX5BhojmsPEk87EDABUdrxB3g0U= bscho@CBS-Legion\nssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAILf/2L/BYgXRrac1lwXwVT9hlYw8pIXKxoxKBa0pqzaO merenova@DESKTOP-B1B6L3G\nssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQDd+74YxXDObYl/01wVNk6z9RIlwEN35ieBKUS2hbpj6fwuj4qBksQcHP5KEAQC80tQ+SKG+6Y/EfWSm1UnnzLVJg0fzn2O7qjNABxPUPZCqjP/00PWtTwGMGh1aS4C918bnVH6GTB3yoVRDzf/GOBYG/dmCKsrVcOqKKL7TJid/UpIOM/0jlzEBTlPmUvOsh8v0dz80A28P3F4ohXxDMKYCye/m6ggCNLdWjbu5a4JjqUvCYksJKq0VuRKPutXww7zbht2YlA9uZyggH62Ph/ztFNzu330ReaiucBIPVGsYHcbGoL5S1gzATKSZcvxjIoaginyTHL86fVXOjoiac/MTwsf/wX2uZVLIP60TagcaBTpq08+9AGkOnCyQW5mAFfxBisvDFqRH9M3jPlxXn0/zBA7w2WQgVjSpfrg3qRdDcbay+/goPs/8QFnQgRiSVwQXmGeb5+XY6WXWmGhofq6F+rF8tOJkFZ0Rx6/7S7CWxnMIiYpaXGJnhJbGnsZfUeQJQRxWMj8Cd1XJTlvZQW7E3NzzY0oaSla2sYpWQ5UjWgIgLvnQvPfgWMkNCEnRIGz9lGg6Ko/CE7IlcTNiSzT/QQ78L2gF2RkvXkWQtBd54W1lwelPyqrYv8CBmS0tAsoEwtpH7lBdnUEk3xRWSNqjfGvi8hy32I3A6bA3lhZw== seoyeon@Sena\nssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQC2GoBM6Q725S8o+WdfLkT6ARLIkHDoESUks/IvV81pfUQPwaQfalJ5oYA57crc2KuxCVn2SIsSnPlB1+mwAvQ3qchn2LR4owUkBPQX7DjbLuP+wWzTQE9330xDf0rZ2XYd/RzTWR8bQtSMayK0CWyz3pxDLWcnMSkNoGpbsvExa9p3Sc7+ZR5+aSK7FE6MIkL9hmjM8rKVl9ZzoaW6KqEYvWAWdjY/ZLQIwWxtJieYBZPX7QApZTxzR+2KvVlIo7H9IOYT38tNzkzFnNPUEj88XE5rCazLEZAd68b5e9wsvZLggGFK6i6ExA/4nR5qAJyX1YTcu8669FE63DmEgmXggYFbKThxWHs66jd0YDdIUfDbNXGJtUFhmTAX/5ofjlz9vbMvMi2JkH1uaTPXKBQeFEa8epzgoPBH7IKLjhPNy8BKn9vm8Bx+40sVYlQNNIek6EsIGjR1wJk9UofGbyxOAgMpcHhgNXBEu3V/ef+iF0ol56RxzHC8mXfoFakCHqUpnVeRfpASXoH/PoJRdus1bN9Dp1yuIjBajZ48WFdUjNJlZhEDs+Y1UUXbLrc8gG8XeZ7/b1Ewywy+nzxVe7OV917UdRGxJlscQiK78kMZls3s8nezaJqF3/1iHi6HVbgCaJvRo6T6PdIU+ruufT/Pp8svGEMqrnvhhWrt719Dw== haminkoo@hamins-MacBook-Air.local\nssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIIvdvbc82orcRHtGpJfYWtUduxISunnTL3AhgoQfhYtv hyunjin@aigpu1117\nssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQCzyXQylsoX23aGPykv1CC1At+SpXCDHmSmU94u9ZrAAomdvkDtx8I7xs7o1+/ZVObHps5zdBGn8c70MmNpB+tT5cIxVQ5gHJ2hTcnZCGMiL6zuJMchwczNPFOa1gtewdBn6NwGrhgEFUmmaiJaQi8JsLcJSTIoSyfOMc97Pr2Cw1KRoHXxrODxZ0AjsT12JhVFrlTD9ERaBgGl095JN9p3Tjy00GwN1xskb3UHBHhtGzE2hG+O8a054/AkKYmAcj01wEN2fUuA5W/S9hkJgiv2W6MevE3old26V/koq5Cczgl6iARfAKm2ycV836OfV7wee0B66sk8VLralw1EMP2ytvUahrfUcXRDchzDohnmLRhbnYp80p339Jq1O6jqX/3FSDNDfBiV1HC+lfTLteHFa89+AH7skFDokYvOcFnmJzwwsZ6SgWLRl6nLShYwpcICqd2ROzb8lGAR8gicwU0MAwynF6w+kxHHuQotoLPERIGPuVhIydoTAk7aP2kuS20= merenova@merenovaui-MacBookAir.local\nssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQDc2DjCvfJF1GhIcdwYaffyY+UqNZiZ04BonxlrcuC/8FfTEyfsG5P2Iiap4iH0GkEfxsx8eQArJq1L2yDo0ZbyeoZBx1yQCNGFxwwkGwTAZAMbt8XK1LCQOOh9ytL8OCYym7JEbDZ8Faav5oDcy6bx94uWXWPZWXXAT4Bk/QqE0R9YeLj9Nrvg/TzvwkqUHHZGBSKvPq7xP6afuFfLQGaZOFfCRIUlOSInXuSGZTUkbyPLjvDM/2tzZLyfhmE8uKsNT8VzXlwtg9qm9YyjjW+JDIAMTboIgznlUTDQtDq8OUcU+pTFe95/ZTkB7+cr6yzHHgKkfjUIYVClHR3mR1u/zqDgX/Iszd09qy+2luzqS6oNIfvH9t55l03W7qpHxZTlzT5xd65mKg/U2uhR1XZZafvHIAC56kUN2MOg2s68S/xIFFORkCPwHUEG7dtnzUTq8IgSsriwXSUOr7qtKuGDoEj5hdiWFzw1DlpIB8AdL4Xuko41OmvyK/KhAxW8tAs= msycm@DESKTOP-SL4QL9K\nssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIAiTifD3exCl9Qp6cIxV8WpC/CtxCEHKlDNMmpoCiu+8 vastai-yejun\nssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOPPHTxGWRFzZz8+BOmtW8e1P0Kw5DeHbjvFG6i03MfV vessl-jimmy0527\nssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIO2OUNw3KS3nRQqqBYcnr6dCd++fr4y0fcoqdP4eDq+p youngjiroh99@yonsei-ai-login4\nssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJx2RbMd27e2gn2eCvAwcuTnbcV9sLlSBMsUfmKFglzJ vessl-parksy1203\nssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIN4MTi7UdmIDAWkmc5lc/Jl/w6z+aqeF3jGmpss74WYm jihoon@aigpu1117\nb3BlbnNzaC1rZXktdjEAAAAABG5vbmUAAAAEbm9uZQAAAAAAAAABAAAAMwAAAAtzc2gtZW QyNTUxOQAAACDeDE4u1HZiAwFpJnOZXPyZf8Os/mqnhd4xpqbLO+FmJgAAAJiWe7Qzlnu0 MwAAAAtzc2gtZWQyNTUxOQAAACDeDE4u1HZiAwFpJnOZXPyZf8Os/mqnhd4xpqbLO+FmJg AAAEDm1BELxSRWvXf2FlLD2eMYm7K0QfmsyieebsjM65rvF94MTi7UdmIDAWkmc5lc/Jl/ w6z+aqeF3jGmpss74WYmAAAAEGppaG9vbkBhaWdwdTExMTcBAgMEBQ==\nssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQClUlnfJYoxQkwbDS9OMYZ490NgxDD5D66S7gA1BeKv1e8xIEA4zwFuJduL80lWAMf51vbzctG+XpYkpiP0J8NhsqCfdl7jqwDmSJLwexOxRRZ8LamruST3Tjd+RiQ2opZVmr4VJz2uBO9PJ1+HxaXxt6gV5aCbCC8t7SDZ9itcwGC0DchfwhQjtYyTKQzx3hfg+tQUce2pZGSJJnQ9R2WrLTUyYr4HMowUsCZH1Acw2DTDcLqDmbqaMGrLFDXX0Jag5ccWIeld2lS/B4r1OoqIiAfxZOXpL0RklMhhCMQK19N7KJddlw9ncSuJdRgeywAq8VtPQmPL/E4FnvYVddMB rsa-key-20250728\nssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIPgF6euQuWHMSrFB8zYcDUt/RqamwTNqhuCREG24eh4n jihoonlee98@yonsei.ac.kr\nssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIA3Kwym668sdJ06+8ElSkSrVGyrzXASUwp25zLhriWVa yeon_04@yonsei.ac.kr\nssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQC7MKeSIx77kel8p3wdWQxMh0O2HryrkNQE/c5teXECu/bbQwhb8EztM1axE8Z4LMJQqYiHJlGbJ49PCclRyAD6RxxpP6+fe4rolhQDDPhx0v61PokFFCv8QcVVJsZ3Tb9/XtIp2aLkmgZg+wJdfgbU5lfrBXnOk3SX0x5DM3ZDQ7NYQl7mwj877Ro1Le06m2bWxanegErQgu8wz7nGu2aeMCGKPb0OX5johsQwTM3kYQR2/fFCq4PkKhlmWw0D9B6mO7BjAeOi8JljR2eiOZoy76UQXUTfwJDnziN0MMfttTDWf+q9mSaMFSzVZGaAYUiB8AKob0jU2c7muNq2Ui8r+JKvt8qDOh9rrTcTvyZXgh4oasMRGkXIvaC0C1ktm3Qc9qpoaZzJ8Wq8F/VkpGocd9tZhhkxhgSiN7qR5iMXLU9bANkX5fbRwsdCFRLYhjBRMFS7AMI4V0XSnjDIkRud7L9El8IuAumqQf1SfgjamS7s57ZR2kAAS577H/n94QM= bscho333@jobeomsig-ui-MacBookAir.local')}
+The following directories listed in your path were found to be non-existent: {PosixPath('/venv/RVCD/bin/x86_64-conda-linux-gnu-g++')}
+The following directories listed in your path were found to be non-existent: {PosixPath('/venv/RVCD/targets/x86_64-linux/lib')}
+The following directories listed in your path were found to be non-existent: {PosixPath('18384'), PosixPath('8080'), PosixPath('localhost'), PosixPath('Syncthing|localhost'), PosixPath('16006'), PosixPath('11111'), PosixPath('8384'), PosixPath('Jupyter|localhost'), PosixPath('6006'), PosixPath('/terminals/1'), PosixPath('Tensorboard'), PosixPath('1111'), PosixPath('Instance Portal|localhost'), PosixPath('Jupyter Terminal|localhost')}
+The following directories listed in your path were found to be non-existent: {PosixPath('/venv/RVCD/bin/x86_64-conda-linux-gnu-gcc')}
+CUDA_SETUP: WARNING! libcudart.so not found in any environmental path. Searching in backup paths...
+DEBUG: Possible options found for libcudart.so: {PosixPath('/usr/local/cuda/lib64/libcudart.so')}
+CUDA SETUP: PyTorch settings found: CUDA_VERSION=118, Highest Compute Capability: 8.0.
+CUDA SETUP: To manually override the PyTorch CUDA version please see:https://github.com/TimDettmers/bitsandbytes/blob/main/how_to_use_nonpytorch_cuda.md
+CUDA SETUP: Loading binary /venv/RVCD/lib/python3.9/site-packages/bitsandbytes/libbitsandbytes_cuda118.so...
+libcusparse.so.11: cannot open shared object file: No such file or directory
+CUDA SETUP: Something unexpected happened. Please compile from source:
+git clone https://github.com/TimDettmers/bitsandbytes.git
+cd bitsandbytes
+CUDA_VERSION=118 make cuda11x
+python setup.py install
+Traceback (most recent call last):
+  File "<stdin>", line 10, in <module>
+  File "/venv/RVCD/lib/python3.9/site-packages/bitsandbytes/__init__.py", line 6, in <module>
+    from . import cuda_setup, utils, research
+  File "/venv/RVCD/lib/python3.9/site-packages/bitsandbytes/research/__init__.py", line 1, in <module>
+    from . import nn
+  File "/venv/RVCD/lib/python3.9/site-packages/bitsandbytes/research/nn/__init__.py", line 1, in <module>
+    from .modules import LinearFP8Mixed, LinearFP8Global
+  File "/venv/RVCD/lib/python3.9/site-packages/bitsandbytes/research/nn/modules.py", line 8, in <module>
+    from bitsandbytes.optim import GlobalOptimManager
+  File "/venv/RVCD/lib/python3.9/site-packages/bitsandbytes/optim/__init__.py", line 6, in <module>
+    from bitsandbytes.cextension import COMPILED_WITH_CUDA
+  File "/venv/RVCD/lib/python3.9/site-packages/bitsandbytes/cextension.py", line 20, in <module>
+    raise RuntimeError('''
+RuntimeError: 
+        CUDA Setup failed despite GPU being available. Please run the following command to get more information:
+
+        python -m bitsandbytes
+
+        Inspect the output of the command and see if you can locate CUDA libraries. You might need to add them
+        to your LD_LIBRARY_PATH. If you suspect a bug, please take the information from python -m bitsandbytes
+        and open an issue at: https://github.com/TimDettmers/bitsandbytes/issues

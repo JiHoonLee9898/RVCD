@@ -9,50 +9,63 @@ MAX_NEW_TOKENS=64
 CHAIR_CACHE_PATH="eval/CHAIR_CACHE/chair.pkl"
 
 
-
-### RVCD for CHAIR/BLEU ###
-# CUDA_VISIBLE_DEVICES=${GPU_ID} python rvcd_generation_chair_bleu.py \
-#     --model llava-1.5 \
-#     --ref_folder_path DB_single_concept_images_flux_generated/generated_images \
-#     --data_path ${COMMON_DATA_PATH} \
-#     --chair_cache_path ${CHAIR_CACHE_PATH} \
-#     --yolo_version yolov8x.pt \
-#     --num_samples ${NUM_SAMPLES} \
-#     --seed ${SEED} \
-#     --gpu-id ${GPU_ID} \
-#     --output_dir ${OUT_DIR} \
-#     --max_new_tokens ${MAX_NEW_TOKENS} \
-#     --rvcd_alpha 1 \
-#     --rvcd_beta 0.1 \
+## RVCD for CHAIR/BLEU ###
+CUDA_VISIBLE_DEVICES=${GPU_ID} python rvcd_generation_chair_bleu.py \
+    --model llava-1.5 \
+    --ref_folder_path DB_single_concept_images_flux_generated/generated_images \
+    --data_path ${COMMON_DATA_PATH} \
+    --chair_cache_path ${CHAIR_CACHE_PATH} \
+    --yolo_version yolov8x.pt \
+    --num_samples ${NUM_SAMPLES} \
+    --seed ${SEED} \
+    --gpu-id ${GPU_ID} \
+    --output_dir ${OUT_DIR} \
+    --max_new_tokens ${MAX_NEW_TOKENS} \
+    --rvcd_alpha 1 \
+    --rvcd_beta 0.1 \
  
 
-
-# ### greedy for CHAIR/BLEU ###
-# CUDA_VISIBLE_DEVICES=${GPU_ID} python prior_decodings/prior_generation_chair_bleu.py \
-#     --model not_rvcd_llava \
-#     --data_path ${COMMON_DATA_PATH} \
-#     -d greedy \
-#     --num_samples ${NUM_SAMPLES} \
-#     --seed ${SEED} \
-#     --gpu-id ${GPU_ID} \
-#     --output_dir ${OUT_DIR} \
-#     --max_new_tokens ${MAX_NEW_TOKENS} \
-#     --chair_cache_path ${CHAIR_CACHE_PATH}
-
-
-# ### dola for CHAIR/BLEU ###
-# CUDA_VISIBLE_DEVICES=${GPU_ID} python prior_decodings/prior_generation_chair_bleu.py \
-#     --model not_rvcd_llava \
-#     --data_path ${COMMON_DATA_PATH} \
-#     -d dola \
-#     --num_samples ${NUM_SAMPLES} \
-#     --seed ${SEED} \
-#     --gpu-id ${GPU_ID} \
-#     --output_dir ${OUT_DIR} \
-#     --max_new_tokens ${MAX_NEW_TOKENS} \
-#     --chair_cache_path ${CHAIR_CACHE_PATH}
+# eRVCD for CHAIR/BLEU ###
+CUDA_VISIBLE_DEVICES=0 \
+python ervcd_generation_chair_bleu.py \
+--model llava-1.5 \
+--data_path /home/jihoon/jihoon/DATASETS/coco2014/val2014 \
+--ref_folder_path DB_single_concept_images_flux_generated/generated_images \
+--chair_cache_path eval/CHAIR_CACHE/chair.pkl \
+--num_samples 300 \
+--seed 42 \
+--gpu-id 0 \
+--output_dir ./generated_captions/ \
+--rvcd_alpha 1 \
+--rvcd_beta 0.1 \
+--ervcd_grid_fill_mode black_front \
+--ervcd_logit_scale_mode presence
 
 
+### greedy for CHAIR/BLEU ###
+CUDA_VISIBLE_DEVICES=${GPU_ID} python prior_decodings/prior_generation_chair_bleu.py \
+    --model not_rvcd_llava \
+    --data_path ${COMMON_DATA_PATH} \
+    -d greedy \
+    --num_samples ${NUM_SAMPLES} \
+    --seed ${SEED} \
+    --gpu-id ${GPU_ID} \
+    --output_dir ${OUT_DIR} \
+    --max_new_tokens ${MAX_NEW_TOKENS} \
+    --chair_cache_path ${CHAIR_CACHE_PATH}
+
+
+### dola for CHAIR/BLEU ###
+CUDA_VISIBLE_DEVICES=${GPU_ID} python prior_decodings/prior_generation_chair_bleu.py \
+    --model not_rvcd_llava \
+    --data_path ${COMMON_DATA_PATH} \
+    -d dola \
+    --num_samples ${NUM_SAMPLES} \
+    --seed ${SEED} \
+    --gpu-id ${GPU_ID} \
+    --output_dir ${OUT_DIR} \
+    --max_new_tokens ${MAX_NEW_TOKENS} \
+    --chair_cache_path ${CHAIR_CACHE_PATH}
 
 
 ### opera for CHAIR/BLEU ###
@@ -105,6 +118,10 @@ CUDA_VISIBLE_DEVICES=${GPU_ID} python prior_decodings/prior_generation_chair_ble
 
 
 
+
+
+
+
 # ### halc for CHAIR/BLEU ###
 # CUDA_VISIBLE_DEVICES=${GPU_ID} python prior_decodings/prior_generation_chair_bleu.py \
 #     --model not_rvcd_llava \
@@ -121,11 +138,6 @@ CUDA_VISIBLE_DEVICES=${GPU_ID} python prior_decodings/prior_generation_chair_ble
 #     --expand-ratio 0.6 \
 #     --detector dino \
 #     --box_threshold 0.4
-
-
-
-
-
 
 
 # ### RVCD for POPE ###

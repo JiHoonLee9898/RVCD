@@ -75,3 +75,1502 @@ Executing transaction: / - \ | / - \ | / - \ | / - \
 #
 #     $ conda deactivate
 
++ conda create -n RVCD python=3.9 -y
+Retrieving notices: - \ | / - \ | / - \ | / - done
+Channels:
+ - nvidia
+ - conda-forge
+Platform: linux-64
+Collecting package metadata (repodata.json): | / - \ | / - \ | / - \ | / - \ done
+Solving environment: / done
+
+
+==> WARNING: A newer version of conda exists. <==
+    current version: 26.1.1
+    latest version: 26.5.0
+
+Please update conda by running
+
+    $ conda update -n base -c conda-forge conda
+
+
+
+## Package Plan ##
+
+  environment location: /venv/RVCD
+
+  added / updated specs:
+    - python=3.9
+
+
+The following packages will be downloaded:
+
+    package                    |            build
+    ---------------------------|-----------------
+    _openmp_mutex-4.5          |           20_gnu          28 KB  conda-forge
+    ca-certificates-2026.5.20  |       hbd8a1cb_0         127 KB  conda-forge
+    ld_impl_linux-64-2.45.1    |default_hbd61a6d_102         711 KB  conda-forge
+    libexpat-2.8.1             |       hecca717_0          75 KB  conda-forge
+    libgcc-15.2.0              |      he0feb66_19        1017 KB  conda-forge
+    libgcc-ng-15.2.0           |      h69a702a_19          27 KB  conda-forge
+    libgomp-15.2.0             |      he0feb66_19         590 KB  conda-forge
+    liblzma-5.8.3              |       hb03c661_0         111 KB  conda-forge
+    libnsl-2.0.1               |       hb9d3cd8_1          33 KB  conda-forge
+    libsqlite-3.53.1           |       h0c1763c_0         933 KB  conda-forge
+    libuuid-2.42.1             |       h5347b49_0          39 KB  conda-forge
+    libxcrypt-4.4.36           |       hd590300_1          98 KB  conda-forge
+    ncurses-6.6                |       hdb14827_0         897 KB  conda-forge
+    openssl-3.6.2              |       h35e630c_0         3.0 MB  conda-forge
+    pip-25.2                   |     pyh8b19718_0         1.1 MB  conda-forge
+    python-3.9.23              |hc30ae73_0_cpython        22.6 MB  conda-forge
+    setuptools-80.9.0          |     pyhff2d567_0         731 KB  conda-forge
+    wheel-0.45.1               |     pyhd8ed1ab_1          61 KB  conda-forge
+    ------------------------------------------------------------
+                                           Total:        32.1 MB
+
+The following NEW packages will be INSTALLED:
+
+  _openmp_mutex      conda-forge/linux-64::_openmp_mutex-4.5-20_gnu 
+  bzip2              conda-forge/linux-64::bzip2-1.0.8-hda65f42_9 
+  ca-certificates    conda-forge/noarch::ca-certificates-2026.5.20-hbd8a1cb_0 
+  ld_impl_linux-64   conda-forge/linux-64::ld_impl_linux-64-2.45.1-default_hbd61a6d_102 
+  libexpat           conda-forge/linux-64::libexpat-2.8.1-hecca717_0 
+  libffi             conda-forge/linux-64::libffi-3.5.2-h3435931_0 
+  libgcc             conda-forge/linux-64::libgcc-15.2.0-he0feb66_19 
+  libgcc-ng          conda-forge/linux-64::libgcc-ng-15.2.0-h69a702a_19 
+  libgomp            conda-forge/linux-64::libgomp-15.2.0-he0feb66_19 
+  liblzma            conda-forge/linux-64::liblzma-5.8.3-hb03c661_0 
+  libnsl             conda-forge/linux-64::libnsl-2.0.1-hb9d3cd8_1 
+  libsqlite          conda-forge/linux-64::libsqlite-3.53.1-h0c1763c_0 
+  libuuid            conda-forge/linux-64::libuuid-2.42.1-h5347b49_0 
+  libxcrypt          conda-forge/linux-64::libxcrypt-4.4.36-hd590300_1 
+  libzlib            conda-forge/linux-64::libzlib-1.3.2-h25fd6f3_2 
+  ncurses            conda-forge/linux-64::ncurses-6.6-hdb14827_0 
+  openssl            conda-forge/linux-64::openssl-3.6.2-h35e630c_0 
+  pip                conda-forge/noarch::pip-25.2-pyh8b19718_0 
+  python             conda-forge/linux-64::python-3.9.23-hc30ae73_0_cpython 
+  readline           conda-forge/linux-64::readline-8.3-h853b02a_0 
+  setuptools         conda-forge/noarch::setuptools-80.9.0-pyhff2d567_0 
+  tk                 conda-forge/linux-64::tk-8.6.13-noxft_h366c992_103 
+  tzdata             conda-forge/noarch::tzdata-2025c-hc9c84f9_1 
+  wheel              conda-forge/noarch::wheel-0.45.1-pyhd8ed1ab_1 
+  zstd               conda-forge/linux-64::zstd-1.5.7-hb78ec9c_6 
+
+
+
+Downloading and Extracting Packages: ...working...python-3.9.23        | 22.6 MB   |            |   0% 
+openssl-3.6.2        | 3.0 MB    |            |   0% [A
+
+pip-25.2             | 1.1 MB    |            |   0% [A[A
+
+
+libgcc-15.2.0        | 1017 KB   |            |   0% [A[A[A
+
+
+
+libsqlite-3.53.1     | 933 KB    |            |   0% [A[A[A[A
+
+
+
+
+ncurses-6.6          | 897 KB    |            |   0% [A[A[A[A[A
+
+
+
+
+
+setuptools-80.9.0    | 731 KB    |            |   0% [A[A[A[A[A[A
+
+
+
+
+
+
+ld_impl_linux-64-2.4 | 711 KB    |            |   0% [A[A[A[A[A[A[A
+
+
+
+
+
+
+
+libgomp-15.2.0       | 590 KB    |            |   0% [A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+ca-certificates-2026 | 127 KB    |            |   0% [A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+liblzma-5.8.3        | 111 KB    |            |   0% [A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+libxcrypt-4.4.36     | 98 KB     |            |   0% [A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+libexpat-2.8.1       | 75 KB     |            |   0% [A[A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+wheel-0.45.1         | 61 KB     |            |   0% [A[A[A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+
+libuuid-2.42.1       | 39 KB     |            |   0% [A[A[A[A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+libnsl-2.0.1         | 33 KB     |            |   0% [A[A[A[A[A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+_openmp_mutex-4.5    | 28 KB     |            |   0% [A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+libgcc-ng-15.2.0     | 27 KB     |            |   0% [A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A
+
+pip-25.2             | 1.1 MB    | ########## | 100% [A[Apython-3.9.23        | 22.6 MB   | #2         |  13% 
+openssl-3.6.2        | 3.0 MB    | ####4      |  44% [A
+
+
+
+
+ncurses-6.6          | 897 KB    | 1          |   2% [A[A[A[A[A
+
+
+
+libsqlite-3.53.1     | 933 KB    | #7         |  17% [A[A[A[A
+
+
+libgcc-15.2.0        | 1017 KB   | ########## | 100% [A[A[A
+
+
+libgcc-15.2.0        | 1017 KB   | ########## | 100% [A[A[A
+
+
+
+
+
+setuptools-80.9.0    | 731 KB    | 2          |   2% [A[A[A[A[A[A
+
+
+
+
+ncurses-6.6          | 897 KB    | ########## | 100% [A[A[A[A[A
+
+
+
+libsqlite-3.53.1     | 933 KB    | ########## | 100% [A[A[A[A
+
+
+
+
+
+setuptools-80.9.0    | 731 KB    | ########## | 100% [A[A[A[A[A[A
+
+
+
+
+
+
+
+libgomp-15.2.0       | 590 KB    | 2          |   3% [A[A[A[A[A[A[A[A
+
+
+
+
+
+
+ld_impl_linux-64-2.4 | 711 KB    | 2          |   2% [A[A[A[A[A[A[Apython-3.9.23        | 22.6 MB   | ###        |  31% 
+
+
+
+
+
+
+
+
+ca-certificates-2026 | 127 KB    | #2         |  13% [A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+ca-certificates-2026 | 127 KB    | ########## | 100% [A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+libgomp-15.2.0       | 590 KB    | ########## | 100% [A[A[A[A[A[A[A[A
+openssl-3.6.2        | 3.0 MB    | ########## | 100% [A
+openssl-3.6.2        | 3.0 MB    | ########## | 100% [A
+
+
+
+
+
+
+ld_impl_linux-64-2.4 | 711 KB    | ########## | 100% [A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+liblzma-5.8.3        | 111 KB    | #4         |  14% [A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+libxcrypt-4.4.36     | 98 KB     | #6         |  16% [A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+liblzma-5.8.3        | 111 KB    | ########## | 100% [A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+libxcrypt-4.4.36     | 98 KB     | ########## | 100% [A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+libexpat-2.8.1       | 75 KB     | ##1        |  21% [A[A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+libexpat-2.8.1       | 75 KB     | ########## | 100% [A[A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+
+libuuid-2.42.1       | 39 KB     | ####       |  41% [A[A[A[A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+
+libuuid-2.42.1       | 39 KB     | ########## | 100% [A[A[A[A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+libnsl-2.0.1         | 33 KB     | ####8      |  49% [A[A[A[A[A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+libnsl-2.0.1         | 33 KB     | ########## | 100% [A[A[A[A[A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+_openmp_mutex-4.5    | 28 KB     | #####6     |  57% [A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+_openmp_mutex-4.5    | 28 KB     | ########## | 100% [A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[Apython-3.9.23        | 22.6 MB   | ####6      |  47% 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+libgcc-ng-15.2.0     | 27 KB     | #####9     |  59% [A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+libgcc-ng-15.2.0     | 27 KB     | ########## | 100% [A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+wheel-0.45.1         | 61 KB     | ##6        |  26% [A[A[A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+wheel-0.45.1         | 61 KB     | ########## | 100% [A[A[A[A[A[A[A[A[A[A[A[A[A
+
+
+libgcc-15.2.0        | 1017 KB   | ########## | 100% [A[A[A
+
+
+
+libsqlite-3.53.1     | 933 KB    | ########## | 100% [A[A[A[A
+
+
+
+libsqlite-3.53.1     | 933 KB    | ########## | 100% [A[A[A[Apython-3.9.23        | 22.6 MB   | #######2   |  73% python-3.9.23        | 22.6 MB   | #########9 |  99% python-3.9.23        | 22.6 MB   | ########## | 100% 
+
+pip-25.2             | 1.1 MB    | ########## | 100% [A[A
+
+pip-25.2             | 1.1 MB    | ########## | 100% [A[A
+
+
+
+
+
+
+
+
+ca-certificates-2026 | 127 KB    | ########## | 100% [A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+ca-certificates-2026 | 127 KB    | ########## | 100% [A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+libgomp-15.2.0       | 590 KB    | ########## | 100% [A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+libgomp-15.2.0       | 590 KB    | ########## | 100% [A[A[A[A[A[A[A[A
+
+
+
+
+
+setuptools-80.9.0    | 731 KB    | ########## | 100% [A[A[A[A[A[A
+
+
+
+
+
+setuptools-80.9.0    | 731 KB    | ########## | 100% [A[A[A[A[A[A
+
+
+
+
+
+
+ld_impl_linux-64-2.4 | 711 KB    | ########## | 100% [A[A[A[A[A[A[A
+
+
+
+
+
+
+ld_impl_linux-64-2.4 | 711 KB    | ########## | 100% [A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+liblzma-5.8.3        | 111 KB    | ########## | 100% [A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+liblzma-5.8.3        | 111 KB    | ########## | 100% [A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+libxcrypt-4.4.36     | 98 KB     | ########## | 100% [A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+libxcrypt-4.4.36     | 98 KB     | ########## | 100% [A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+libexpat-2.8.1       | 75 KB     | ########## | 100% [A[A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+libexpat-2.8.1       | 75 KB     | ########## | 100% [A[A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+
+libuuid-2.42.1       | 39 KB     | ########## | 100% [A[A[A[A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+
+libuuid-2.42.1       | 39 KB     | ########## | 100% [A[A[A[A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+libnsl-2.0.1         | 33 KB     | ########## | 100% [A[A[A[A[A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+libnsl-2.0.1         | 33 KB     | ########## | 100% [A[A[A[A[A[A[A[A[A[A[A[A[A[A[A
+openssl-3.6.2        | 3.0 MB    | ########## | 100% [A
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+_openmp_mutex-4.5    | 28 KB     | ########## | 100% [A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+_openmp_mutex-4.5    | 28 KB     | ########## | 100% [A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+libgcc-ng-15.2.0     | 27 KB     | ########## | 100% [A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+libgcc-ng-15.2.0     | 27 KB     | ########## | 100% [A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+wheel-0.45.1         | 61 KB     | ########## | 100% [A[A[A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+wheel-0.45.1         | 61 KB     | ########## | 100% [A[A[A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+ncurses-6.6          | 897 KB    | ########## | 100% [A[A[A[A[A
+
+
+
+
+ncurses-6.6          | 897 KB    | ########## | 100% [A[A[A[A[Apython-3.9.23        | 22.6 MB   | ########## | 100%                                                      
+                                                     [A
+
+                                                     [A[A
+
+
+                                                     [A[A[A
+
+
+
+                                                     [A[A[A[A
+
+
+
+
+                                                     [A[A[A[A[A
+
+
+
+
+
+                                                     [A[A[A[A[A[A
+
+
+
+
+
+
+                                                     [A[A[A[A[A[A[A
+
+
+
+
+
+
+
+                                                     [A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+                                                     [A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+                                                     [A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+                                                     [A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+                                                     [A[A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+                                                     [A[A[A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+
+                                                     [A[A[A[A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                                                     [A[A[A[A[A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                                                     [A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                                                     [A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A done
+Preparing transaction: \ | done
+Verifying transaction: - \ | / - \ | / - \ done
+Executing transaction: / - \ | / - \ | / - \ | / - \ | / - \ | / - \ | done
+#
+# To activate this environment, use
+#
+#     $ conda activate RVCD
+#
+# To deactivate an active environment, use
+#
+#     $ conda deactivate
+
++ conda create -n RVCD python=3.9 -y
+Channels:
+ - nvidia
+ - conda-forge
+Platform: linux-64
+Collecting package metadata (repodata.json): - \ | done
+Solving environment: - \ done
+
+
+==> WARNING: A newer version of conda exists. <==
+    current version: 26.1.1
+    latest version: 26.5.0
+
+Please update conda by running
+
+    $ conda update -n base -c conda-forge conda
+
+
+
+## Package Plan ##
+
+  environment location: /venv/RVCD
+
+  added / updated specs:
+    - python=3.9
+
+
+The following NEW packages will be INSTALLED:
+
+  _openmp_mutex      conda-forge/linux-64::_openmp_mutex-4.5-20_gnu 
+  bzip2              conda-forge/linux-64::bzip2-1.0.8-hda65f42_9 
+  ca-certificates    conda-forge/noarch::ca-certificates-2026.5.20-hbd8a1cb_0 
+  ld_impl_linux-64   conda-forge/linux-64::ld_impl_linux-64-2.45.1-default_hbd61a6d_102 
+  libexpat           conda-forge/linux-64::libexpat-2.8.1-hecca717_0 
+  libffi             conda-forge/linux-64::libffi-3.5.2-h3435931_0 
+  libgcc             conda-forge/linux-64::libgcc-15.2.0-he0feb66_19 
+  libgcc-ng          conda-forge/linux-64::libgcc-ng-15.2.0-h69a702a_19 
+  libgomp            conda-forge/linux-64::libgomp-15.2.0-he0feb66_19 
+  liblzma            conda-forge/linux-64::liblzma-5.8.3-hb03c661_0 
+  libnsl             conda-forge/linux-64::libnsl-2.0.1-hb9d3cd8_1 
+  libsqlite          conda-forge/linux-64::libsqlite-3.53.1-h0c1763c_0 
+  libuuid            conda-forge/linux-64::libuuid-2.42.1-h5347b49_0 
+  libxcrypt          conda-forge/linux-64::libxcrypt-4.4.36-hd590300_1 
+  libzlib            conda-forge/linux-64::libzlib-1.3.2-h25fd6f3_2 
+  ncurses            conda-forge/linux-64::ncurses-6.6-hdb14827_0 
+  openssl            conda-forge/linux-64::openssl-3.6.2-h35e630c_0 
+  pip                conda-forge/noarch::pip-25.2-pyh8b19718_0 
+  python             conda-forge/linux-64::python-3.9.23-hc30ae73_0_cpython 
+  readline           conda-forge/linux-64::readline-8.3-h853b02a_0 
+  setuptools         conda-forge/noarch::setuptools-80.9.0-pyhff2d567_0 
+  tk                 conda-forge/linux-64::tk-8.6.13-noxft_h366c992_103 
+  tzdata             conda-forge/noarch::tzdata-2025c-hc9c84f9_1 
+  wheel              conda-forge/noarch::wheel-0.45.1-pyhd8ed1ab_1 
+  zstd               conda-forge/linux-64::zstd-1.5.7-hb78ec9c_6 
+
+
+
+Downloading and Extracting Packages: ...working... done
+Preparing transaction: / - done
+Verifying transaction: | / - \ | / - \ | / done
+Executing transaction: \ | / - \ | / - \ | / - \ | / - \ | / - \ | done
+#
+# To activate this environment, use
+#
+#     $ conda activate RVCD
+#
+# To deactivate an active environment, use
+#
+#     $ conda deactivate
+
++ conda create -n RVCD python=3.9 -y
+Channels:
+ - nvidia
+ - conda-forge
+Platform: linux-64
+Collecting package metadata (repodata.json): - \ | / - done
+Solving environment: | / done
+
+
+==> WARNING: A newer version of conda exists. <==
+    current version: 26.1.1
+    latest version: 26.5.0
+
+Please update conda by running
+
+    $ conda update -n base -c conda-forge conda
+
+
+
+## Package Plan ##
+
+  environment location: /venv/RVCD
+
+  added / updated specs:
+    - python=3.9
+
+
+The following NEW packages will be INSTALLED:
+
+  _openmp_mutex      conda-forge/linux-64::_openmp_mutex-4.5-20_gnu 
+  bzip2              conda-forge/linux-64::bzip2-1.0.8-hda65f42_9 
+  ca-certificates    conda-forge/noarch::ca-certificates-2026.5.20-hbd8a1cb_0 
+  ld_impl_linux-64   conda-forge/linux-64::ld_impl_linux-64-2.45.1-default_hbd61a6d_102 
+  libexpat           conda-forge/linux-64::libexpat-2.8.1-hecca717_0 
+  libffi             conda-forge/linux-64::libffi-3.5.2-h3435931_0 
+  libgcc             conda-forge/linux-64::libgcc-15.2.0-he0feb66_19 
+  libgcc-ng          conda-forge/linux-64::libgcc-ng-15.2.0-h69a702a_19 
+  libgomp            conda-forge/linux-64::libgomp-15.2.0-he0feb66_19 
+  liblzma            conda-forge/linux-64::liblzma-5.8.3-hb03c661_0 
+  libnsl             conda-forge/linux-64::libnsl-2.0.1-hb9d3cd8_1 
+  libsqlite          conda-forge/linux-64::libsqlite-3.53.1-h0c1763c_0 
+  libuuid            conda-forge/linux-64::libuuid-2.42.1-h5347b49_0 
+  libxcrypt          conda-forge/linux-64::libxcrypt-4.4.36-hd590300_1 
+  libzlib            conda-forge/linux-64::libzlib-1.3.2-h25fd6f3_2 
+  ncurses            conda-forge/linux-64::ncurses-6.6-hdb14827_0 
+  openssl            conda-forge/linux-64::openssl-3.6.2-h35e630c_0 
+  pip                conda-forge/noarch::pip-25.2-pyh8b19718_0 
+  python             conda-forge/linux-64::python-3.9.23-hc30ae73_0_cpython 
+  readline           conda-forge/linux-64::readline-8.3-h853b02a_0 
+  setuptools         conda-forge/noarch::setuptools-80.9.0-pyhff2d567_0 
+  tk                 conda-forge/linux-64::tk-8.6.13-noxft_h366c992_103 
+  tzdata             conda-forge/noarch::tzdata-2025c-hc9c84f9_1 
+  wheel              conda-forge/noarch::wheel-0.45.1-pyhd8ed1ab_1 
+  zstd               conda-forge/linux-64::zstd-1.5.7-hb78ec9c_6 
+
+
+
+Downloading and Extracting Packages: ...working... done
+Preparing transaction: \ | done
+Verifying transaction: - \ | / - \ | / - \ done
+Executing transaction: / - \ | / - \ | / - \ | / - \ | / - \ | / - \ done
+#
+# To activate this environment, use
+#
+#     $ conda activate RVCD
+#
+# To deactivate an active environment, use
+#
+#     $ conda deactivate
+
++ conda create -n RVCD python=3.9 -y
+Channels:
+ - nvidia
+ - conda-forge
+Platform: linux-64
+Collecting package metadata (repodata.json): - \ | / - \ | done
+Solving environment: - \ done
+
+
+==> WARNING: A newer version of conda exists. <==
+    current version: 26.1.1
+    latest version: 26.5.0
+
+Please update conda by running
+
+    $ conda update -n base -c conda-forge conda
+
+
+
+## Package Plan ##
+
+  environment location: /venv/RVCD
+
+  added / updated specs:
+    - python=3.9
+
+
+The following NEW packages will be INSTALLED:
+
+  _openmp_mutex      conda-forge/linux-64::_openmp_mutex-4.5-20_gnu 
+  bzip2              conda-forge/linux-64::bzip2-1.0.8-hda65f42_9 
+  ca-certificates    conda-forge/noarch::ca-certificates-2026.5.20-hbd8a1cb_0 
+  ld_impl_linux-64   conda-forge/linux-64::ld_impl_linux-64-2.45.1-default_hbd61a6d_102 
+  libexpat           conda-forge/linux-64::libexpat-2.8.1-hecca717_0 
+  libffi             conda-forge/linux-64::libffi-3.5.2-h3435931_0 
+  libgcc             conda-forge/linux-64::libgcc-15.2.0-he0feb66_19 
+  libgcc-ng          conda-forge/linux-64::libgcc-ng-15.2.0-h69a702a_19 
+  libgomp            conda-forge/linux-64::libgomp-15.2.0-he0feb66_19 
+  liblzma            conda-forge/linux-64::liblzma-5.8.3-hb03c661_0 
+  libnsl             conda-forge/linux-64::libnsl-2.0.1-hb9d3cd8_1 
+  libsqlite          conda-forge/linux-64::libsqlite-3.53.1-h0c1763c_0 
+  libuuid            conda-forge/linux-64::libuuid-2.42.1-h5347b49_0 
+  libxcrypt          conda-forge/linux-64::libxcrypt-4.4.36-hd590300_1 
+  libzlib            conda-forge/linux-64::libzlib-1.3.2-h25fd6f3_2 
+  ncurses            conda-forge/linux-64::ncurses-6.6-hdb14827_0 
+  openssl            conda-forge/linux-64::openssl-3.6.2-h35e630c_0 
+  pip                conda-forge/noarch::pip-25.2-pyh8b19718_0 
+  python             conda-forge/linux-64::python-3.9.23-hc30ae73_0_cpython 
+  readline           conda-forge/linux-64::readline-8.3-h853b02a_0 
+  setuptools         conda-forge/noarch::setuptools-80.9.0-pyhff2d567_0 
+  tk                 conda-forge/linux-64::tk-8.6.13-noxft_h366c992_103 
+  tzdata             conda-forge/noarch::tzdata-2025c-hc9c84f9_1 
+  wheel              conda-forge/noarch::wheel-0.45.1-pyhd8ed1ab_1 
+  zstd               conda-forge/linux-64::zstd-1.5.7-hb78ec9c_6 
+
+
+
+Downloading and Extracting Packages: ...working... done
+Preparing transaction: / - done
+Verifying transaction: | / - \ | / - \ | / done
+Executing transaction: \ | / - \ | / - \ | / - \ | / - \ | / - \ | done
+#
+# To activate this environment, use
+#
+#     $ conda activate RVCD
+#
+# To deactivate an active environment, use
+#
+#     $ conda deactivate
+
++ conda create -n RVCD python=3.9 -y
+Channels:
+ - nvidia
+ - conda-forge
+Platform: linux-64
+Collecting package metadata (repodata.json): - \ | / - \ done
+Solving environment: / - done
+
+
+==> WARNING: A newer version of conda exists. <==
+    current version: 26.1.1
+    latest version: 26.5.0
+
+Please update conda by running
+
+    $ conda update -n base -c conda-forge conda
+
+
+
+## Package Plan ##
+
+  environment location: /venv/RVCD
+
+  added / updated specs:
+    - python=3.9
+
+
+The following NEW packages will be INSTALLED:
+
+  _openmp_mutex      conda-forge/linux-64::_openmp_mutex-4.5-20_gnu 
+  bzip2              conda-forge/linux-64::bzip2-1.0.8-hda65f42_9 
+  ca-certificates    conda-forge/noarch::ca-certificates-2026.5.20-hbd8a1cb_0 
+  ld_impl_linux-64   conda-forge/linux-64::ld_impl_linux-64-2.45.1-default_hbd61a6d_102 
+  libexpat           conda-forge/linux-64::libexpat-2.8.1-hecca717_0 
+  libffi             conda-forge/linux-64::libffi-3.5.2-h3435931_0 
+  libgcc             conda-forge/linux-64::libgcc-15.2.0-he0feb66_19 
+  libgcc-ng          conda-forge/linux-64::libgcc-ng-15.2.0-h69a702a_19 
+  libgomp            conda-forge/linux-64::libgomp-15.2.0-he0feb66_19 
+  liblzma            conda-forge/linux-64::liblzma-5.8.3-hb03c661_0 
+  libnsl             conda-forge/linux-64::libnsl-2.0.1-hb9d3cd8_1 
+  libsqlite          conda-forge/linux-64::libsqlite-3.53.1-h0c1763c_0 
+  libuuid            conda-forge/linux-64::libuuid-2.42.1-h5347b49_0 
+  libxcrypt          conda-forge/linux-64::libxcrypt-4.4.36-hd590300_1 
+  libzlib            conda-forge/linux-64::libzlib-1.3.2-h25fd6f3_2 
+  ncurses            conda-forge/linux-64::ncurses-6.6-hdb14827_0 
+  openssl            conda-forge/linux-64::openssl-3.6.2-h35e630c_0 
+  pip                conda-forge/noarch::pip-25.2-pyh8b19718_0 
+  python             conda-forge/linux-64::python-3.9.23-hc30ae73_0_cpython 
+  readline           conda-forge/linux-64::readline-8.3-h853b02a_0 
+  setuptools         conda-forge/noarch::setuptools-80.9.0-pyhff2d567_0 
+  tk                 conda-forge/linux-64::tk-8.6.13-noxft_h366c992_103 
+  tzdata             conda-forge/noarch::tzdata-2025c-hc9c84f9_1 
+  wheel              conda-forge/noarch::wheel-0.45.1-pyhd8ed1ab_1 
+  zstd               conda-forge/linux-64::zstd-1.5.7-hb78ec9c_6 
+
+
+
+Downloading and Extracting Packages: ...working... done
+Preparing transaction: | / done
+Verifying transaction: \ | / - \ | / - \ done
+Executing transaction: / - \ | / - \ | / - \ | / - \ | / - \ | / - \ done
+#
+# To activate this environment, use
+#
+#     $ conda activate RVCD
+#
+# To deactivate an active environment, use
+#
+#     $ conda deactivate
+
++ conda create -n RVCD python=3.9 -y
+Channels:
+ - nvidia
+ - conda-forge
+Platform: linux-64
+Collecting package metadata (repodata.json): - \ | / - \ done
+Solving environment: / done
+
+
+==> WARNING: A newer version of conda exists. <==
+    current version: 26.1.1
+    latest version: 26.5.0
+
+Please update conda by running
+
+    $ conda update -n base -c conda-forge conda
+
+
+
+## Package Plan ##
+
+  environment location: /venv/RVCD
+
+  added / updated specs:
+    - python=3.9
+
+
+The following NEW packages will be INSTALLED:
+
+  _openmp_mutex      conda-forge/linux-64::_openmp_mutex-4.5-20_gnu 
+  bzip2              conda-forge/linux-64::bzip2-1.0.8-hda65f42_9 
+  ca-certificates    conda-forge/noarch::ca-certificates-2026.5.20-hbd8a1cb_0 
+  ld_impl_linux-64   conda-forge/linux-64::ld_impl_linux-64-2.45.1-default_hbd61a6d_102 
+  libexpat           conda-forge/linux-64::libexpat-2.8.1-hecca717_0 
+  libffi             conda-forge/linux-64::libffi-3.5.2-h3435931_0 
+  libgcc             conda-forge/linux-64::libgcc-15.2.0-he0feb66_19 
+  libgcc-ng          conda-forge/linux-64::libgcc-ng-15.2.0-h69a702a_19 
+  libgomp            conda-forge/linux-64::libgomp-15.2.0-he0feb66_19 
+  liblzma            conda-forge/linux-64::liblzma-5.8.3-hb03c661_0 
+  libnsl             conda-forge/linux-64::libnsl-2.0.1-hb9d3cd8_1 
+  libsqlite          conda-forge/linux-64::libsqlite-3.53.1-h0c1763c_0 
+  libuuid            conda-forge/linux-64::libuuid-2.42.1-h5347b49_0 
+  libxcrypt          conda-forge/linux-64::libxcrypt-4.4.36-hd590300_1 
+  libzlib            conda-forge/linux-64::libzlib-1.3.2-h25fd6f3_2 
+  ncurses            conda-forge/linux-64::ncurses-6.6-hdb14827_0 
+  openssl            conda-forge/linux-64::openssl-3.6.2-h35e630c_0 
+  pip                conda-forge/noarch::pip-25.2-pyh8b19718_0 
+  python             conda-forge/linux-64::python-3.9.23-hc30ae73_0_cpython 
+  readline           conda-forge/linux-64::readline-8.3-h853b02a_0 
+  setuptools         conda-forge/noarch::setuptools-80.9.0-pyhff2d567_0 
+  tk                 conda-forge/linux-64::tk-8.6.13-noxft_h366c992_103 
+  tzdata             conda-forge/noarch::tzdata-2025c-hc9c84f9_1 
+  wheel              conda-forge/noarch::wheel-0.45.1-pyhd8ed1ab_1 
+  zstd               conda-forge/linux-64::zstd-1.5.7-hb78ec9c_6 
+
+
+
+Downloading and Extracting Packages: ...working... done
+Preparing transaction: \ | done
+Verifying transaction: - \ | / - \ | / - \ done
+Executing transaction: / - \ | / - \ | / - \ | / - \ | / - \ | / - \ done
+#
+# To activate this environment, use
+#
+#     $ conda activate RVCD
+#
+# To deactivate an active environment, use
+#
+#     $ conda deactivate
+
++ conda create -n RVCD python=3.9 -y
+Channels:
+ - nvidia
+ - conda-forge
+Platform: linux-64
+Collecting package metadata (repodata.json): - \ | / - \ | / - \ | / - done
+Solving environment: | / done
+
+
+==> WARNING: A newer version of conda exists. <==
+    current version: 26.1.1
+    latest version: 26.5.0
+
+Please update conda by running
+
+    $ conda update -n base -c conda-forge conda
+
+
+
+## Package Plan ##
+
+  environment location: /venv/RVCD
+
+  added / updated specs:
+    - python=3.9
+
+
+The following NEW packages will be INSTALLED:
+
+  _openmp_mutex      conda-forge/linux-64::_openmp_mutex-4.5-20_gnu 
+  bzip2              conda-forge/linux-64::bzip2-1.0.8-hda65f42_9 
+  ca-certificates    conda-forge/noarch::ca-certificates-2026.5.20-hbd8a1cb_0 
+  ld_impl_linux-64   conda-forge/linux-64::ld_impl_linux-64-2.45.1-default_hbd61a6d_102 
+  libexpat           conda-forge/linux-64::libexpat-2.8.1-hecca717_0 
+  libffi             conda-forge/linux-64::libffi-3.5.2-h3435931_0 
+  libgcc             conda-forge/linux-64::libgcc-15.2.0-he0feb66_19 
+  libgcc-ng          conda-forge/linux-64::libgcc-ng-15.2.0-h69a702a_19 
+  libgomp            conda-forge/linux-64::libgomp-15.2.0-he0feb66_19 
+  liblzma            conda-forge/linux-64::liblzma-5.8.3-hb03c661_0 
+  libnsl             conda-forge/linux-64::libnsl-2.0.1-hb9d3cd8_1 
+  libsqlite          conda-forge/linux-64::libsqlite-3.53.1-h0c1763c_0 
+  libuuid            conda-forge/linux-64::libuuid-2.42.1-h5347b49_0 
+  libxcrypt          conda-forge/linux-64::libxcrypt-4.4.36-hd590300_1 
+  libzlib            conda-forge/linux-64::libzlib-1.3.2-h25fd6f3_2 
+  ncurses            conda-forge/linux-64::ncurses-6.6-hdb14827_0 
+  openssl            conda-forge/linux-64::openssl-3.6.2-h35e630c_0 
+  pip                conda-forge/noarch::pip-25.2-pyh8b19718_0 
+  python             conda-forge/linux-64::python-3.9.23-hc30ae73_0_cpython 
+  readline           conda-forge/linux-64::readline-8.3-h853b02a_0 
+  setuptools         conda-forge/noarch::setuptools-80.9.0-pyhff2d567_0 
+  tk                 conda-forge/linux-64::tk-8.6.13-noxft_h366c992_103 
+  tzdata             conda-forge/noarch::tzdata-2025c-hc9c84f9_1 
+  wheel              conda-forge/noarch::wheel-0.45.1-pyhd8ed1ab_1 
+  zstd               conda-forge/linux-64::zstd-1.5.7-hb78ec9c_6 
+
+
+
+Downloading and Extracting Packages: ...working... done
+Preparing transaction: \ | done
+Verifying transaction: - \ | / - \ | / - \ done
+Executing transaction: / - \ | / - \ | / - \ | / - \ | / - \ | / - \ done
+#
+# To activate this environment, use
+#
+#     $ conda activate RVCD
+#
+# To deactivate an active environment, use
+#
+#     $ conda deactivate
+
++ conda create -n RVCD python=3.9 -y
+Channels:
+ - nvidia
+ - conda-forge
+Platform: linux-64
+Collecting package metadata (repodata.json): - \ | / done
+Solving environment: \ done
+
+
+==> WARNING: A newer version of conda exists. <==
+    current version: 26.1.1
+    latest version: 26.5.0
+
+Please update conda by running
+
+    $ conda update -n base -c conda-forge conda
+
+
+
+## Package Plan ##
+
+  environment location: /venv/RVCD
+
+  added / updated specs:
+    - python=3.9
+
+
+The following NEW packages will be INSTALLED:
+
+  _openmp_mutex      conda-forge/linux-64::_openmp_mutex-4.5-20_gnu 
+  bzip2              conda-forge/linux-64::bzip2-1.0.8-hda65f42_9 
+  ca-certificates    conda-forge/noarch::ca-certificates-2026.5.20-hbd8a1cb_0 
+  ld_impl_linux-64   conda-forge/linux-64::ld_impl_linux-64-2.45.1-default_hbd61a6d_102 
+  libexpat           conda-forge/linux-64::libexpat-2.8.1-hecca717_0 
+  libffi             conda-forge/linux-64::libffi-3.5.2-h3435931_0 
+  libgcc             conda-forge/linux-64::libgcc-15.2.0-he0feb66_19 
+  libgcc-ng          conda-forge/linux-64::libgcc-ng-15.2.0-h69a702a_19 
+  libgomp            conda-forge/linux-64::libgomp-15.2.0-he0feb66_19 
+  liblzma            conda-forge/linux-64::liblzma-5.8.3-hb03c661_0 
+  libnsl             conda-forge/linux-64::libnsl-2.0.1-hb9d3cd8_1 
+  libsqlite          conda-forge/linux-64::libsqlite-3.53.1-h0c1763c_0 
+  libuuid            conda-forge/linux-64::libuuid-2.42.1-h5347b49_0 
+  libxcrypt          conda-forge/linux-64::libxcrypt-4.4.36-hd590300_1 
+  libzlib            conda-forge/linux-64::libzlib-1.3.2-h25fd6f3_2 
+  ncurses            conda-forge/linux-64::ncurses-6.6-hdb14827_0 
+  openssl            conda-forge/linux-64::openssl-3.6.2-h35e630c_0 
+  pip                conda-forge/noarch::pip-25.2-pyh8b19718_0 
+  python             conda-forge/linux-64::python-3.9.23-hc30ae73_0_cpython 
+  readline           conda-forge/linux-64::readline-8.3-h853b02a_0 
+  setuptools         conda-forge/noarch::setuptools-80.9.0-pyhff2d567_0 
+  tk                 conda-forge/linux-64::tk-8.6.13-noxft_h366c992_103 
+  tzdata             conda-forge/noarch::tzdata-2025c-hc9c84f9_1 
+  wheel              conda-forge/noarch::wheel-0.45.1-pyhd8ed1ab_1 
+  zstd               conda-forge/linux-64::zstd-1.5.7-hb78ec9c_6 
+
+
+
+Downloading and Extracting Packages: ...working... done
+Preparing transaction: / - done
+Verifying transaction: | / - \ | / - \ | / done
+Executing transaction: \ | / - \ | / - \ | / - \ | / - \ | / - \ | / done
+#
+# To activate this environment, use
+#
+#     $ conda activate RVCD
+#
+# To deactivate an active environment, use
+#
+#     $ conda deactivate
+

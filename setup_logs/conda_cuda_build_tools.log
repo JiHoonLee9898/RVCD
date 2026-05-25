@@ -1,0 +1,27 @@
++ conda install -y -c nvidia/label/cuda-11.8.0 -c nvidia cuda-nvcc>=11.8,<11.9 cuda-cudart>=11.8,<11.9 cuda-cudart-dev>=11.8,<11.9 cuda-libraries-dev>=11.8,<11.9 cuda-thrust>=11.8,<11.9
+Channels:
+ - nvidia/label/cuda-11.8.0
+ - nvidia
+ - conda-forge
+Platform: linux-64
+Collecting package metadata (repodata.json): - \ | / - \ | / - done
+Solving environment: | / - failed
+
+PackagesNotFoundError: The following packages are not available from current channels:
+
+  - cuda-thrust[version='>=11.8,<11.9']
+
+Current channels:
+
+  - https://conda.anaconda.org/nvidia/label/cuda-11.8.0
+  - https://conda.anaconda.org/nvidia
+  - https://conda.anaconda.org/conda-forge
+
+To search for alternate channels that may provide the conda package you're
+looking for, navigate to
+
+    https://anaconda.org
+
+and use the search bar at the top of the page.
+
+

@@ -41,3 +41,355 @@ Successfully installed transformers-4.36.2
 
 [notice] A new release of pip is available: 25.3 -> 26.1.1
 [notice] To update, run: pip install --upgrade pip
++ python -m pip install -e /root/RVCD/transformers-4.36.2
+Obtaining file:///root/RVCD/transformers-4.36.2
+  Installing build dependencies: started
+  Installing build dependencies: finished with status 'done'
+  Checking if build backend supports build_editable: started
+  Checking if build backend supports build_editable: finished with status 'done'
+  Getting requirements to build editable: started
+  Getting requirements to build editable: finished with status 'done'
+  Preparing editable metadata (pyproject.toml): started
+  Preparing editable metadata (pyproject.toml): finished with status 'done'
+Requirement already satisfied: filelock in /venv/RVCD/lib/python3.9/site-packages (from transformers==4.36.2) (3.19.1)
+Requirement already satisfied: huggingface-hub<1.0,>=0.19.3 in /venv/RVCD/lib/python3.9/site-packages (from transformers==4.36.2) (0.20.2)
+Requirement already satisfied: numpy>=1.17 in /venv/RVCD/lib/python3.9/site-packages (from transformers==4.36.2) (1.26.4)
+Requirement already satisfied: packaging>=20.0 in /venv/RVCD/lib/python3.9/site-packages (from transformers==4.36.2) (26.2)
+Requirement already satisfied: pyyaml>=5.1 in /venv/RVCD/lib/python3.9/site-packages (from transformers==4.36.2) (6.0)
+Requirement already satisfied: regex!=2019.12.17 in /venv/RVCD/lib/python3.9/site-packages (from transformers==4.36.2) (2022.10.31)
+Requirement already satisfied: requests in /venv/RVCD/lib/python3.9/site-packages (from transformers==4.36.2) (2.28.1)
+Requirement already satisfied: tokenizers<0.19,>=0.14 in /venv/RVCD/lib/python3.9/site-packages (from transformers==4.36.2) (0.15.0)
+Requirement already satisfied: safetensors>=0.3.1 in /venv/RVCD/lib/python3.9/site-packages (from transformers==4.36.2) (0.7.0)
+Requirement already satisfied: tqdm>=4.27 in /venv/RVCD/lib/python3.9/site-packages (from transformers==4.36.2) (4.64.1)
+Requirement already satisfied: fsspec>=2023.5.0 in /venv/RVCD/lib/python3.9/site-packages (from huggingface-hub<1.0,>=0.19.3->transformers==4.36.2) (2025.10.0)
+Requirement already satisfied: typing-extensions>=3.7.4.3 in /venv/RVCD/lib/python3.9/site-packages (from huggingface-hub<1.0,>=0.19.3->transformers==4.36.2) (4.15.0)
+Requirement already satisfied: charset-normalizer<3,>=2 in /venv/RVCD/lib/python3.9/site-packages (from requests->transformers==4.36.2) (2.1.1)
+Requirement already satisfied: idna<4,>=2.5 in /venv/RVCD/lib/python3.9/site-packages (from requests->transformers==4.36.2) (3.4)
+Requirement already satisfied: urllib3<1.27,>=1.21.1 in /venv/RVCD/lib/python3.9/site-packages (from requests->transformers==4.36.2) (1.26.13)
+Requirement already satisfied: certifi>=2017.4.17 in /venv/RVCD/lib/python3.9/site-packages (from requests->transformers==4.36.2) (2022.12.7)
+Building wheels for collected packages: transformers
+  Building editable for transformers (pyproject.toml): started
+  Building editable for transformers (pyproject.toml): finished with status 'done'
+  Created wheel for transformers: filename=transformers-4.36.2-0.editable-py3-none-any.whl size=41057 sha256=32dba7f42200bd7419efe22dedaad076980d226d21389bea2f97160576c7382f
+  Stored in directory: /tmp/pip-ephem-wheel-cache-d0hz_w7u/wheels/22/c9/e6/744f931876c44faf1329dbce95e4b7eab551cbcc13ced39d06
+Successfully built transformers
+Installing collected packages: transformers
+  Attempting uninstall: transformers
+    Found existing installation: transformers 4.36.2
+    Uninstalling transformers-4.36.2:
+      Successfully uninstalled transformers-4.36.2
+ERROR: pip's dependency resolver does not currently take into account all the packages that are installed. This behaviour is the source of the following dependency conflicts.
+sentence-transformers 3.1.1 requires transformers<5.0.0,>=4.38.0, but you have transformers 4.36.2 which is incompatible.
+Successfully installed transformers-4.36.2
+WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable. It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+
+[notice] A new release of pip is available: 25.3 -> 26.0.1
+[notice] To update, run: pip install --upgrade pip
++ python -m pip install -e /root/RVCD/transformers-4.36.2
+Obtaining file:///root/RVCD/transformers-4.36.2
+  Installing build dependencies: started
+  Installing build dependencies: finished with status 'done'
+  Checking if build backend supports build_editable: started
+  Checking if build backend supports build_editable: finished with status 'done'
+  Getting requirements to build editable: started
+  Getting requirements to build editable: finished with status 'done'
+  Preparing editable metadata (pyproject.toml): started
+  Preparing editable metadata (pyproject.toml): finished with status 'done'
+Requirement already satisfied: filelock in /venv/RVCD/lib/python3.9/site-packages (from transformers==4.36.2) (3.19.1)
+Requirement already satisfied: huggingface-hub<1.0,>=0.19.3 in /venv/RVCD/lib/python3.9/site-packages (from transformers==4.36.2) (0.20.2)
+Requirement already satisfied: numpy>=1.17 in /venv/RVCD/lib/python3.9/site-packages (from transformers==4.36.2) (1.26.4)
+Requirement already satisfied: packaging>=20.0 in /venv/RVCD/lib/python3.9/site-packages (from transformers==4.36.2) (26.2)
+Requirement already satisfied: pyyaml>=5.1 in /venv/RVCD/lib/python3.9/site-packages (from transformers==4.36.2) (6.0)
+Requirement already satisfied: regex!=2019.12.17 in /venv/RVCD/lib/python3.9/site-packages (from transformers==4.36.2) (2022.10.31)
+Requirement already satisfied: requests in /venv/RVCD/lib/python3.9/site-packages (from transformers==4.36.2) (2.28.1)
+Requirement already satisfied: tokenizers<0.19,>=0.14 in /venv/RVCD/lib/python3.9/site-packages (from transformers==4.36.2) (0.15.0)
+Requirement already satisfied: safetensors>=0.3.1 in /venv/RVCD/lib/python3.9/site-packages (from transformers==4.36.2) (0.7.0)
+Requirement already satisfied: tqdm>=4.27 in /venv/RVCD/lib/python3.9/site-packages (from transformers==4.36.2) (4.64.1)
+Requirement already satisfied: fsspec>=2023.5.0 in /venv/RVCD/lib/python3.9/site-packages (from huggingface-hub<1.0,>=0.19.3->transformers==4.36.2) (2025.10.0)
+Requirement already satisfied: typing-extensions>=3.7.4.3 in /venv/RVCD/lib/python3.9/site-packages (from huggingface-hub<1.0,>=0.19.3->transformers==4.36.2) (4.15.0)
+Requirement already satisfied: charset-normalizer<3,>=2 in /venv/RVCD/lib/python3.9/site-packages (from requests->transformers==4.36.2) (2.1.1)
+Requirement already satisfied: idna<4,>=2.5 in /venv/RVCD/lib/python3.9/site-packages (from requests->transformers==4.36.2) (3.4)
+Requirement already satisfied: urllib3<1.27,>=1.21.1 in /venv/RVCD/lib/python3.9/site-packages (from requests->transformers==4.36.2) (1.26.13)
+Requirement already satisfied: certifi>=2017.4.17 in /venv/RVCD/lib/python3.9/site-packages (from requests->transformers==4.36.2) (2022.12.7)
+Building wheels for collected packages: transformers
+  Building editable for transformers (pyproject.toml): started
+  Building editable for transformers (pyproject.toml): finished with status 'done'
+  Created wheel for transformers: filename=transformers-4.36.2-0.editable-py3-none-any.whl size=41057 sha256=47601b15d58917db26dfd068d320b391083fceba972a36fadf1d028080395bae
+  Stored in directory: /tmp/pip-ephem-wheel-cache-5syn92gh/wheels/22/c9/e6/744f931876c44faf1329dbce95e4b7eab551cbcc13ced39d06
+Successfully built transformers
+Installing collected packages: transformers
+  Attempting uninstall: transformers
+    Found existing installation: transformers 4.36.2
+    Uninstalling transformers-4.36.2:
+      Successfully uninstalled transformers-4.36.2
+ERROR: pip's dependency resolver does not currently take into account all the packages that are installed. This behaviour is the source of the following dependency conflicts.
+sentence-transformers 3.1.1 requires transformers<5.0.0,>=4.38.0, but you have transformers 4.36.2 which is incompatible.
+Successfully installed transformers-4.36.2
+WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable. It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+
+[notice] A new release of pip is available: 25.3 -> 26.0.1
+[notice] To update, run: pip install --upgrade pip
++ python -m pip install -e /root/RVCD/transformers-4.36.2
+Obtaining file:///root/RVCD/transformers-4.36.2
+  Installing build dependencies: started
+  Installing build dependencies: finished with status 'done'
+  Checking if build backend supports build_editable: started
+  Checking if build backend supports build_editable: finished with status 'done'
+  Getting requirements to build editable: started
+  Getting requirements to build editable: finished with status 'done'
+  Preparing editable metadata (pyproject.toml): started
+  Preparing editable metadata (pyproject.toml): finished with status 'done'
+Requirement already satisfied: filelock in /venv/RVCD/lib/python3.9/site-packages (from transformers==4.36.2) (3.19.1)
+Requirement already satisfied: huggingface-hub<1.0,>=0.19.3 in /venv/RVCD/lib/python3.9/site-packages (from transformers==4.36.2) (0.20.2)
+Requirement already satisfied: numpy>=1.17 in /venv/RVCD/lib/python3.9/site-packages (from transformers==4.36.2) (1.26.4)
+Requirement already satisfied: packaging>=20.0 in /venv/RVCD/lib/python3.9/site-packages (from transformers==4.36.2) (26.2)
+Requirement already satisfied: pyyaml>=5.1 in /venv/RVCD/lib/python3.9/site-packages (from transformers==4.36.2) (6.0)
+Requirement already satisfied: regex!=2019.12.17 in /venv/RVCD/lib/python3.9/site-packages (from transformers==4.36.2) (2022.10.31)
+Requirement already satisfied: requests in /venv/RVCD/lib/python3.9/site-packages (from transformers==4.36.2) (2.28.1)
+Requirement already satisfied: tokenizers<0.19,>=0.14 in /venv/RVCD/lib/python3.9/site-packages (from transformers==4.36.2) (0.15.0)
+Requirement already satisfied: safetensors>=0.3.1 in /venv/RVCD/lib/python3.9/site-packages (from transformers==4.36.2) (0.7.0)
+Requirement already satisfied: tqdm>=4.27 in /venv/RVCD/lib/python3.9/site-packages (from transformers==4.36.2) (4.64.1)
+Requirement already satisfied: fsspec>=2023.5.0 in /venv/RVCD/lib/python3.9/site-packages (from huggingface-hub<1.0,>=0.19.3->transformers==4.36.2) (2025.10.0)
+Requirement already satisfied: typing-extensions>=3.7.4.3 in /venv/RVCD/lib/python3.9/site-packages (from huggingface-hub<1.0,>=0.19.3->transformers==4.36.2) (4.15.0)
+Requirement already satisfied: charset-normalizer<3,>=2 in /venv/RVCD/lib/python3.9/site-packages (from requests->transformers==4.36.2) (2.1.1)
+Requirement already satisfied: idna<4,>=2.5 in /venv/RVCD/lib/python3.9/site-packages (from requests->transformers==4.36.2) (3.4)
+Requirement already satisfied: urllib3<1.27,>=1.21.1 in /venv/RVCD/lib/python3.9/site-packages (from requests->transformers==4.36.2) (1.26.13)
+Requirement already satisfied: certifi>=2017.4.17 in /venv/RVCD/lib/python3.9/site-packages (from requests->transformers==4.36.2) (2022.12.7)
+Building wheels for collected packages: transformers
+  Building editable for transformers (pyproject.toml): started
+  Building editable for transformers (pyproject.toml): finished with status 'done'
+  Created wheel for transformers: filename=transformers-4.36.2-0.editable-py3-none-any.whl size=41057 sha256=89b3f8e3242e61eb7d7b7020f8823b40ca0bae8819f849f28ee1174a8e3bdb02
+  Stored in directory: /tmp/pip-ephem-wheel-cache-ft8y7kzt/wheels/22/c9/e6/744f931876c44faf1329dbce95e4b7eab551cbcc13ced39d06
+Successfully built transformers
+Installing collected packages: transformers
+  Attempting uninstall: transformers
+    Found existing installation: transformers 4.36.2
+    Uninstalling transformers-4.36.2:
+      Successfully uninstalled transformers-4.36.2
+ERROR: pip's dependency resolver does not currently take into account all the packages that are installed. This behaviour is the source of the following dependency conflicts.
+sentence-transformers 3.1.1 requires transformers<5.0.0,>=4.38.0, but you have transformers 4.36.2 which is incompatible.
+Successfully installed transformers-4.36.2
+WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable. It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+
+[notice] A new release of pip is available: 25.3 -> 26.0.1
+[notice] To update, run: pip install --upgrade pip
++ python -m pip install -e /root/RVCD/transformers-4.36.2
+Obtaining file:///root/RVCD/transformers-4.36.2
+  Installing build dependencies: started
+  Installing build dependencies: finished with status 'done'
+  Checking if build backend supports build_editable: started
+  Checking if build backend supports build_editable: finished with status 'done'
+  Getting requirements to build editable: started
+  Getting requirements to build editable: finished with status 'done'
+  Preparing editable metadata (pyproject.toml): started
+  Preparing editable metadata (pyproject.toml): finished with status 'done'
+Requirement already satisfied: filelock in /venv/RVCD/lib/python3.9/site-packages (from transformers==4.36.2) (3.19.1)
+Requirement already satisfied: huggingface-hub<1.0,>=0.19.3 in /venv/RVCD/lib/python3.9/site-packages (from transformers==4.36.2) (0.20.2)
+Requirement already satisfied: numpy>=1.17 in /venv/RVCD/lib/python3.9/site-packages (from transformers==4.36.2) (1.26.4)
+Requirement already satisfied: packaging>=20.0 in /venv/RVCD/lib/python3.9/site-packages (from transformers==4.36.2) (26.2)
+Requirement already satisfied: pyyaml>=5.1 in /venv/RVCD/lib/python3.9/site-packages (from transformers==4.36.2) (6.0)
+Requirement already satisfied: regex!=2019.12.17 in /venv/RVCD/lib/python3.9/site-packages (from transformers==4.36.2) (2022.10.31)
+Requirement already satisfied: requests in /venv/RVCD/lib/python3.9/site-packages (from transformers==4.36.2) (2.28.1)
+Requirement already satisfied: tokenizers<0.19,>=0.14 in /venv/RVCD/lib/python3.9/site-packages (from transformers==4.36.2) (0.15.0)
+Requirement already satisfied: safetensors>=0.3.1 in /venv/RVCD/lib/python3.9/site-packages (from transformers==4.36.2) (0.7.0)
+Requirement already satisfied: tqdm>=4.27 in /venv/RVCD/lib/python3.9/site-packages (from transformers==4.36.2) (4.64.1)
+Requirement already satisfied: fsspec>=2023.5.0 in /venv/RVCD/lib/python3.9/site-packages (from huggingface-hub<1.0,>=0.19.3->transformers==4.36.2) (2025.10.0)
+Requirement already satisfied: typing-extensions>=3.7.4.3 in /venv/RVCD/lib/python3.9/site-packages (from huggingface-hub<1.0,>=0.19.3->transformers==4.36.2) (4.15.0)
+Requirement already satisfied: charset-normalizer<3,>=2 in /venv/RVCD/lib/python3.9/site-packages (from requests->transformers==4.36.2) (2.1.1)
+Requirement already satisfied: idna<4,>=2.5 in /venv/RVCD/lib/python3.9/site-packages (from requests->transformers==4.36.2) (3.4)
+Requirement already satisfied: urllib3<1.27,>=1.21.1 in /venv/RVCD/lib/python3.9/site-packages (from requests->transformers==4.36.2) (1.26.13)
+Requirement already satisfied: certifi>=2017.4.17 in /venv/RVCD/lib/python3.9/site-packages (from requests->transformers==4.36.2) (2022.12.7)
+Building wheels for collected packages: transformers
+  Building editable for transformers (pyproject.toml): started
+  Building editable for transformers (pyproject.toml): finished with status 'done'
+  Created wheel for transformers: filename=transformers-4.36.2-0.editable-py3-none-any.whl size=41057 sha256=f3d9d5d9b6f861292b5c2664b2146fc95d33a64abf704eee337727fa6ee866d6
+  Stored in directory: /tmp/pip-ephem-wheel-cache-3pjsiw08/wheels/22/c9/e6/744f931876c44faf1329dbce95e4b7eab551cbcc13ced39d06
+Successfully built transformers
+Installing collected packages: transformers
+  Attempting uninstall: transformers
+    Found existing installation: transformers 4.36.2
+    Uninstalling transformers-4.36.2:
+      Successfully uninstalled transformers-4.36.2
+ERROR: pip's dependency resolver does not currently take into account all the packages that are installed. This behaviour is the source of the following dependency conflicts.
+sentence-transformers 3.1.1 requires transformers<5.0.0,>=4.38.0, but you have transformers 4.36.2 which is incompatible.
+Successfully installed transformers-4.36.2
+WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable. It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+
+[notice] A new release of pip is available: 25.3 -> 26.0.1
+[notice] To update, run: pip install --upgrade pip
++ python -m pip install -e /root/RVCD/transformers-4.36.2
+Obtaining file:///root/RVCD/transformers-4.36.2
+  Installing build dependencies: started
+  Installing build dependencies: finished with status 'done'
+  Checking if build backend supports build_editable: started
+  Checking if build backend supports build_editable: finished with status 'done'
+  Getting requirements to build editable: started
+  Getting requirements to build editable: finished with status 'done'
+  Preparing editable metadata (pyproject.toml): started
+  Preparing editable metadata (pyproject.toml): finished with status 'done'
+Requirement already satisfied: filelock in /venv/RVCD/lib/python3.9/site-packages (from transformers==4.36.2) (3.19.1)
+Requirement already satisfied: huggingface-hub<1.0,>=0.19.3 in /venv/RVCD/lib/python3.9/site-packages (from transformers==4.36.2) (0.20.2)
+Requirement already satisfied: numpy>=1.17 in /venv/RVCD/lib/python3.9/site-packages (from transformers==4.36.2) (1.26.4)
+Requirement already satisfied: packaging>=20.0 in /venv/RVCD/lib/python3.9/site-packages (from transformers==4.36.2) (26.2)
+Requirement already satisfied: pyyaml>=5.1 in /venv/RVCD/lib/python3.9/site-packages (from transformers==4.36.2) (6.0)
+Requirement already satisfied: regex!=2019.12.17 in /venv/RVCD/lib/python3.9/site-packages (from transformers==4.36.2) (2022.10.31)
+Requirement already satisfied: requests in /venv/RVCD/lib/python3.9/site-packages (from transformers==4.36.2) (2.28.1)
+Requirement already satisfied: tokenizers<0.19,>=0.14 in /venv/RVCD/lib/python3.9/site-packages (from transformers==4.36.2) (0.15.0)
+Requirement already satisfied: safetensors>=0.3.1 in /venv/RVCD/lib/python3.9/site-packages (from transformers==4.36.2) (0.7.0)
+Requirement already satisfied: tqdm>=4.27 in /venv/RVCD/lib/python3.9/site-packages (from transformers==4.36.2) (4.64.1)
+Requirement already satisfied: fsspec>=2023.5.0 in /venv/RVCD/lib/python3.9/site-packages (from huggingface-hub<1.0,>=0.19.3->transformers==4.36.2) (2025.10.0)
+Requirement already satisfied: typing-extensions>=3.7.4.3 in /venv/RVCD/lib/python3.9/site-packages (from huggingface-hub<1.0,>=0.19.3->transformers==4.36.2) (4.15.0)
+Requirement already satisfied: charset-normalizer<3,>=2 in /venv/RVCD/lib/python3.9/site-packages (from requests->transformers==4.36.2) (2.1.1)
+Requirement already satisfied: idna<4,>=2.5 in /venv/RVCD/lib/python3.9/site-packages (from requests->transformers==4.36.2) (3.4)
+Requirement already satisfied: urllib3<1.27,>=1.21.1 in /venv/RVCD/lib/python3.9/site-packages (from requests->transformers==4.36.2) (1.26.13)
+Requirement already satisfied: certifi>=2017.4.17 in /venv/RVCD/lib/python3.9/site-packages (from requests->transformers==4.36.2) (2022.12.7)
+Building wheels for collected packages: transformers
+  Building editable for transformers (pyproject.toml): started
+  Building editable for transformers (pyproject.toml): finished with status 'done'
+  Created wheel for transformers: filename=transformers-4.36.2-0.editable-py3-none-any.whl size=41057 sha256=328a2387e3e48bde011d5c342408f4d01786e864ef78747c2b1933d81ea2bcbd
+  Stored in directory: /tmp/pip-ephem-wheel-cache-0hnr8of8/wheels/22/c9/e6/744f931876c44faf1329dbce95e4b7eab551cbcc13ced39d06
+Successfully built transformers
+Installing collected packages: transformers
+  Attempting uninstall: transformers
+    Found existing installation: transformers 4.36.2
+    Uninstalling transformers-4.36.2:
+      Successfully uninstalled transformers-4.36.2
+ERROR: pip's dependency resolver does not currently take into account all the packages that are installed. This behaviour is the source of the following dependency conflicts.
+sentence-transformers 3.1.1 requires transformers<5.0.0,>=4.38.0, but you have transformers 4.36.2 which is incompatible.
+Successfully installed transformers-4.36.2
+WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable. It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+
+[notice] A new release of pip is available: 25.3 -> 26.0.1
+[notice] To update, run: pip install --upgrade pip
++ python -m pip install -e /root/RVCD/transformers-4.36.2
+Obtaining file:///root/RVCD/transformers-4.36.2
+  Installing build dependencies: started
+  Installing build dependencies: finished with status 'done'
+  Checking if build backend supports build_editable: started
+  Checking if build backend supports build_editable: finished with status 'done'
+  Getting requirements to build editable: started
+  Getting requirements to build editable: finished with status 'done'
+  Preparing editable metadata (pyproject.toml): started
+  Preparing editable metadata (pyproject.toml): finished with status 'done'
+Requirement already satisfied: filelock in /venv/RVCD/lib/python3.9/site-packages (from transformers==4.36.2) (3.19.1)
+Requirement already satisfied: huggingface-hub<1.0,>=0.19.3 in /venv/RVCD/lib/python3.9/site-packages (from transformers==4.36.2) (0.20.2)
+Requirement already satisfied: numpy>=1.17 in /venv/RVCD/lib/python3.9/site-packages (from transformers==4.36.2) (1.26.4)
+Requirement already satisfied: packaging>=20.0 in /venv/RVCD/lib/python3.9/site-packages (from transformers==4.36.2) (26.2)
+Requirement already satisfied: pyyaml>=5.1 in /venv/RVCD/lib/python3.9/site-packages (from transformers==4.36.2) (6.0)
+Requirement already satisfied: regex!=2019.12.17 in /venv/RVCD/lib/python3.9/site-packages (from transformers==4.36.2) (2022.10.31)
+Requirement already satisfied: requests in /venv/RVCD/lib/python3.9/site-packages (from transformers==4.36.2) (2.28.1)
+Requirement already satisfied: tokenizers<0.19,>=0.14 in /venv/RVCD/lib/python3.9/site-packages (from transformers==4.36.2) (0.15.0)
+Requirement already satisfied: safetensors>=0.3.1 in /venv/RVCD/lib/python3.9/site-packages (from transformers==4.36.2) (0.7.0)
+Requirement already satisfied: tqdm>=4.27 in /venv/RVCD/lib/python3.9/site-packages (from transformers==4.36.2) (4.64.1)
+Requirement already satisfied: fsspec>=2023.5.0 in /venv/RVCD/lib/python3.9/site-packages (from huggingface-hub<1.0,>=0.19.3->transformers==4.36.2) (2025.10.0)
+Requirement already satisfied: typing-extensions>=3.7.4.3 in /venv/RVCD/lib/python3.9/site-packages (from huggingface-hub<1.0,>=0.19.3->transformers==4.36.2) (4.15.0)
+Requirement already satisfied: charset-normalizer<3,>=2 in /venv/RVCD/lib/python3.9/site-packages (from requests->transformers==4.36.2) (2.1.1)
+Requirement already satisfied: idna<4,>=2.5 in /venv/RVCD/lib/python3.9/site-packages (from requests->transformers==4.36.2) (3.4)
+Requirement already satisfied: urllib3<1.27,>=1.21.1 in /venv/RVCD/lib/python3.9/site-packages (from requests->transformers==4.36.2) (1.26.13)
+Requirement already satisfied: certifi>=2017.4.17 in /venv/RVCD/lib/python3.9/site-packages (from requests->transformers==4.36.2) (2022.12.7)
+Building wheels for collected packages: transformers
+  Building editable for transformers (pyproject.toml): started
+  Building editable for transformers (pyproject.toml): finished with status 'done'
+  Created wheel for transformers: filename=transformers-4.36.2-0.editable-py3-none-any.whl size=41057 sha256=370c2180cf146668b9a673f82e456c49b3412605f03d5da6c279d09540ba80ad
+  Stored in directory: /tmp/pip-ephem-wheel-cache-qf3304gc/wheels/22/c9/e6/744f931876c44faf1329dbce95e4b7eab551cbcc13ced39d06
+Successfully built transformers
+Installing collected packages: transformers
+  Attempting uninstall: transformers
+    Found existing installation: transformers 4.36.2
+    Uninstalling transformers-4.36.2:
+      Successfully uninstalled transformers-4.36.2
+ERROR: pip's dependency resolver does not currently take into account all the packages that are installed. This behaviour is the source of the following dependency conflicts.
+sentence-transformers 3.1.1 requires transformers<5.0.0,>=4.38.0, but you have transformers 4.36.2 which is incompatible.
+Successfully installed transformers-4.36.2
+WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable. It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+
+[notice] A new release of pip is available: 25.3 -> 26.0.1
+[notice] To update, run: pip install --upgrade pip
++ python -m pip install -e /root/RVCD/transformers-4.36.2
+Obtaining file:///root/RVCD/transformers-4.36.2
+  Installing build dependencies: started
+  Installing build dependencies: finished with status 'done'
+  Checking if build backend supports build_editable: started
+  Checking if build backend supports build_editable: finished with status 'done'
+  Getting requirements to build editable: started
+  Getting requirements to build editable: finished with status 'done'
+  Preparing editable metadata (pyproject.toml): started
+  Preparing editable metadata (pyproject.toml): finished with status 'done'
+Requirement already satisfied: filelock in /venv/RVCD/lib/python3.9/site-packages (from transformers==4.36.2) (3.19.1)
+Requirement already satisfied: huggingface-hub<1.0,>=0.19.3 in /venv/RVCD/lib/python3.9/site-packages (from transformers==4.36.2) (0.20.2)
+Requirement already satisfied: numpy>=1.17 in /venv/RVCD/lib/python3.9/site-packages (from transformers==4.36.2) (1.26.4)
+Requirement already satisfied: packaging>=20.0 in /venv/RVCD/lib/python3.9/site-packages (from transformers==4.36.2) (26.2)
+Requirement already satisfied: pyyaml>=5.1 in /venv/RVCD/lib/python3.9/site-packages (from transformers==4.36.2) (6.0)
+Requirement already satisfied: regex!=2019.12.17 in /venv/RVCD/lib/python3.9/site-packages (from transformers==4.36.2) (2022.10.31)
+Requirement already satisfied: requests in /venv/RVCD/lib/python3.9/site-packages (from transformers==4.36.2) (2.28.1)
+Requirement already satisfied: tokenizers<0.19,>=0.14 in /venv/RVCD/lib/python3.9/site-packages (from transformers==4.36.2) (0.15.0)
+Requirement already satisfied: safetensors>=0.3.1 in /venv/RVCD/lib/python3.9/site-packages (from transformers==4.36.2) (0.7.0)
+Requirement already satisfied: tqdm>=4.27 in /venv/RVCD/lib/python3.9/site-packages (from transformers==4.36.2) (4.64.1)
+Requirement already satisfied: fsspec>=2023.5.0 in /venv/RVCD/lib/python3.9/site-packages (from huggingface-hub<1.0,>=0.19.3->transformers==4.36.2) (2025.10.0)
+Requirement already satisfied: typing-extensions>=3.7.4.3 in /venv/RVCD/lib/python3.9/site-packages (from huggingface-hub<1.0,>=0.19.3->transformers==4.36.2) (4.15.0)
+Requirement already satisfied: charset-normalizer<3,>=2 in /venv/RVCD/lib/python3.9/site-packages (from requests->transformers==4.36.2) (2.1.1)
+Requirement already satisfied: idna<4,>=2.5 in /venv/RVCD/lib/python3.9/site-packages (from requests->transformers==4.36.2) (3.4)
+Requirement already satisfied: urllib3<1.27,>=1.21.1 in /venv/RVCD/lib/python3.9/site-packages (from requests->transformers==4.36.2) (1.26.13)
+Requirement already satisfied: certifi>=2017.4.17 in /venv/RVCD/lib/python3.9/site-packages (from requests->transformers==4.36.2) (2022.12.7)
+Building wheels for collected packages: transformers
+  Building editable for transformers (pyproject.toml): started
+  Building editable for transformers (pyproject.toml): finished with status 'done'
+  Created wheel for transformers: filename=transformers-4.36.2-0.editable-py3-none-any.whl size=41057 sha256=ba1294b367f1cb8498e9ff199b8eb30c4aabcc6123f484675c7168b9b98e5684
+  Stored in directory: /tmp/pip-ephem-wheel-cache-ptnjfqyv/wheels/22/c9/e6/744f931876c44faf1329dbce95e4b7eab551cbcc13ced39d06
+Successfully built transformers
+Installing collected packages: transformers
+  Attempting uninstall: transformers
+    Found existing installation: transformers 4.36.2
+    Uninstalling transformers-4.36.2:
+      Successfully uninstalled transformers-4.36.2
+ERROR: pip's dependency resolver does not currently take into account all the packages that are installed. This behaviour is the source of the following dependency conflicts.
+sentence-transformers 3.1.1 requires transformers<5.0.0,>=4.38.0, but you have transformers 4.36.2 which is incompatible.
+Successfully installed transformers-4.36.2
+WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable. It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+
+[notice] A new release of pip is available: 25.3 -> 26.0.1
+[notice] To update, run: pip install --upgrade pip
++ python -m pip install -e /root/RVCD/transformers-4.36.2
+Obtaining file:///root/RVCD/transformers-4.36.2
+  Installing build dependencies: started
+  Installing build dependencies: finished with status 'done'
+  Checking if build backend supports build_editable: started
+  Checking if build backend supports build_editable: finished with status 'done'
+  Getting requirements to build editable: started
+  Getting requirements to build editable: finished with status 'done'
+  Preparing editable metadata (pyproject.toml): started
+  Preparing editable metadata (pyproject.toml): finished with status 'done'
+Requirement already satisfied: filelock in /venv/RVCD/lib/python3.9/site-packages (from transformers==4.36.2) (3.19.1)
+Requirement already satisfied: huggingface-hub<1.0,>=0.19.3 in /venv/RVCD/lib/python3.9/site-packages (from transformers==4.36.2) (0.20.2)
+Requirement already satisfied: numpy>=1.17 in /venv/RVCD/lib/python3.9/site-packages (from transformers==4.36.2) (1.26.4)
+Requirement already satisfied: packaging>=20.0 in /venv/RVCD/lib/python3.9/site-packages (from transformers==4.36.2) (26.2)
+Requirement already satisfied: pyyaml>=5.1 in /venv/RVCD/lib/python3.9/site-packages (from transformers==4.36.2) (6.0)
+Requirement already satisfied: regex!=2019.12.17 in /venv/RVCD/lib/python3.9/site-packages (from transformers==4.36.2) (2022.10.31)
+Requirement already satisfied: requests in /venv/RVCD/lib/python3.9/site-packages (from transformers==4.36.2) (2.28.1)
+Requirement already satisfied: tokenizers<0.19,>=0.14 in /venv/RVCD/lib/python3.9/site-packages (from transformers==4.36.2) (0.15.0)
+Requirement already satisfied: safetensors>=0.3.1 in /venv/RVCD/lib/python3.9/site-packages (from transformers==4.36.2) (0.7.0)
+Requirement already satisfied: tqdm>=4.27 in /venv/RVCD/lib/python3.9/site-packages (from transformers==4.36.2) (4.64.1)
+Requirement already satisfied: fsspec>=2023.5.0 in /venv/RVCD/lib/python3.9/site-packages (from huggingface-hub<1.0,>=0.19.3->transformers==4.36.2) (2025.10.0)
+Requirement already satisfied: typing-extensions>=3.7.4.3 in /venv/RVCD/lib/python3.9/site-packages (from huggingface-hub<1.0,>=0.19.3->transformers==4.36.2) (4.15.0)
+Requirement already satisfied: charset-normalizer<3,>=2 in /venv/RVCD/lib/python3.9/site-packages (from requests->transformers==4.36.2) (2.1.1)
+Requirement already satisfied: idna<4,>=2.5 in /venv/RVCD/lib/python3.9/site-packages (from requests->transformers==4.36.2) (3.4)
+Requirement already satisfied: urllib3<1.27,>=1.21.1 in /venv/RVCD/lib/python3.9/site-packages (from requests->transformers==4.36.2) (1.26.13)
+Requirement already satisfied: certifi>=2017.4.17 in /venv/RVCD/lib/python3.9/site-packages (from requests->transformers==4.36.2) (2022.12.7)
+Building wheels for collected packages: transformers
+  Building editable for transformers (pyproject.toml): started
+  Building editable for transformers (pyproject.toml): finished with status 'done'
+  Created wheel for transformers: filename=transformers-4.36.2-0.editable-py3-none-any.whl size=41057 sha256=2dbd312a431355a052da4afa3f6282da7b629cc1cb28f2d53f53a325c03d4d18
+  Stored in directory: /tmp/pip-ephem-wheel-cache-jwd9vspm/wheels/22/c9/e6/744f931876c44faf1329dbce95e4b7eab551cbcc13ced39d06
+Successfully built transformers
+Installing collected packages: transformers
+  Attempting uninstall: transformers
+    Found existing installation: transformers 4.36.2
+    Uninstalling transformers-4.36.2:
+      Successfully uninstalled transformers-4.36.2
+ERROR: pip's dependency resolver does not currently take into account all the packages that are installed. This behaviour is the source of the following dependency conflicts.
+sentence-transformers 3.1.1 requires transformers<5.0.0,>=4.38.0, but you have transformers 4.36.2 which is incompatible.
+Successfully installed transformers-4.36.2
+WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable. It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+
+[notice] A new release of pip is available: 25.3 -> 26.0.1
+[notice] To update, run: pip install --upgrade pip

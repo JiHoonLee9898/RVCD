@@ -1,40 +1,56 @@
 #!/usr/bin/env bash
-# setup_rvcd_reliable_all_in_one.sh
+# setup_rvcd_reliable_a100_blackwell_fixed_v2.sh
 #
-# Reliable RVCD all-in-one setup.
+# RVCD reliable all-in-one setup for:
+#   - A100 / Ampere / Hopper-class NVIDIA GPUs
+#   - Blackwell GPUs
 #
-# Fixed design:
-#   1. Detect GPU 0.
-#   2. Always delete/recreate the target env.
-#   3. Install GPU-compatible torch.
-#   4. Install and verify RVCD runtime pip dependencies FIRST.
-#      This means tqdm/transformers/ultralytics/minigpt4 deps are installed
-#      before any GroundingDINO/CUDA-extension build step can fail.
-#   5. Only after runtime deps are verified, install CUDA build tools.
-#   6. Build GroundingDINO.
-#   7. Final verification.
-#
-# If anything fails, logs are written under:
-#   /home/jihoon/jihoon/RVCD/setup_logs
+# Main fixes vs previous script:
+#   1. A100/base path uses CUDA 11.8 instead of CUDA 11.7.
+#   2. A100/base path no longer pins old bitsandbytes==0.37.0.
+#   3. bitsandbytes is installed/tested separately with BNB_CUDA_VERSION/CUDA_VERSION forced.
+#   4. bitsandbytes import failure is non-fatal by default; set STRICT_BNB=1 to fail hard.
+#   5. Removed the erroneous unconditional "conda activate RVCD_BW" after main().
+#   6. PatternLite/OpenJDK install is moved into an optional function and uses the detected env.
+#   7. RVCD_ROOT defaults to the current script directory, with fallbacks for common paths.
 #
 # Usage:
-#   cd /home/jihoon/jihoon/RVCD
-#   bash setup_rvcd_reliable_all_in_one.sh
+#   cd /path/to/RVCD
+#   bash setup_rvcd_reliable_a100_blackwell_fixed_v2.sh
 #
-# Optional:
-#   INSTALL_COCO=0 bash setup_rvcd_reliable_all_in_one.sh
-#   INSTALL_WEIGHTS=0 bash setup_rvcd_reliable_all_in_one.sh
+# Useful options:
+#   INSTALL_COCO=0 bash setup_rvcd_reliable_a100_blackwell_fixed_v2.sh
+#   INSTALL_WEIGHTS=0 bash setup_rvcd_reliable_a100_blackwell_fixed_v2.sh
+#   INSTALL_PATTERNLITE=0 bash setup_rvcd_reliable_a100_blackwell_fixed_v2.sh
+#   STRICT_BNB=1 bash setup_rvcd_reliable_a100_blackwell_fixed_v2.sh
+#   RVCD_ROOT=/home/jihoon/jihoon/RVCD bash setup_rvcd_reliable_a100_blackwell_fixed_v2.sh
+#
+# If anything fails, logs are written under:
+#   ${RVCD_ROOT}/setup_logs
 
 set -Eeo pipefail
 
 # ----------------------------
 # Paths
 # ----------------------------
-RVCD_ROOT="${RVCD_ROOT:-/home/jihoon/jihoon/RVCD}"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+if [ -z "${RVCD_ROOT:-}" ]; then
+  if [ -d "${SCRIPT_DIR}/MAIN_CODES" ]; then
+    RVCD_ROOT="${SCRIPT_DIR}"
+  elif [ -d "/home/jihoon/jihoon/RVCD/MAIN_CODES" ]; then
+    RVCD_ROOT="/home/jihoon/jihoon/RVCD"
+  elif [ -d "/root/RVCD/MAIN_CODES" ]; then
+    RVCD_ROOT="/root/RVCD"
+  else
+    RVCD_ROOT="${SCRIPT_DIR}"
+  fi
+fi
+
 RVCD_MAIN_CODES="${RVCD_MAIN_CODES:-${RVCD_ROOT}/MAIN_CODES}"
 GROUNDINGDINO_DIR="${GROUNDINGDINO_DIR:-${RVCD_MAIN_CODES}/decoder_zoo/GroundingDINO}"
 
-DATASETS_DIR="${DATASETS_DIR:-/home/jihoon/jihoon/DATASETS}"
+DATASETS_DIR="${DATASETS_DIR:-/root/DATASETS}"
 COCO_ROOT="${COCO_ROOT:-${DATASETS_DIR}/coco2014}"
 DATA_PATH="${DATA_PATH:-${COCO_ROOT}/val2014}"
 
@@ -43,14 +59,23 @@ TRANSFORMERS_ALT_DIR="${TRANSFORMERS_ALT_DIR:-${RVCD_MAIN_CODES}/transformers-4.
 
 INSTALL_COCO="${INSTALL_COCO:-1}"
 INSTALL_WEIGHTS="${INSTALL_WEIGHTS:-1}"
+INSTALL_PATTERNLITE="${INSTALL_PATTERNLITE:-1}"
+INSTALL_PATTERN_GIT="${INSTALL_PATTERN_GIT:-0}"
+
 WEIGHTS_URL="${WEIGHTS_URL:-https://drive.google.com/drive/folders/1UaMJga-BKju88CXAdonbiQujBKkdcVGX}"
 WEIGHTS_DIR="${WEIGHTS_DIR:-${RVCD_MAIN_CODES}/decoder_zoo/weights}"
 
 LOG_DIR="${LOG_DIR:-${RVCD_ROOT}/setup_logs}"
 
+# bitsandbytes policy:
+#   STRICT_BNB=0: warn and continue if bitsandbytes fails.
+#   STRICT_BNB=1: fail setup if bitsandbytes fails.
+STRICT_BNB="${STRICT_BNB:-0}"
+
 # ----------------------------
 # GPU-dependent stacks
 # ----------------------------
+# Blackwell path
 BW_ENV="${BW_ENV:-RVCD_BW}"
 BW_PYTHON="${BW_PYTHON:-3.10}"
 BW_TORCH="${BW_TORCH:-2.7.1}"
@@ -58,13 +83,29 @@ BW_TORCHVISION="${BW_TORCHVISION:-0.22.1}"
 BW_TORCHAUDIO="${BW_TORCHAUDIO:-2.7.1}"
 BW_CUDA="${BW_CUDA:-12.8}"
 BW_ARCH_LIST="${BW_ARCH_LIST:-12.0}"
+BW_BNB_PACKAGE="${BW_BNB_PACKAGE:-bitsandbytes>=0.46.0}"
 
+# Base/A100 path
+#
+# Important:
+#   The older combination torch cu117 + bitsandbytes==0.37.0 often misdetects
+#   modern driver/container CUDA as 13.0 and crashes on import.
+#
+#   This base path intentionally uses:
+#     - torch 2.0.0 cu118
+#     - CUDA 11.8 build tools
+#     - bitsandbytes 0.42.0
+#     - BNB_CUDA_VERSION/CUDA_VERSION=118
+#
+#   This keeps the RVCD-era torch stack close to the original script while avoiding
+#   the CUDA 13.0 bitsandbytes autodetection trap on A100.
 BASE_ENV="${BASE_ENV:-RVCD}"
 BASE_PYTHON="${BASE_PYTHON:-3.9}"
 BASE_TORCH="${BASE_TORCH:-2.0.0}"
 BASE_TORCHVISION="${BASE_TORCHVISION:-0.15.1}"
 BASE_TORCHAUDIO="${BASE_TORCHAUDIO:-2.0.1}"
-BASE_CUDA="${BASE_CUDA:-11.7}"
+BASE_CUDA="${BASE_CUDA:-11.8}"
+BASE_BNB_PACKAGE="${BASE_BNB_PACKAGE:-bitsandbytes==0.42.0}"
 
 # ----------------------------
 # Helpers
@@ -107,9 +148,78 @@ run_logged() {
   if [ "${status}" -ne 0 ]; then
     echo
     echo "[ERROR] Command failed. Log: ${LOG_DIR}/${logfile}" >&2
-    grep -n -i -E "error|failed|conflict|resolution|No matching|Could not|subprocess|metadata|wheel|traceback|exception" "${LOG_DIR}/${logfile}" | tail -80 || true
+    grep -n -i -E "error|failed|conflict|resolution|No matching|Could not|subprocess|metadata|wheel|traceback|exception|undefined|CUDA|bitsandbytes" "${LOG_DIR}/${logfile}" | tail -120 || true
     exit "${status}"
   fi
+}
+
+run_logged_allow_fail() {
+  # Usage:
+  #   run_logged_allow_fail log_filename command args...
+  local logfile="$1"
+  shift
+  echo "+ $*" | tee -a "${LOG_DIR}/${logfile}"
+  set +e
+  "$@" 2>&1 | tee -a "${LOG_DIR}/${logfile}"
+  local status=${PIPESTATUS[0]}
+  set -e
+  return "${status}"
+}
+
+prepend_path_dir() {
+  local d="$1"
+  if [ -d "${d}" ]; then
+    case ":${PATH}:" in
+      *":${d}:"*) ;;
+      *) export PATH="${d}:${PATH}" ;;
+    esac
+  fi
+}
+
+prepend_ld_dir() {
+  local d="$1"
+  if [ -d "${d}" ]; then
+    case ":${LD_LIBRARY_PATH:-}:" in
+      *":${d}:"*) ;;
+      *) export LD_LIBRARY_PATH="${d}:${LD_LIBRARY_PATH:-}" ;;
+    esac
+  fi
+}
+
+cuda_code_from_version() {
+  # "11.8" -> "118", "12.8" -> "128"
+  echo "$1" | tr -d '.'
+}
+
+setup_cuda_library_path() {
+  # Make CUDA runtime libraries from pip torch / nvidia wheels discoverable.
+  # This is especially important for bitsandbytes import checks.
+  local site_pkgs=""
+  site_pkgs="$(python - <<'PY'
+import site
+paths = site.getsitepackages()
+print(paths[0] if paths else "")
+PY
+)"
+
+  prepend_ld_dir "${CONDA_PREFIX}/lib"
+  prepend_ld_dir "${CONDA_PREFIX}/targets/x86_64-linux/lib"
+
+  if [ -n "${site_pkgs}" ]; then
+    prepend_ld_dir "${site_pkgs}/torch/lib"
+    prepend_ld_dir "${site_pkgs}/nvidia/cuda_runtime/lib"
+    prepend_ld_dir "${site_pkgs}/nvidia/cublas/lib"
+    prepend_ld_dir "${site_pkgs}/nvidia/cufft/lib"
+    prepend_ld_dir "${site_pkgs}/nvidia/curand/lib"
+    prepend_ld_dir "${site_pkgs}/nvidia/cusolver/lib"
+    prepend_ld_dir "${site_pkgs}/nvidia/cusparse/lib"
+    prepend_ld_dir "${site_pkgs}/nvidia/nccl/lib"
+    prepend_ld_dir "${site_pkgs}/nvidia/nvtx/lib"
+  fi
+
+  export LIBRARY_PATH="${CONDA_PREFIX}/targets/x86_64-linux/lib:${CONDA_PREFIX}/lib:${LIBRARY_PATH:-}"
+
+  echo "LD_LIBRARY_PATH=${LD_LIBRARY_PATH:-}"
 }
 
 load_conda() {
@@ -171,7 +281,7 @@ detect_gpu0() {
     TORCHAUDIO_VERSION="${BW_TORCHAUDIO}"
     TORCH_INDEX_URL="https://download.pytorch.org/whl/cu128"
     TARGET_ARCH_LIST="${BW_ARCH_LIST}"
-    BNB_PACKAGE="bitsandbytes>=0.46.0"
+    BNB_PACKAGE="${BW_BNB_PACKAGE}"
   else
     MODE="base"
     ENV_NAME="${BASE_ENV}"
@@ -180,20 +290,19 @@ detect_gpu0() {
     TORCH_VERSION="${BASE_TORCH}"
     TORCHVISION_VERSION="${BASE_TORCHVISION}"
     TORCHAUDIO_VERSION="${BASE_TORCHAUDIO}"
-    TORCH_INDEX_URL="https://download.pytorch.org/whl/cu117"
-    TARGET_ARCH_LIST="8.6"
-    BNB_PACKAGE="bitsandbytes==0.37.0"
+    TORCH_INDEX_URL="https://download.pytorch.org/whl/cu118"
 
+    # For A100 this should become 8.0.
+    # For RTX 3090/4090/H100 this uses the actual detected CC where available.
+    TARGET_ARCH_LIST="8.0"
     if [ -n "${GPU_CC:-}" ] && [[ "${GPU_CC}" =~ ^[0-9]+\.[0-9]+$ ]]; then
-      major="${GPU_CC%%.*}"
-      minor="${GPU_CC#*.}"
-      if [ "${major}" -lt 8 ] || { [ "${major}" -eq 8 ] && [ "${minor}" -le 6 ]; }; then
-        TARGET_ARCH_LIST="${GPU_CC}"
-      else
-        TARGET_ARCH_LIST="8.6+PTX"
-      fi
+      TARGET_ARCH_LIST="${GPU_CC}"
     fi
+
+    BNB_PACKAGE="${BASE_BNB_PACKAGE}"
   fi
+
+  BNB_CUDA_CODE="$(cuda_code_from_version "${TARGET_CUDA}")"
 
   cat <<EOF
 Selected setup:
@@ -201,9 +310,14 @@ Selected setup:
   ENV_NAME=${ENV_NAME}
   PYTHON_VERSION=${PYTHON_VERSION}
   TORCH_VERSION=${TORCH_VERSION}
+  TORCHVISION_VERSION=${TORCHVISION_VERSION}
+  TORCHAUDIO_VERSION=${TORCHAUDIO_VERSION}
   TORCH_INDEX_URL=${TORCH_INDEX_URL}
   TARGET_CUDA=${TARGET_CUDA}
   TORCH_CUDA_ARCH_LIST=${TARGET_ARCH_LIST}
+  BNB_PACKAGE=${BNB_PACKAGE}
+  BNB_CUDA_VERSION=${BNB_CUDA_CODE}
+  STRICT_BNB=${STRICT_BNB}
 EOF
 }
 
@@ -250,6 +364,7 @@ install_torch_stack() {
     "torchaudio==${TORCHAUDIO_VERSION}" \
     --index-url "${TORCH_INDEX_URL}"
 
+  setup_cuda_library_path
   verify_torch_cuda
 }
 
@@ -357,11 +472,95 @@ print("AutoTokenizer OK")
 PY
 }
 
+write_activation_hook() {
+  log "Writing persistent PYTHONPATH, CUDA, and bitsandbytes env"
+
+  mkdir -p "${CONDA_PREFIX}/etc/conda/activate.d"
+
+  cat > "${CONDA_PREFIX}/etc/conda/activate.d/rvcd_env.sh" <<EOF
+export CUDA_HOME=\$CONDA_PREFIX
+export PATH=\$CUDA_HOME/bin:\$PATH
+export LD_LIBRARY_PATH=\$CONDA_PREFIX/targets/x86_64-linux/lib:\$CONDA_PREFIX/lib:\${LD_LIBRARY_PATH:-}
+export LIBRARY_PATH=\$CONDA_PREFIX/targets/x86_64-linux/lib:\$CONDA_PREFIX/lib:\${LIBRARY_PATH:-}
+export CC=\$CONDA_PREFIX/bin/x86_64-conda-linux-gnu-gcc
+export CXX=\$CONDA_PREFIX/bin/x86_64-conda-linux-gnu-g++
+export TORCH_CUDA_ARCH_LIST="${TARGET_ARCH_LIST}"
+export BNB_CUDA_VERSION="${BNB_CUDA_CODE}"
+export CUDA_VERSION="${BNB_CUDA_CODE}"
+export PYTHONPATH=${RVCD_MAIN_CODES}:\${PYTHONPATH:-}
+EOF
+
+  export CUDA_HOME="${CONDA_PREFIX}"
+  export PATH="${CUDA_HOME}/bin:${PATH}"
+  export LIBRARY_PATH="${CONDA_PREFIX}/targets/x86_64-linux/lib:${CONDA_PREFIX}/lib:${LIBRARY_PATH:-}"
+  export CC="${CONDA_PREFIX}/bin/x86_64-conda-linux-gnu-gcc"
+  export CXX="${CONDA_PREFIX}/bin/x86_64-conda-linux-gnu-g++"
+  export TORCH_CUDA_ARCH_LIST="${TARGET_ARCH_LIST}"
+  export BNB_CUDA_VERSION="${BNB_CUDA_CODE}"
+  export CUDA_VERSION="${BNB_CUDA_CODE}"
+  export PYTHONPATH="${RVCD_MAIN_CODES}:${PYTHONPATH:-}"
+
+  setup_cuda_library_path
+
+  echo "PYTHONPATH=${PYTHONPATH}"
+  echo "TORCH_CUDA_ARCH_LIST=${TORCH_CUDA_ARCH_LIST}"
+  echo "BNB_CUDA_VERSION=${BNB_CUDA_VERSION}"
+  echo "CUDA_VERSION=${CUDA_VERSION}"
+}
+
+install_bitsandbytes_safely() {
+  log "Installing bitsandbytes safely"
+
+  write_activation_hook
+
+  # Remove any previously misdetected/broken bnb first.
+  python -m pip uninstall -y bitsandbytes >/dev/null 2>&1 || true
+
+  run_logged "pip_bitsandbytes.log" env \
+    BNB_CUDA_VERSION="${BNB_CUDA_CODE}" \
+    CUDA_VERSION="${BNB_CUDA_CODE}" \
+    LD_LIBRARY_PATH="${LD_LIBRARY_PATH:-}" \
+    python -m pip install --no-cache-dir "${BNB_PACKAGE}"
+
+  set +e
+  env \
+    BNB_CUDA_VERSION="${BNB_CUDA_CODE}" \
+    CUDA_VERSION="${BNB_CUDA_CODE}" \
+    LD_LIBRARY_PATH="${LD_LIBRARY_PATH:-}" \
+    python - <<'PY' 2>&1 | tee "${LOG_DIR}/verify_bitsandbytes.log"
+import os
+print("BNB_CUDA_VERSION:", os.environ.get("BNB_CUDA_VERSION"))
+print("CUDA_VERSION:", os.environ.get("CUDA_VERSION"))
+print("LD_LIBRARY_PATH:", os.environ.get("LD_LIBRARY_PATH", "")[:1000])
+
+import torch
+print("torch:", torch.__version__, "torch cuda:", torch.version.cuda, "cuda available:", torch.cuda.is_available())
+print("gpu:", torch.cuda.get_device_name(0) if torch.cuda.is_available() else "none")
+
+import bitsandbytes as bnb
+print("bitsandbytes OK:", getattr(bnb, "__version__", "unknown"))
+PY
+  local status=${PIPESTATUS[0]}
+  set -e
+
+  if [ "${status}" -ne 0 ]; then
+    echo
+    warn "bitsandbytes import failed. Log: ${LOG_DIR}/verify_bitsandbytes.log"
+    warn "This setup will continue because STRICT_BNB=${STRICT_BNB}."
+    warn "If your RVCD run actually needs 8-bit/4-bit quantization, rerun with STRICT_BNB=1 after checking the log."
+    if [ "${STRICT_BNB}" = "1" ]; then
+      die "bitsandbytes failed and STRICT_BNB=1"
+    fi
+  else
+    echo "bitsandbytes import OK"
+  fi
+}
+
 install_runtime_deps_first() {
   log "Installing RVCD runtime dependencies BEFORE CUDA/GroundingDINO build"
 
   # This requirements file is saved under the repo, not /tmp, so it remains debuggable.
-  REQ_FILE="${LOG_DIR}/rvcd_full_deps_no_torch_runtime.txt"
+  REQ_FILE="${LOG_DIR}/rvcd_full_deps_no_torch_no_bnb_runtime.txt"
 
   run_logged "pip_basics_again.log" python -m pip install -U "pip<26" "setuptools<81" wheel
   run_logged "pip_numpy.log" python -m pip install "numpy==1.26.4"
@@ -390,7 +589,6 @@ peft==0.2.0
 sentence-transformers
 gradio==3.47.1
 accelerate==0.26.1
-${BNB_PACKAGE}
 scikit-image
 visual-genome
 wandb
@@ -416,7 +614,8 @@ REQ
   echo "Saved requirements to: ${REQ_FILE}"
   grep -n "tqdm" "${REQ_FILE}"
 
-  # Install all runtime dependencies. If this fails, stop here before CUDA build.
+  # Install all runtime dependencies except torch and bitsandbytes.
+  # bitsandbytes is installed separately so CUDA detection can be controlled.
   run_logged "pip_runtime_deps.log" python -m pip install -r "${REQ_FILE}"
 
   install_transformers_explicitly
@@ -440,36 +639,8 @@ REQ
   fi
 
   verify_torch_cuda
-  write_activation_hook
+  install_bitsandbytes_safely
   verify_runtime_imports
-}
-
-write_activation_hook() {
-  log "Writing persistent PYTHONPATH and build env"
-
-  mkdir -p "${CONDA_PREFIX}/etc/conda/activate.d"
-
-  cat > "${CONDA_PREFIX}/etc/conda/activate.d/rvcd_env.sh" <<EOF
-export CUDA_HOME=\$CONDA_PREFIX
-export PATH=\$CUDA_HOME/bin:\$PATH
-export LD_LIBRARY_PATH=\$CONDA_PREFIX/targets/x86_64-linux/lib:\$CONDA_PREFIX/lib:\${LD_LIBRARY_PATH:-}
-export LIBRARY_PATH=\$CONDA_PREFIX/targets/x86_64-linux/lib:\$CONDA_PREFIX/lib:\${LIBRARY_PATH:-}
-export CC=\$CONDA_PREFIX/bin/x86_64-conda-linux-gnu-gcc
-export CXX=\$CONDA_PREFIX/bin/x86_64-conda-linux-gnu-g++
-export TORCH_CUDA_ARCH_LIST="${TARGET_ARCH_LIST}"
-export PYTHONPATH=${RVCD_MAIN_CODES}:\${PYTHONPATH:-}
-EOF
-
-  export CUDA_HOME="${CONDA_PREFIX}"
-  export PATH="${CUDA_HOME}/bin:${PATH}"
-  export LD_LIBRARY_PATH="${CONDA_PREFIX}/targets/x86_64-linux/lib:${CONDA_PREFIX}/lib:${LD_LIBRARY_PATH:-}"
-  export LIBRARY_PATH="${CONDA_PREFIX}/targets/x86_64-linux/lib:${CONDA_PREFIX}/lib:${LIBRARY_PATH:-}"
-  export CC="${CONDA_PREFIX}/bin/x86_64-conda-linux-gnu-gcc"
-  export CXX="${CONDA_PREFIX}/bin/x86_64-conda-linux-gnu-g++"
-  export TORCH_CUDA_ARCH_LIST="${TARGET_ARCH_LIST}"
-  export PYTHONPATH="${RVCD_MAIN_CODES}:${PYTHONPATH:-}"
-
-  echo "PYTHONPATH=${PYTHONPATH}"
 }
 
 verify_runtime_imports() {
@@ -477,9 +648,11 @@ verify_runtime_imports() {
 
   cd "${RVCD_MAIN_CODES}"
   export PYTHONPATH="${RVCD_MAIN_CODES}:${PYTHONPATH:-}"
+  setup_cuda_library_path
 
   python - <<PY
 import importlib
+import os
 import torch
 
 print("torch:", torch.__version__, torch.version.cuda, torch.cuda.is_available())
@@ -498,7 +671,6 @@ mods = [
     ("pycocoevalcap", "pycocoevalcap"),
     ("spacy", "spacy"),
     ("nltk", "nltk"),
-    ("bitsandbytes", "bitsandbytes"),
 ]
 
 failed = []
@@ -530,6 +702,17 @@ try:
 except Exception as e:
     failed.append(("spaCy model", repr(e)))
 
+# bitsandbytes is useful for quantization, but many RVCD paths do not require it.
+# Keep it non-fatal unless STRICT_BNB=1.
+try:
+    import bitsandbytes as bnb
+    print("bitsandbytes OK:", getattr(bnb, "__version__", "unknown"))
+except Exception as e:
+    msg = repr(e)
+    print("bitsandbytes WARN:", msg)
+    if "${STRICT_BNB}" == "1":
+        failed.append(("bitsandbytes", msg))
+
 if failed:
     print("\\nFAILED RUNTIME IMPORTS:")
     for label, err in failed:
@@ -554,16 +737,13 @@ install_cuda_build_tools_after_deps() {
       "cuda-thrust>=12.8,<12.9"
   else
     run_logged "conda_cuda_build_tools.log" conda install -y \
-      -c nvidia/label/cuda-11.7.0 \
+      -c nvidia/label/cuda-11.8.0 \
       -c nvidia \
-      "cuda-nvcc>=11.7,<11.8" \
-      "cuda-cudart>=11.7,<11.8" \
-      "cuda-cudart-dev>=11.7,<11.8" \
-      "cuda-libraries-dev>=11.7,<11.8" \
-      "cuda-thrust>=11.7,<11.8" \
-      "libcusparse-dev>=11.7,<11.8" \
-      "libcublas-dev>=11.10,<12" \
-      "libcusolver-dev>=11.4,<11.5"
+      "cuda-nvcc>=11.8,<11.9" \
+      "cuda-cudart>=11.8,<11.9" \
+      "cuda-cudart-dev>=11.8,<11.9" \
+      "cuda-libraries-dev>=11.8,<11.9" \
+      "cuda-thrust>=11.8,<11.9"
   fi
 
   run_logged "conda_compilers.log" conda install -y -c conda-forge gcc_linux-64=11 gxx_linux-64=11 ninja git pyyaml
@@ -591,11 +771,6 @@ download_file() {
   local url="$1"
   local out="$2"
 
-  if [ -f "$out" ]; then
-    echo "Already exists: $out"
-    return 0
-  fi
-
   if have_cmd wget; then
     wget -c -O "$out" "$url"
   elif have_cmd curl; then
@@ -608,16 +783,168 @@ PY
   fi
 }
 
+zip_is_valid() {
+  local z="$1"
+  [ -f "${z}" ] || return 1
+
+  python - "${z}" <<'PY'
+import sys, zipfile
+from pathlib import Path
+z = Path(sys.argv[1])
+try:
+    with zipfile.ZipFile(z, "r") as f:
+        bad = f.testzip()
+        if bad:
+            print(f"BAD_MEMBER={bad}")
+            raise SystemExit(1)
+        if not f.namelist():
+            print("EMPTY_ZIP")
+            raise SystemExit(1)
+except Exception as e:
+    print(f"ZIP_INVALID: {e}")
+    raise SystemExit(1)
+print(f"ZIP_OK: {z} ({z.stat().st_size} bytes)")
+PY
+}
+
+ensure_zip_downloaded_and_valid() {
+  local url="$1"
+  local out="$2"
+
+  if [ -f "${out}" ]; then
+    echo "Found existing zip: ${out}"
+    if zip_is_valid "${out}"; then
+      return 0
+    fi
+    warn "Existing zip is corrupt/incomplete. Removing: ${out}"
+    rm -f "${out}"
+  fi
+
+  echo "Downloading: ${url}"
+  download_file "${url}" "${out}"
+
+  if zip_is_valid "${out}"; then
+    return 0
+  fi
+
+  warn "Downloaded zip failed validation. Retrying once: ${out}"
+  rm -f "${out}"
+  download_file "${url}" "${out}"
+  zip_is_valid "${out}" || die "Zip validation failed after retry: ${out}"
+}
+
+extract_zip_fresh() {
+  local z="$1"
+  local dest="$2"
+  local expected_dir="$3"
+
+  echo "Extracting fresh: ${z} -> ${dest}"
+  rm -rf "${dest}/${expected_dir}"
+  python -m zipfile -e "${z}" "${dest}"
+}
+
+repair_coco_symlink() {
+  local root="$1"
+  local val_dir="${root}/val2014"
+  local ann_dir="${root}/annotations"
+
+  [ -d "${val_dir}" ] || return 1
+  [ -d "${ann_dir}" ] || return 1
+
+  # Always replace stale/broken/wrong val2014/annotations with the correct link.
+  # Correct layout:
+  #   ${root}/val2014/annotations -> ../annotations
+  rm -rf "${val_dir}/annotations"
+  ln -sfn ../annotations "${val_dir}/annotations"
+}
+
 coco_ready_at() {
   local candidate="$1"
+  local root=""
+
   [ -d "${candidate}" ] || return 1
+  root="$(cd "${candidate}/.." 2>/dev/null && pwd -P || true)"
+  [ -n "${root}" ] || return 1
+  [ -d "${root}/annotations" ] || return 1
+
+  repair_coco_symlink "${root}" || return 1
+
   [ -f "${candidate}/annotations/captions_val2014.json" ] || return 1
   [ -f "${candidate}/annotations/instances_val2014.json" ] || return 1
-  find "${candidate}" -maxdepth 1 -name 'COCO_val2014_*.jpg' | grep -q .
+  find "${candidate}" -maxdepth 1 -type f -name 'COCO_val2014_*.jpg' -print -quit | grep -q .
+}
+
+print_coco_diagnostics() {
+  local root="$1"
+  local val_dir="${root}/val2014"
+
+  echo
+  echo "COCO diagnostics:"
+  echo "  COCO_ROOT=${root}"
+  echo "  DATA_PATH=${val_dir}"
+  echo
+  echo "Top-level:"
+  ls -lah "${root}" || true
+  echo
+  echo "val2014:"
+  ls -lah "${val_dir}" 2>/dev/null | head -30 || true
+  echo
+  echo "annotations:"
+  ls -lah "${root}/annotations" 2>/dev/null | head -30 || true
+  echo
+  echo "val2014/annotations link:"
+  ls -lah "${val_dir}/annotations" 2>/dev/null || true
+  echo
+  echo "Required JSON files:"
+  ls -lah "${val_dir}/annotations/captions_val2014.json" 2>/dev/null || true
+  ls -lah "${val_dir}/annotations/instances_val2014.json" 2>/dev/null || true
+  echo
+  echo "Sample image:"
+  find "${val_dir}" -maxdepth 1 -type f -name 'COCO_val2014_*.jpg' -print -quit 2>/dev/null || true
+  echo
+}
+
+validate_or_extract_coco() {
+  local root="$1"
+
+  echo "Validating COCO under: ${root}"
+
+  # Existing extracted folders may be partial from a previous failed run.
+  # Validate them first; if invalid, do NOT skip extraction just because dirs exist.
+  if [ -d "${root}/val2014" ] && [ -d "${root}/annotations" ]; then
+    repair_coco_symlink "${root}" || true
+    if coco_ready_at "${root}/val2014"; then
+      echo "COCO2014 ready from existing extracted folders:"
+      echo "  ${root}/val2014"
+      find "${root}/val2014" -maxdepth 1 -type f -name 'COCO_val2014_*.jpg' -print -quit
+      return 0
+    fi
+    warn "Existing COCO folders are incomplete; will re-extract from validated zip files."
+  fi
+
+  ensure_zip_downloaded_and_valid "http://images.cocodataset.org/zips/val2014.zip" "${root}/val2014.zip"
+  ensure_zip_downloaded_and_valid "http://images.cocodataset.org/annotations/annotations_trainval2014.zip" "${root}/annotations_trainval2014.zip"
+
+  extract_zip_fresh "${root}/val2014.zip" "${root}" "val2014"
+  extract_zip_fresh "${root}/annotations_trainval2014.zip" "${root}" "annotations"
+
+  repair_coco_symlink "${root}" || true
+
+  if coco_ready_at "${root}/val2014"; then
+    echo "COCO2014 ready after extraction:"
+    echo "  ${root}/val2014"
+    find "${root}/val2014" -maxdepth 1 -type f -name 'COCO_val2014_*.jpg' -print -quit
+    return 0
+  fi
+
+  print_coco_diagnostics "${root}"
+  return 1
 }
 
 find_existing_coco() {
   if coco_ready_at "${DATA_PATH}"; then
+    COCO_ROOT="$(cd "${DATA_PATH}/.." && pwd -P)"
+    DATA_PATH="${COCO_ROOT}/val2014"
     return 0
   fi
 
@@ -627,15 +954,12 @@ find_existing_coco() {
       root_dir="$(dirname "${ann_dir}")"
       val_dir="${root_dir}/val2014"
 
-      if [ -d "${val_dir}" ] && find "${val_dir}" -maxdepth 1 -name 'COCO_val2014_*.jpg' | grep -q .; then
-        ln -sfn ../annotations "${val_dir}/annotations"
-        if coco_ready_at "${val_dir}"; then
-          DATA_PATH="${val_dir}"
-          COCO_ROOT="${root_dir}"
-          return 0
-        fi
+      if [ -d "${val_dir}" ] && coco_ready_at "${val_dir}"; then
+        DATA_PATH="${val_dir}"
+        COCO_ROOT="${root_dir}"
+        return 0
       fi
-    done < <(find "${DATASETS_DIR}" -path '*/annotations/captions_val2014.json' 2>/dev/null | head -20)
+    done < <(find "${DATASETS_DIR}" -path '*/annotations/captions_val2014.json' 2>/dev/null | head -50)
   fi
 
   return 1
@@ -649,28 +973,23 @@ setup_coco2014() {
 
   log "Checking COCO2014 data"
 
+  mkdir -p "${COCO_ROOT}"
+
   if find_existing_coco; then
     echo "COCO2014 ready:"
     echo "  ${DATA_PATH}"
-    find "${DATA_PATH}" -maxdepth 1 -name 'COCO_val2014_*.jpg' | head -1
+    find "${DATA_PATH}" -maxdepth 1 -type f -name 'COCO_val2014_*.jpg' -print -quit
     return 0
   fi
 
-  echo "COCO2014 missing. Downloading into ${COCO_ROOT}"
-  mkdir -p "${COCO_ROOT}"
-  cd "${COCO_ROOT}"
+  echo "COCO2014 not ready. Downloading/validating/extracting into ${COCO_ROOT}"
 
-  download_file "http://images.cocodataset.org/zips/val2014.zip" "val2014.zip"
-  download_file "http://images.cocodataset.org/annotations/annotations_trainval2014.zip" "annotations_trainval2014.zip"
+  if ! validate_or_extract_coco "${COCO_ROOT}"; then
+    die "COCO2014 setup failed: ${COCO_ROOT}/val2014"
+  fi
 
-  [ -d "${COCO_ROOT}/val2014" ] || python -m zipfile -e "${COCO_ROOT}/val2014.zip" "${COCO_ROOT}"
-  [ -d "${COCO_ROOT}/annotations" ] || python -m zipfile -e "${COCO_ROOT}/annotations_trainval2014.zip" "${COCO_ROOT}"
-
-  ln -sfn ../annotations "${COCO_ROOT}/val2014/annotations"
   DATA_PATH="${COCO_ROOT}/val2014"
-
-  coco_ready_at "${DATA_PATH}" || die "COCO2014 setup failed: ${DATA_PATH}"
-  echo "COCO2014 ready: ${DATA_PATH}"
+  echo "COCO2014 final DATA_PATH=${DATA_PATH}"
 }
 
 setup_weights() {
@@ -709,6 +1028,43 @@ setup_weights() {
   find "${WEIGHTS_DIR}" -maxdepth 3 -type f | head -50 || true
 }
 
+install_patternlite_optional() {
+  if [ "${INSTALL_PATTERNLITE}" != "1" ]; then
+    log "Skipping PatternLite/OpenJDK because INSTALL_PATTERNLITE=${INSTALL_PATTERNLITE}"
+    return 0
+  fi
+
+  log "Installing optional OpenJDK 11 and PatternLite inside ${ENV_NAME}"
+
+  if run_logged_allow_fail "conda_openjdk.log" conda install -c conda-forge openjdk=11 -y; then
+    which java || true
+    java -version || true
+  else
+    warn "OpenJDK install failed. Continuing."
+  fi
+
+  # Do not install full clips/pattern by default: it pulls mysqlclient and often
+  # fails without system MariaDB/MySQL headers. PatternLite provides pattern.en.
+  if [ "${INSTALL_PATTERN_GIT}" = "1" ]; then
+    run_logged_allow_fail "pip_pattern_git.log" python -m pip install "git+https://github.com/clips/pattern.git" || \
+      warn "pattern git install failed. Continuing."
+  fi
+
+  python -m pip uninstall -y pattern Pattern pattern3 PatternLite >/dev/null 2>&1 || true
+
+  if ! run_logged_allow_fail "pip_patternlite.log" python -m pip install PatternLite; then
+    warn "PatternLite install failed. Continuing."
+  fi
+
+  python - <<'PY' || true
+try:
+    from pattern.en import singularize
+    print("PatternLite pattern.en OK:", singularize("dogs"))
+except Exception as e:
+    print("PatternLite pattern.en WARN:", repr(e))
+PY
+}
+
 build_groundingdino() {
   log "Building GroundingDINO"
 
@@ -716,14 +1072,7 @@ build_groundingdino() {
 
   cd "${GROUNDINGDINO_DIR}"
 
-  export CUDA_HOME="${CONDA_PREFIX}"
-  export PATH="${CUDA_HOME}/bin:${PATH}"
-  export LD_LIBRARY_PATH="${CONDA_PREFIX}/targets/x86_64-linux/lib:${CONDA_PREFIX}/lib:${LD_LIBRARY_PATH:-}"
-  export LIBRARY_PATH="${CONDA_PREFIX}/targets/x86_64-linux/lib:${CONDA_PREFIX}/lib:${LIBRARY_PATH:-}"
-  export CC="${CONDA_PREFIX}/bin/x86_64-conda-linux-gnu-gcc"
-  export CXX="${CONDA_PREFIX}/bin/x86_64-conda-linux-gnu-g++"
-  export TORCH_CUDA_ARCH_LIST="${TARGET_ARCH_LIST}"
-  export PYTHONPATH="${RVCD_MAIN_CODES}:${PYTHONPATH:-}"
+  write_activation_hook
 
   which nvcc
   nvcc --version
@@ -764,6 +1113,12 @@ PY
   echo "Env: ${ENV_NAME}"
   echo "GPU: ${GPU_NAME}"
   echo "CUDA: ${TARGET_CUDA}"
+  echo "Torch: ${TORCH_VERSION}"
+  echo "TorchVision: ${TORCHVISION_VERSION}"
+  echo "TorchAudio: ${TORCHAUDIO_VERSION}"
+  echo "TORCH_CUDA_ARCH_LIST: ${TARGET_ARCH_LIST}"
+  echo "BNB_PACKAGE: ${BNB_PACKAGE}"
+  echo "BNB_CUDA_VERSION/CUDA_VERSION: ${BNB_CUDA_CODE}"
   echo "COCO data path: ${DATA_PATH}"
   echo "Weights dir: ${WEIGHTS_DIR}"
   echo "Logs: ${LOG_DIR}"
@@ -772,6 +1127,14 @@ PY
   echo "  conda activate ${ENV_NAME}"
   echo "  cd ${RVCD_MAIN_CODES}"
   echo "  bash run_example.sh"
+  echo
+  if [ "${STRICT_BNB}" != "1" ]; then
+    echo "Note:"
+    echo "  bitsandbytes is non-fatal in this script. If you need quantization paths,"
+    echo "  test with:"
+    echo "    conda activate ${ENV_NAME}"
+    echo "    BNB_CUDA_VERSION=${BNB_CUDA_CODE} CUDA_VERSION=${BNB_CUDA_CODE} python -c 'import bitsandbytes; print(\"bnb ok\")'"
+  fi
 }
 
 main() {
@@ -784,10 +1147,11 @@ main() {
   create_clean_env
   install_torch_stack
 
-  # Critical fix: install/verify runtime deps before CUDA extension build.
+  # Critical: install/verify runtime deps before CUDA extension build.
   install_runtime_deps_first
 
-  # Optional data/weights are safe after runtime deps.
+  # Optional Java/PatternLite, data, and weights.
+  install_patternlite_optional
   setup_coco2014
   setup_weights
 
@@ -798,21 +1162,3 @@ main() {
 }
 
 main "$@"
-
-
-conda activate RVCD_BW
-
-conda install -c conda-forge openjdk=11 -y
-
-which java
-java -version
-
-python -m pip install "git+https://github.com/clips/pattern.git"
-
-
-# 잘못 깔린 pattern 제거
-python -m pip uninstall -y pattern Pattern pattern3 PatternLite
-
-# pattern.en 제공하는 패키지 설치
-python -m pip install PatternLite
-

@@ -1,0 +1,17 @@
++ python -m pip install -U gdown
+Requirement already satisfied: gdown in /venv/RVCD/lib/python3.9/site-packages (5.2.2)
+Requirement already satisfied: beautifulsoup4 in /venv/RVCD/lib/python3.9/site-packages (from gdown) (4.14.3)
+Requirement already satisfied: filelock in /venv/RVCD/lib/python3.9/site-packages (from gdown) (3.19.1)
+Requirement already satisfied: requests[socks] in /venv/RVCD/lib/python3.9/site-packages (from gdown) (2.28.1)
+Requirement already satisfied: tqdm in /venv/RVCD/lib/python3.9/site-packages (from gdown) (4.64.1)
+Requirement already satisfied: soupsieve>=1.6.1 in /venv/RVCD/lib/python3.9/site-packages (from beautifulsoup4->gdown) (2.8.4)
+Requirement already satisfied: typing-extensions>=4.0.0 in /venv/RVCD/lib/python3.9/site-packages (from beautifulsoup4->gdown) (4.15.0)
+Requirement already satisfied: charset-normalizer<3,>=2 in /venv/RVCD/lib/python3.9/site-packages (from requests[socks]->gdown) (2.1.1)
+Requirement already satisfied: idna<4,>=2.5 in /venv/RVCD/lib/python3.9/site-packages (from requests[socks]->gdown) (3.4)
+Requirement already satisfied: urllib3<1.27,>=1.21.1 in /venv/RVCD/lib/python3.9/site-packages (from requests[socks]->gdown) (1.26.13)
+Requirement already satisfied: certifi>=2017.4.17 in /venv/RVCD/lib/python3.9/site-packages (from requests[socks]->gdown) (2025.8.3)
+Requirement already satisfied: PySocks!=1.5.7,>=1.5.6 in /venv/RVCD/lib/python3.9/site-packages (from requests[socks]->gdown) (1.7.1)
+WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable. It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+
+[notice] A new release of pip is available: 25.3 -> 26.0.1
+[notice] To update, run: pip install --upgrade pip

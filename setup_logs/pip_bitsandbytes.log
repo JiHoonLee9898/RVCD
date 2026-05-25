@@ -1,0 +1,78 @@
++ env BNB_CUDA_VERSION=118 CUDA_VERSION=118 LD_LIBRARY_PATH=/venv/RVCD/lib/python3.9/site-packages/torch/lib:/venv/RVCD/targets/x86_64-linux/lib:/venv/RVCD/lib:/venv/RVCD/targets/x86_64-linux/lib:/venv/RVCD/lib:/venv/RVCD/targets/x86_64-linux/lib:/venv/RVCD/lib:/usr/local/nvidia/lib:/usr/local/nvidia/lib64 python -m pip install --no-cache-dir bitsandbytes==0.42.0
+Collecting bitsandbytes==0.42.0
+  Downloading bitsandbytes-0.42.0-py3-none-any.whl.metadata (9.9 kB)
+Requirement already satisfied: scipy in /venv/RVCD/lib/python3.9/site-packages (from bitsandbytes==0.42.0) (1.13.1)
+Requirement already satisfied: numpy<2.3,>=1.22.4 in /venv/RVCD/lib/python3.9/site-packages (from scipy->bitsandbytes==0.42.0) (1.26.4)
+Downloading bitsandbytes-0.42.0-py3-none-any.whl (105.0 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 105.0/105.0 MB 73.3 MB/s  0:00:01
+Installing collected packages: bitsandbytes
+Successfully installed bitsandbytes-0.42.0
+WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable. It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+
+[notice] A new release of pip is available: 25.3 -> 26.0.1
+[notice] To update, run: pip install --upgrade pip
++ env BNB_CUDA_VERSION=118 CUDA_VERSION=118 LD_LIBRARY_PATH=/venv/RVCD/lib/python3.9/site-packages/torch/lib:/venv/RVCD/targets/x86_64-linux/lib:/venv/RVCD/lib:/venv/RVCD/targets/x86_64-linux/lib:/venv/RVCD/lib:/venv/RVCD/targets/x86_64-linux/lib:/venv/RVCD/lib:/usr/local/nvidia/lib:/usr/local/nvidia/lib64 python -m pip install --no-cache-dir bitsandbytes==0.42.0
+Collecting bitsandbytes==0.42.0
+  Downloading bitsandbytes-0.42.0-py3-none-any.whl.metadata (9.9 kB)
+Requirement already satisfied: scipy in /venv/RVCD/lib/python3.9/site-packages (from bitsandbytes==0.42.0) (1.13.1)
+Requirement already satisfied: numpy<2.3,>=1.22.4 in /venv/RVCD/lib/python3.9/site-packages (from scipy->bitsandbytes==0.42.0) (1.26.4)
+Downloading bitsandbytes-0.42.0-py3-none-any.whl (105.0 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 105.0/105.0 MB 90.3 MB/s  0:00:01
+Installing collected packages: bitsandbytes
+Successfully installed bitsandbytes-0.42.0
+WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable. It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+
+[notice] A new release of pip is available: 25.3 -> 26.0.1
+[notice] To update, run: pip install --upgrade pip
++ env BNB_CUDA_VERSION=118 CUDA_VERSION=118 LD_LIBRARY_PATH=/venv/RVCD/lib/python3.9/site-packages/torch/lib:/venv/RVCD/targets/x86_64-linux/lib:/venv/RVCD/lib:/venv/RVCD/targets/x86_64-linux/lib:/venv/RVCD/lib:/venv/RVCD/targets/x86_64-linux/lib:/venv/RVCD/lib:/usr/local/nvidia/lib:/usr/local/nvidia/lib64 python -m pip install --no-cache-dir bitsandbytes==0.42.0
+Collecting bitsandbytes==0.42.0
+  Downloading bitsandbytes-0.42.0-py3-none-any.whl.metadata (9.9 kB)
+Requirement already satisfied: scipy in /venv/RVCD/lib/python3.9/site-packages (from bitsandbytes==0.42.0) (1.13.1)
+Requirement already satisfied: numpy<2.3,>=1.22.4 in /venv/RVCD/lib/python3.9/site-packages (from scipy->bitsandbytes==0.42.0) (1.26.4)
+Downloading bitsandbytes-0.42.0-py3-none-any.whl (105.0 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 105.0/105.0 MB 150.8 MB/s  0:00:00
+Installing collected packages: bitsandbytes
+Successfully installed bitsandbytes-0.42.0
+WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable. It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+
+[notice] A new release of pip is available: 25.3 -> 26.0.1
+[notice] To update, run: pip install --upgrade pip
++ env BNB_CUDA_VERSION=118 CUDA_VERSION=118 LD_LIBRARY_PATH=/venv/RVCD/lib/python3.9/site-packages/torch/lib:/venv/RVCD/targets/x86_64-linux/lib:/venv/RVCD/lib:/venv/RVCD/targets/x86_64-linux/lib:/venv/RVCD/lib:/venv/RVCD/targets/x86_64-linux/lib:/venv/RVCD/lib:/usr/local/nvidia/lib:/usr/local/nvidia/lib64 python -m pip install --no-cache-dir bitsandbytes==0.42.0
+Collecting bitsandbytes==0.42.0
+  Downloading bitsandbytes-0.42.0-py3-none-any.whl.metadata (9.9 kB)
+Requirement already satisfied: scipy in /venv/RVCD/lib/python3.9/site-packages (from bitsandbytes==0.42.0) (1.13.1)
+Requirement already satisfied: numpy<2.3,>=1.22.4 in /venv/RVCD/lib/python3.9/site-packages (from scipy->bitsandbytes==0.42.0) (1.26.4)
+Downloading bitsandbytes-0.42.0-py3-none-any.whl (105.0 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 105.0/105.0 MB 152.4 MB/s  0:00:00
+Installing collected packages: bitsandbytes
+Successfully installed bitsandbytes-0.42.0
+WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable. It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+
+[notice] A new release of pip is available: 25.3 -> 26.0.1
+[notice] To update, run: pip install --upgrade pip
++ env BNB_CUDA_VERSION=118 CUDA_VERSION=118 LD_LIBRARY_PATH=/venv/RVCD/lib/python3.9/site-packages/torch/lib:/venv/RVCD/targets/x86_64-linux/lib:/venv/RVCD/lib:/venv/RVCD/targets/x86_64-linux/lib:/venv/RVCD/lib:/venv/RVCD/targets/x86_64-linux/lib:/venv/RVCD/lib:/usr/local/nvidia/lib:/usr/local/nvidia/lib64 python -m pip install --no-cache-dir bitsandbytes==0.42.0
+Collecting bitsandbytes==0.42.0
+  Downloading bitsandbytes-0.42.0-py3-none-any.whl.metadata (9.9 kB)
+Requirement already satisfied: scipy in /venv/RVCD/lib/python3.9/site-packages (from bitsandbytes==0.42.0) (1.13.1)
+Requirement already satisfied: numpy<2.3,>=1.22.4 in /venv/RVCD/lib/python3.9/site-packages (from scipy->bitsandbytes==0.42.0) (1.26.4)
+Downloading bitsandbytes-0.42.0-py3-none-any.whl (105.0 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 105.0/105.0 MB 4.4 MB/s  0:00:23
+Installing collected packages: bitsandbytes
+Successfully installed bitsandbytes-0.42.0
+WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable. It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+
+[notice] A new release of pip is available: 25.3 -> 26.0.1
+[notice] To update, run: pip install --upgrade pip
++ env BNB_CUDA_VERSION=118 CUDA_VERSION=118 LD_LIBRARY_PATH=/venv/RVCD/lib/python3.9/site-packages/torch/lib:/venv/RVCD/targets/x86_64-linux/lib:/venv/RVCD/lib:/venv/RVCD/targets/x86_64-linux/lib:/venv/RVCD/lib:/venv/RVCD/targets/x86_64-linux/lib:/venv/RVCD/lib:/usr/local/nvidia/lib:/usr/local/nvidia/lib64 python -m pip install --no-cache-dir bitsandbytes==0.42.0
+Collecting bitsandbytes==0.42.0
+  Downloading bitsandbytes-0.42.0-py3-none-any.whl.metadata (9.9 kB)
+Requirement already satisfied: scipy in /venv/RVCD/lib/python3.9/site-packages (from bitsandbytes==0.42.0) (1.13.1)
+Requirement already satisfied: numpy<2.3,>=1.22.4 in /venv/RVCD/lib/python3.9/site-packages (from scipy->bitsandbytes==0.42.0) (1.26.4)
+Downloading bitsandbytes-0.42.0-py3-none-any.whl (105.0 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 105.0/105.0 MB 160.0 MB/s  0:00:00
+Installing collected packages: bitsandbytes
+Successfully installed bitsandbytes-0.42.0
+WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable. It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+
+[notice] A new release of pip is available: 25.3 -> 26.0.1
+[notice] To update, run: pip install --upgrade pip

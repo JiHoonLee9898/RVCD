@@ -1,0 +1,193 @@
++ conda install -y -c conda-forge gcc_linux-64=11 gxx_linux-64=11 ninja git pyyaml
+Channels:
+ - conda-forge
+ - nvidia
+Platform: linux-64
+Collecting package metadata (repodata.json): - \ | / - done
+Solving environment: | / - \ | / - \ done
+
+
+==> WARNING: A newer version of conda exists. <==
+    current version: 26.1.1
+    latest version: 26.5.0
+
+Please update conda by running
+
+    $ conda update -n base -c conda-forge conda
+
+
+
+## Package Plan ##
+
+  environment location: /venv/RVCD
+
+  added / updated specs:
+    - gcc_linux-64=11
+    - git
+    - gxx_linux-64=11
+    - ninja
+    - pyyaml
+
+
+The following packages will be downloaded:
+
+    package                    |            build
+    ---------------------------|-----------------
+    git-2.54.0                 | pl5321h6d3cee1_0        10.8 MB  conda-forge
+    libcurl-8.20.0             |       hcf29cc6_0         458 KB  conda-forge
+    ninja-1.13.2               |       h171cf75_0         182 KB  conda-forge
+    perl-5.32.1                | 7_hd590300_perl5        12.7 MB  conda-forge
+    python_abi-3.9             |           8_cp39           7 KB  conda-forge
+    pyyaml-6.0.2               |   py39h9399b63_2         178 KB  conda-forge
+    yaml-0.2.5                 |       h280c20c_3          83 KB  conda-forge
+    ------------------------------------------------------------
+                                           Total:        24.5 MB
+
+The following NEW packages will be INSTALLED:
+
+  binutils_impl_lin~ conda-forge/linux-64::binutils_impl_linux-64-2.40-ha1999f0_7 
+  binutils_linux-64  conda-forge/linux-64::binutils_linux-64-2.40-hb3c18ed_4 
+  c-ares             conda-forge/linux-64::c-ares-1.34.6-hb03c661_0 
+  gcc_impl_linux-64  conda-forge/linux-64::gcc_impl_linux-64-11.4.0-h00c12a0_13 
+  gcc_linux-64       conda-forge/linux-64::gcc_linux-64-11.4.0-ha077dfb_4 
+  git                conda-forge/linux-64::git-2.54.0-pl5321h6d3cee1_0 
+  gxx_impl_linux-64  conda-forge/linux-64::gxx_impl_linux-64-11.4.0-h634f3ee_13 
+  gxx_linux-64       conda-forge/linux-64::gxx_linux-64-11.4.0-h35bfe5d_4 
+  kernel-headers_li~ conda-forge/noarch::kernel-headers_linux-64-6.12.0-he073ed8_6 
+  libcurl            conda-forge/linux-64::libcurl-8.20.0-hcf29cc6_0 
+  libev              conda-forge/linux-64::libev-4.33-hd590300_2 
+  libgcc-devel_linu~ conda-forge/noarch::libgcc-devel_linux-64-11.4.0-h8f596e0_113 
+  libnghttp2         conda-forge/linux-64::libnghttp2-1.68.1-h877daf1_0 
+  libsanitizer       conda-forge/linux-64::libsanitizer-11.4.0-h5763a12_13 
+  libssh2            conda-forge/linux-64::libssh2-1.11.1-hcf80075_0 
+  libstdcxx-devel_l~ conda-forge/noarch::libstdcxx-devel_linux-64-11.4.0-h8f596e0_113 
+  libstdcxx-ng       conda-forge/linux-64::libstdcxx-ng-15.2.0-hdf11a46_19 
+  perl               conda-forge/linux-64::perl-5.32.1-7_hd590300_perl5 
+  python_abi         conda-forge/noarch::python_abi-3.9-8_cp39 
+  sysroot_linux-64   conda-forge/noarch::sysroot_linux-64-2.39-hc4b9eeb_6 
+  yaml               conda-forge/linux-64::yaml-0.2.5-h280c20c_3 
+
+The following packages will be UPDATED:
+
+  ninja                      pypi/pypi::ninja-1.13.0-pypi_0 --> conda-forge/linux-64::ninja-1.13.2-h171cf75_0 
+  pyyaml                       pypi/pypi::pyyaml-6.0-pypi_0 --> conda-forge/linux-64::pyyaml-6.0.2-py39h9399b63_2 
+
+The following packages will be DOWNGRADED:
+
+  ld_impl_linux-64              2.45.1-default_hbd61a6d_102 --> 2.40-hf3520f5_7 
+
+
+
+Downloading and Extracting Packages: ...working...perl-5.32.1          | 12.7 MB   |            |   0% 
+git-2.54.0           | 10.8 MB   |            |   0% [A
+
+libcurl-8.20.0       | 458 KB    |            |   0% [A[A
+
+
+ninja-1.13.2         | 182 KB    |            |   0% [A[A[A
+
+
+
+pyyaml-6.0.2         | 178 KB    |            |   0% [A[A[A[A
+
+
+
+
+yaml-0.2.5           | 83 KB     |            |   0% [A[A[A[A[A
+
+
+
+
+
+python_abi-3.9       | 7 KB      |            |   0% [A[A[A[A[A[A
+
+
+
+pyyaml-6.0.2         | 178 KB    | ########## | 100% [A[A[A[A
+
+
+ninja-1.13.2         | 182 KB    | ########## | 100% [A[A[Aperl-5.32.1          | 12.7 MB   | 2          |   2% 
+
+libcurl-8.20.0       | 458 KB    | ###8       |  38% [A[A
+git-2.54.0           | 10.8 MB   | 3          |   3% [A
+
+
+
+
+yaml-0.2.5           | 83 KB     | #9         |  19% [A[A[A[A[A
+
+
+
+
+
+python_abi-3.9       | 7 KB      | ########## | 100% [A[A[A[A[A[A
+
+
+
+
+
+python_abi-3.9       | 7 KB      | ########## | 100% [A[A[A[A[A[A
+
+
+
+
+yaml-0.2.5           | 83 KB     | ########## | 100% [A[A[A[A[A
+
+libcurl-8.20.0       | 458 KB    | ########## | 100% [A[A
+
+
+ninja-1.13.2         | 182 KB    | ########## | 100% [A[A[A
+
+
+ninja-1.13.2         | 182 KB    | ########## | 100% [A[A[A
+
+
+
+
+
+python_abi-3.9       | 7 KB      | ########## | 100% [A[A[A[A[A[A
+
+
+
+
+yaml-0.2.5           | 83 KB     | ########## | 100% [A[A[A[A[Aperl-5.32.1          | 12.7 MB   | ####       |  41% 
+git-2.54.0           | 10.8 MB   | ####5      |  45% [A
+
+libcurl-8.20.0       | 458 KB    | ########## | 100% [A[A
+
+
+
+pyyaml-6.0.2         | 178 KB    | ########## | 100% [A[A[A[A
+
+libcurl-8.20.0       | 458 KB    | ########## | 100% [A[A
+
+
+
+pyyaml-6.0.2         | 178 KB    | ########## | 100% [A[A[A[A
+git-2.54.0           | 10.8 MB   | ########## | 100% [Aperl-5.32.1          | 12.7 MB   | ########## | 100% 
+git-2.54.0           | 10.8 MB   | ########## | 100% [A
+git-2.54.0           | 10.8 MB   | ########## | 100% [Aperl-5.32.1          | 12.7 MB   | ########## | 100% perl-5.32.1          | 12.7 MB   | ########## | 100%                                                      
+                                                     [A
+
+                                                     [A[A
+
+
+                                                     [A[A[A
+
+
+
+                                                     [A[A[A[A
+
+
+
+
+                                                     [A[A[A[A[A
+
+
+
+
+
+                                                     [A[A[A[A[A[A done
+Preparing transaction: / - done
+Verifying transaction: | / - \ | / - \ | / - done
+Executing transaction: | / - \ | / - \ | / - \ | / done

@@ -1,0 +1,236 @@
++ python -m pip install git+https://github.com/clips/pattern.git
+Collecting git+https://github.com/clips/pattern.git
+  Cloning https://github.com/clips/pattern.git to /tmp/pip-req-build-qtquh6kg
+  Running command git clone --filter=blob:none --quiet https://github.com/clips/pattern.git /tmp/pip-req-build-qtquh6kg
+  Resolved https://github.com/clips/pattern.git to commit d25511f9ca7ed9356b801d8663b8b5168464e68f
+  Installing build dependencies: started
+  Installing build dependencies: finished with status 'done'
+  Getting requirements to build wheel: started
+  Getting requirements to build wheel: finished with status 'done'
+  Preparing metadata (pyproject.toml): started
+  Preparing metadata (pyproject.toml): finished with status 'done'
+Collecting future (from Pattern==3.6)
+  Downloading future-1.0.0-py3-none-any.whl.metadata (4.0 kB)
+Collecting backports.csv (from Pattern==3.6)
+  Downloading backports.csv-1.0.7-py2.py3-none-any.whl.metadata (4.0 kB)
+Collecting mysqlclient (from Pattern==3.6)
+  Downloading mysqlclient-2.2.7.tar.gz (91 kB)
+  Installing build dependencies: started
+  Installing build dependencies: finished with status 'done'
+  Getting requirements to build wheel: started
+  Getting requirements to build wheel: finished with status 'error'
+  error: subprocess-exited-with-error
+  
+  × Getting requirements to build wheel did not run successfully.
+  │ exit code: 1
+  ╰─> [26 lines of output]
+      Trying pkg-config --exists mysqlclient
+      Command 'pkg-config --exists mysqlclient' returned non-zero exit status 1.
+      Trying pkg-config --exists mariadb
+      Command 'pkg-config --exists mariadb' returned non-zero exit status 1.
+      Trying pkg-config --exists libmariadb
+      Command 'pkg-config --exists libmariadb' returned non-zero exit status 1.
+      Trying pkg-config --exists perconaserverclient
+      Command 'pkg-config --exists perconaserverclient' returned non-zero exit status 1.
+      Traceback (most recent call last):
+        File "/venv/RVCD/lib/python3.9/site-packages/pip/_vendor/pyproject_hooks/_in_process/_in_process.py", line 389, in <module>
+          main()
+        File "/venv/RVCD/lib/python3.9/site-packages/pip/_vendor/pyproject_hooks/_in_process/_in_process.py", line 373, in main
+          json_out["return_val"] = hook(**hook_input["kwargs"])
+        File "/venv/RVCD/lib/python3.9/site-packages/pip/_vendor/pyproject_hooks/_in_process/_in_process.py", line 143, in get_requires_for_build_wheel
+          return hook(config_settings)
+        File "/tmp/pip-build-env-u1zktx7q/overlay/lib/python3.9/site-packages/setuptools/build_meta.py", line 333, in get_requires_for_build_wheel
+          return self._get_build_requires(config_settings, requirements=[])
+        File "/tmp/pip-build-env-u1zktx7q/overlay/lib/python3.9/site-packages/setuptools/build_meta.py", line 301, in _get_build_requires
+          self.run_setup()
+        File "/tmp/pip-build-env-u1zktx7q/overlay/lib/python3.9/site-packages/setuptools/build_meta.py", line 317, in run_setup
+          exec(code, locals())
+        File "<string>", line 156, in <module>
+        File "<string>", line 49, in get_config_posix
+        File "<string>", line 28, in find_package_name
+      Exception: Can not find valid pkg-config name.
+      Specify MYSQLCLIENT_CFLAGS and MYSQLCLIENT_LDFLAGS env vars manually
+      [end of output]
+  
+  note: This error originates from a subprocess, and is likely not a problem with pip.
+
+[notice] A new release of pip is available: 25.3 -> 26.0.1
+[notice] To update, run: pip install --upgrade pip
+ERROR: Failed to build 'mysqlclient' when getting requirements to build wheel
++ python -m pip install git+https://github.com/clips/pattern.git
+Collecting git+https://github.com/clips/pattern.git
+  Cloning https://github.com/clips/pattern.git to /tmp/pip-req-build-73lz6_rv
+  Running command git clone --filter=blob:none --quiet https://github.com/clips/pattern.git /tmp/pip-req-build-73lz6_rv
+  Resolved https://github.com/clips/pattern.git to commit d25511f9ca7ed9356b801d8663b8b5168464e68f
+  Installing build dependencies: started
+  Installing build dependencies: finished with status 'done'
+  Getting requirements to build wheel: started
+  Getting requirements to build wheel: finished with status 'done'
+  Preparing metadata (pyproject.toml): started
+  Preparing metadata (pyproject.toml): finished with status 'done'
+Collecting future (from Pattern==3.6)
+  Using cached future-1.0.0-py3-none-any.whl.metadata (4.0 kB)
+Collecting backports.csv (from Pattern==3.6)
+  Using cached backports.csv-1.0.7-py2.py3-none-any.whl.metadata (4.0 kB)
+Collecting mysqlclient (from Pattern==3.6)
+  Using cached mysqlclient-2.2.7.tar.gz (91 kB)
+  Installing build dependencies: started
+  Installing build dependencies: finished with status 'done'
+  Getting requirements to build wheel: started
+  Getting requirements to build wheel: finished with status 'error'
+  error: subprocess-exited-with-error
+  
+  × Getting requirements to build wheel did not run successfully.
+  │ exit code: 1
+  ╰─> [26 lines of output]
+      Trying pkg-config --exists mysqlclient
+      Command 'pkg-config --exists mysqlclient' returned non-zero exit status 1.
+      Trying pkg-config --exists mariadb
+      Command 'pkg-config --exists mariadb' returned non-zero exit status 1.
+      Trying pkg-config --exists libmariadb
+      Command 'pkg-config --exists libmariadb' returned non-zero exit status 1.
+      Trying pkg-config --exists perconaserverclient
+      Command 'pkg-config --exists perconaserverclient' returned non-zero exit status 1.
+      Traceback (most recent call last):
+        File "/venv/RVCD/lib/python3.9/site-packages/pip/_vendor/pyproject_hooks/_in_process/_in_process.py", line 389, in <module>
+          main()
+        File "/venv/RVCD/lib/python3.9/site-packages/pip/_vendor/pyproject_hooks/_in_process/_in_process.py", line 373, in main
+          json_out["return_val"] = hook(**hook_input["kwargs"])
+        File "/venv/RVCD/lib/python3.9/site-packages/pip/_vendor/pyproject_hooks/_in_process/_in_process.py", line 143, in get_requires_for_build_wheel
+          return hook(config_settings)
+        File "/tmp/pip-build-env-sjzzmr8j/overlay/lib/python3.9/site-packages/setuptools/build_meta.py", line 333, in get_requires_for_build_wheel
+          return self._get_build_requires(config_settings, requirements=[])
+        File "/tmp/pip-build-env-sjzzmr8j/overlay/lib/python3.9/site-packages/setuptools/build_meta.py", line 301, in _get_build_requires
+          self.run_setup()
+        File "/tmp/pip-build-env-sjzzmr8j/overlay/lib/python3.9/site-packages/setuptools/build_meta.py", line 317, in run_setup
+          exec(code, locals())
+        File "<string>", line 156, in <module>
+        File "<string>", line 49, in get_config_posix
+        File "<string>", line 28, in find_package_name
+      Exception: Can not find valid pkg-config name.
+      Specify MYSQLCLIENT_CFLAGS and MYSQLCLIENT_LDFLAGS env vars manually
+      [end of output]
+  
+  note: This error originates from a subprocess, and is likely not a problem with pip.
+
+[notice] A new release of pip is available: 25.3 -> 26.0.1
+[notice] To update, run: pip install --upgrade pip
+ERROR: Failed to build 'mysqlclient' when getting requirements to build wheel
++ python -m pip install git+https://github.com/clips/pattern.git
+Collecting git+https://github.com/clips/pattern.git
+  Cloning https://github.com/clips/pattern.git to /tmp/pip-req-build-352xjn3a
+  Running command git clone --filter=blob:none --quiet https://github.com/clips/pattern.git /tmp/pip-req-build-352xjn3a
+  Resolved https://github.com/clips/pattern.git to commit d25511f9ca7ed9356b801d8663b8b5168464e68f
+  Installing build dependencies: started
+  Installing build dependencies: finished with status 'done'
+  Getting requirements to build wheel: started
+  Getting requirements to build wheel: finished with status 'done'
+  Preparing metadata (pyproject.toml): started
+  Preparing metadata (pyproject.toml): finished with status 'done'
+Collecting future (from Pattern==3.6)
+  Using cached future-1.0.0-py3-none-any.whl.metadata (4.0 kB)
+Collecting backports.csv (from Pattern==3.6)
+  Using cached backports.csv-1.0.7-py2.py3-none-any.whl.metadata (4.0 kB)
+Collecting mysqlclient (from Pattern==3.6)
+  Using cached mysqlclient-2.2.7.tar.gz (91 kB)
+  Installing build dependencies: started
+  Installing build dependencies: finished with status 'done'
+  Getting requirements to build wheel: started
+  Getting requirements to build wheel: finished with status 'error'
+  error: subprocess-exited-with-error
+  
+  × Getting requirements to build wheel did not run successfully.
+  │ exit code: 1
+  ╰─> [26 lines of output]
+      Trying pkg-config --exists mysqlclient
+      Command 'pkg-config --exists mysqlclient' returned non-zero exit status 1.
+      Trying pkg-config --exists mariadb
+      Command 'pkg-config --exists mariadb' returned non-zero exit status 1.
+      Trying pkg-config --exists libmariadb
+      Command 'pkg-config --exists libmariadb' returned non-zero exit status 1.
+      Trying pkg-config --exists perconaserverclient
+      Command 'pkg-config --exists perconaserverclient' returned non-zero exit status 1.
+      Traceback (most recent call last):
+        File "/venv/RVCD/lib/python3.9/site-packages/pip/_vendor/pyproject_hooks/_in_process/_in_process.py", line 389, in <module>
+          main()
+        File "/venv/RVCD/lib/python3.9/site-packages/pip/_vendor/pyproject_hooks/_in_process/_in_process.py", line 373, in main
+          json_out["return_val"] = hook(**hook_input["kwargs"])
+        File "/venv/RVCD/lib/python3.9/site-packages/pip/_vendor/pyproject_hooks/_in_process/_in_process.py", line 143, in get_requires_for_build_wheel
+          return hook(config_settings)
+        File "/tmp/pip-build-env-wqf9v3ox/overlay/lib/python3.9/site-packages/setuptools/build_meta.py", line 333, in get_requires_for_build_wheel
+          return self._get_build_requires(config_settings, requirements=[])
+        File "/tmp/pip-build-env-wqf9v3ox/overlay/lib/python3.9/site-packages/setuptools/build_meta.py", line 301, in _get_build_requires
+          self.run_setup()
+        File "/tmp/pip-build-env-wqf9v3ox/overlay/lib/python3.9/site-packages/setuptools/build_meta.py", line 317, in run_setup
+          exec(code, locals())
+        File "<string>", line 156, in <module>
+        File "<string>", line 49, in get_config_posix
+        File "<string>", line 28, in find_package_name
+      Exception: Can not find valid pkg-config name.
+      Specify MYSQLCLIENT_CFLAGS and MYSQLCLIENT_LDFLAGS env vars manually
+      [end of output]
+  
+  note: This error originates from a subprocess, and is likely not a problem with pip.
+
+[notice] A new release of pip is available: 25.3 -> 26.0.1
+[notice] To update, run: pip install --upgrade pip
+ERROR: Failed to build 'mysqlclient' when getting requirements to build wheel
++ python -m pip install git+https://github.com/clips/pattern.git
+Collecting git+https://github.com/clips/pattern.git
+  Cloning https://github.com/clips/pattern.git to /tmp/pip-req-build-n3ysnrgi
+  Running command git clone --filter=blob:none --quiet https://github.com/clips/pattern.git /tmp/pip-req-build-n3ysnrgi
+  Resolved https://github.com/clips/pattern.git to commit d25511f9ca7ed9356b801d8663b8b5168464e68f
+  Installing build dependencies: started
+  Installing build dependencies: finished with status 'done'
+  Getting requirements to build wheel: started
+  Getting requirements to build wheel: finished with status 'done'
+  Preparing metadata (pyproject.toml): started
+  Preparing metadata (pyproject.toml): finished with status 'done'
+Collecting future (from Pattern==3.6)
+  Using cached future-1.0.0-py3-none-any.whl.metadata (4.0 kB)
+Collecting backports.csv (from Pattern==3.6)
+  Using cached backports.csv-1.0.7-py2.py3-none-any.whl.metadata (4.0 kB)
+Collecting mysqlclient (from Pattern==3.6)
+  Using cached mysqlclient-2.2.7.tar.gz (91 kB)
+  Installing build dependencies: started
+  Installing build dependencies: finished with status 'done'
+  Getting requirements to build wheel: started
+  Getting requirements to build wheel: finished with status 'error'
+  error: subprocess-exited-with-error
+  
+  × Getting requirements to build wheel did not run successfully.
+  │ exit code: 1
+  ╰─> [26 lines of output]
+      Trying pkg-config --exists mysqlclient
+      Command 'pkg-config --exists mysqlclient' returned non-zero exit status 1.
+      Trying pkg-config --exists mariadb
+      Command 'pkg-config --exists mariadb' returned non-zero exit status 1.
+      Trying pkg-config --exists libmariadb
+      Command 'pkg-config --exists libmariadb' returned non-zero exit status 1.
+      Trying pkg-config --exists perconaserverclient
+      Command 'pkg-config --exists perconaserverclient' returned non-zero exit status 1.
+      Traceback (most recent call last):
+        File "/venv/RVCD/lib/python3.9/site-packages/pip/_vendor/pyproject_hooks/_in_process/_in_process.py", line 389, in <module>
+          main()
+        File "/venv/RVCD/lib/python3.9/site-packages/pip/_vendor/pyproject_hooks/_in_process/_in_process.py", line 373, in main
+          json_out["return_val"] = hook(**hook_input["kwargs"])
+        File "/venv/RVCD/lib/python3.9/site-packages/pip/_vendor/pyproject_hooks/_in_process/_in_process.py", line 143, in get_requires_for_build_wheel
+          return hook(config_settings)
+        File "/tmp/pip-build-env-c913kmu0/overlay/lib/python3.9/site-packages/setuptools/build_meta.py", line 333, in get_requires_for_build_wheel
+          return self._get_build_requires(config_settings, requirements=[])
+        File "/tmp/pip-build-env-c913kmu0/overlay/lib/python3.9/site-packages/setuptools/build_meta.py", line 301, in _get_build_requires
+          self.run_setup()
+        File "/tmp/pip-build-env-c913kmu0/overlay/lib/python3.9/site-packages/setuptools/build_meta.py", line 317, in run_setup
+          exec(code, locals())
+        File "<string>", line 156, in <module>
+        File "<string>", line 49, in get_config_posix
+        File "<string>", line 28, in find_package_name
+      Exception: Can not find valid pkg-config name.
+      Specify MYSQLCLIENT_CFLAGS and MYSQLCLIENT_LDFLAGS env vars manually
+      [end of output]
+  
+  note: This error originates from a subprocess, and is likely not a problem with pip.
+
+[notice] A new release of pip is available: 25.3 -> 26.0.1
+[notice] To update, run: pip install --upgrade pip
+ERROR: Failed to build 'mysqlclient' when getting requirements to build wheel

@@ -6,3 +6,75 @@ Requirement already satisfied: packaging>=24.0 in /home/jihoon/temp/miniconda-te
 
 [notice] A new release of pip is available: 25.3 -> 26.1.1
 [notice] To update, run: pip install --upgrade pip
++ python -m pip install -U pip<26 setuptools<81 wheel
+Requirement already satisfied: pip<26 in /venv/RVCD/lib/python3.9/site-packages (25.3)
+Requirement already satisfied: setuptools<81 in /venv/RVCD/lib/python3.9/site-packages (80.10.2)
+Requirement already satisfied: wheel in /venv/RVCD/lib/python3.9/site-packages (0.47.0)
+Requirement already satisfied: packaging>=24.0 in /venv/RVCD/lib/python3.9/site-packages (from wheel) (26.2)
+WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable. It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+
+[notice] A new release of pip is available: 25.3 -> 26.0.1
+[notice] To update, run: pip install --upgrade pip
++ python -m pip install -U pip<26 setuptools<81 wheel
+Requirement already satisfied: pip<26 in /venv/RVCD/lib/python3.9/site-packages (25.3)
+Requirement already satisfied: setuptools<81 in /venv/RVCD/lib/python3.9/site-packages (80.10.2)
+Requirement already satisfied: wheel in /venv/RVCD/lib/python3.9/site-packages (0.47.0)
+Requirement already satisfied: packaging>=24.0 in /venv/RVCD/lib/python3.9/site-packages (from wheel) (26.2)
+WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable. It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+
+[notice] A new release of pip is available: 25.3 -> 26.0.1
+[notice] To update, run: pip install --upgrade pip
++ python -m pip install -U pip<26 setuptools<81 wheel
+Requirement already satisfied: pip<26 in /venv/RVCD/lib/python3.9/site-packages (25.3)
+Requirement already satisfied: setuptools<81 in /venv/RVCD/lib/python3.9/site-packages (80.10.2)
+Requirement already satisfied: wheel in /venv/RVCD/lib/python3.9/site-packages (0.47.0)
+Requirement already satisfied: packaging>=24.0 in /venv/RVCD/lib/python3.9/site-packages (from wheel) (26.2)
+WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable. It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+
+[notice] A new release of pip is available: 25.3 -> 26.0.1
+[notice] To update, run: pip install --upgrade pip
++ python -m pip install -U pip<26 setuptools<81 wheel
+Requirement already satisfied: pip<26 in /venv/RVCD/lib/python3.9/site-packages (25.3)
+Requirement already satisfied: setuptools<81 in /venv/RVCD/lib/python3.9/site-packages (80.10.2)
+Requirement already satisfied: wheel in /venv/RVCD/lib/python3.9/site-packages (0.47.0)
+Requirement already satisfied: packaging>=24.0 in /venv/RVCD/lib/python3.9/site-packages (from wheel) (26.2)
+WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable. It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+
+[notice] A new release of pip is available: 25.3 -> 26.0.1
+[notice] To update, run: pip install --upgrade pip
++ python -m pip install -U pip<26 setuptools<81 wheel
+Requirement already satisfied: pip<26 in /venv/RVCD/lib/python3.9/site-packages (25.3)
+Requirement already satisfied: setuptools<81 in /venv/RVCD/lib/python3.9/site-packages (80.10.2)
+Requirement already satisfied: wheel in /venv/RVCD/lib/python3.9/site-packages (0.47.0)
+Requirement already satisfied: packaging>=24.0 in /venv/RVCD/lib/python3.9/site-packages (from wheel) (26.2)
+WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable. It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+
+[notice] A new release of pip is available: 25.3 -> 26.0.1
+[notice] To update, run: pip install --upgrade pip
++ python -m pip install -U pip<26 setuptools<81 wheel
+Requirement already satisfied: pip<26 in /venv/RVCD/lib/python3.9/site-packages (25.3)
+Requirement already satisfied: setuptools<81 in /venv/RVCD/lib/python3.9/site-packages (80.10.2)
+Requirement already satisfied: wheel in /venv/RVCD/lib/python3.9/site-packages (0.47.0)
+Requirement already satisfied: packaging>=24.0 in /venv/RVCD/lib/python3.9/site-packages (from wheel) (26.2)
+WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable. It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+
+[notice] A new release of pip is available: 25.3 -> 26.0.1
+[notice] To update, run: pip install --upgrade pip
++ python -m pip install -U pip<26 setuptools<81 wheel
+Requirement already satisfied: pip<26 in /venv/RVCD/lib/python3.9/site-packages (25.3)
+Requirement already satisfied: setuptools<81 in /venv/RVCD/lib/python3.9/site-packages (80.10.2)
+Requirement already satisfied: wheel in /venv/RVCD/lib/python3.9/site-packages (0.47.0)
+Requirement already satisfied: packaging>=24.0 in /venv/RVCD/lib/python3.9/site-packages (from wheel) (26.2)
+WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable. It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+
+[notice] A new release of pip is available: 25.3 -> 26.0.1
+[notice] To update, run: pip install --upgrade pip
++ python -m pip install -U pip<26 setuptools<81 wheel
+Requirement already satisfied: pip<26 in /venv/RVCD/lib/python3.9/site-packages (25.3)
+Requirement already satisfied: setuptools<81 in /venv/RVCD/lib/python3.9/site-packages (80.10.2)
+Requirement already satisfied: wheel in /venv/RVCD/lib/python3.9/site-packages (0.47.0)
+Requirement already satisfied: packaging>=24.0 in /venv/RVCD/lib/python3.9/site-packages (from wheel) (26.2)
+WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable. It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+
+[notice] A new release of pip is available: 25.3 -> 26.0.1
+[notice] To update, run: pip install --upgrade pip

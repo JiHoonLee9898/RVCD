@@ -1,0 +1,103 @@
++ python -m pip install PatternLite
+Collecting PatternLite
+  Downloading PatternLite-3.6-py3-none-any.whl.metadata (5.3 kB)
+Requirement already satisfied: numpy in /venv/RVCD/lib/python3.9/site-packages (from PatternLite) (1.26.4)
+Requirement already satisfied: scipy in /venv/RVCD/lib/python3.9/site-packages (from PatternLite) (1.13.1)
+Requirement already satisfied: nltk in /venv/RVCD/lib/python3.9/site-packages (from PatternLite) (3.9.1)
+Requirement already satisfied: click in /venv/RVCD/lib/python3.9/site-packages (from nltk->PatternLite) (8.1.8)
+Requirement already satisfied: joblib in /venv/RVCD/lib/python3.9/site-packages (from nltk->PatternLite) (1.5.3)
+Requirement already satisfied: regex>=2021.8.3 in /venv/RVCD/lib/python3.9/site-packages (from nltk->PatternLite) (2022.10.31)
+Requirement already satisfied: tqdm in /venv/RVCD/lib/python3.9/site-packages (from nltk->PatternLite) (4.64.1)
+Downloading PatternLite-3.6-py3-none-any.whl (22.1 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 22.1/22.1 MB 38.2 MB/s  0:00:00
+Installing collected packages: PatternLite
+Successfully installed PatternLite-3.6
+WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable. It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+
+[notice] A new release of pip is available: 25.3 -> 26.0.1
+[notice] To update, run: pip install --upgrade pip
++ python -m pip install PatternLite
+Collecting PatternLite
+  Using cached PatternLite-3.6-py3-none-any.whl.metadata (5.3 kB)
+Requirement already satisfied: numpy in /venv/RVCD/lib/python3.9/site-packages (from PatternLite) (1.26.4)
+Requirement already satisfied: scipy in /venv/RVCD/lib/python3.9/site-packages (from PatternLite) (1.13.1)
+Requirement already satisfied: nltk in /venv/RVCD/lib/python3.9/site-packages (from PatternLite) (3.9.1)
+Requirement already satisfied: click in /venv/RVCD/lib/python3.9/site-packages (from nltk->PatternLite) (8.1.8)
+Requirement already satisfied: joblib in /venv/RVCD/lib/python3.9/site-packages (from nltk->PatternLite) (1.5.3)
+Requirement already satisfied: regex>=2021.8.3 in /venv/RVCD/lib/python3.9/site-packages (from nltk->PatternLite) (2022.10.31)
+Requirement already satisfied: tqdm in /venv/RVCD/lib/python3.9/site-packages (from nltk->PatternLite) (4.64.1)
+Using cached PatternLite-3.6-py3-none-any.whl (22.1 MB)
+Installing collected packages: PatternLite
+Successfully installed PatternLite-3.6
+WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable. It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+
+[notice] A new release of pip is available: 25.3 -> 26.0.1
+[notice] To update, run: pip install --upgrade pip
++ python -m pip install PatternLite
+Collecting PatternLite
+  Using cached PatternLite-3.6-py3-none-any.whl.metadata (5.3 kB)
+Requirement already satisfied: numpy in /venv/RVCD/lib/python3.9/site-packages (from PatternLite) (1.26.4)
+Requirement already satisfied: scipy in /venv/RVCD/lib/python3.9/site-packages (from PatternLite) (1.13.1)
+Requirement already satisfied: nltk in /venv/RVCD/lib/python3.9/site-packages (from PatternLite) (3.9.1)
+Requirement already satisfied: click in /venv/RVCD/lib/python3.9/site-packages (from nltk->PatternLite) (8.1.8)
+Requirement already satisfied: joblib in /venv/RVCD/lib/python3.9/site-packages (from nltk->PatternLite) (1.5.3)
+Requirement already satisfied: regex>=2021.8.3 in /venv/RVCD/lib/python3.9/site-packages (from nltk->PatternLite) (2022.10.31)
+Requirement already satisfied: tqdm in /venv/RVCD/lib/python3.9/site-packages (from nltk->PatternLite) (4.64.1)
+Using cached PatternLite-3.6-py3-none-any.whl (22.1 MB)
+Installing collected packages: PatternLite
+Successfully installed PatternLite-3.6
+WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable. It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+
+[notice] A new release of pip is available: 25.3 -> 26.0.1
+[notice] To update, run: pip install --upgrade pip
++ python -m pip install PatternLite
+Collecting PatternLite
+  Using cached PatternLite-3.6-py3-none-any.whl.metadata (5.3 kB)
+Requirement already satisfied: numpy in /venv/RVCD/lib/python3.9/site-packages (from PatternLite) (1.26.4)
+Requirement already satisfied: scipy in /venv/RVCD/lib/python3.9/site-packages (from PatternLite) (1.13.1)
+Requirement already satisfied: nltk in /venv/RVCD/lib/python3.9/site-packages (from PatternLite) (3.9.1)
+Requirement already satisfied: click in /venv/RVCD/lib/python3.9/site-packages (from nltk->PatternLite) (8.1.8)
+Requirement already satisfied: joblib in /venv/RVCD/lib/python3.9/site-packages (from nltk->PatternLite) (1.5.3)
+Requirement already satisfied: regex>=2021.8.3 in /venv/RVCD/lib/python3.9/site-packages (from nltk->PatternLite) (2022.10.31)
+Requirement already satisfied: tqdm in /venv/RVCD/lib/python3.9/site-packages (from nltk->PatternLite) (4.64.1)
+Using cached PatternLite-3.6-py3-none-any.whl (22.1 MB)
+Installing collected packages: PatternLite
+Successfully installed PatternLite-3.6
+WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable. It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+
+[notice] A new release of pip is available: 25.3 -> 26.0.1
+[notice] To update, run: pip install --upgrade pip
++ python -m pip install PatternLite
+Collecting PatternLite
+  Using cached PatternLite-3.6-py3-none-any.whl.metadata (5.3 kB)
+Requirement already satisfied: numpy in /venv/RVCD/lib/python3.9/site-packages (from PatternLite) (1.26.4)
+Requirement already satisfied: scipy in /venv/RVCD/lib/python3.9/site-packages (from PatternLite) (1.13.1)
+Requirement already satisfied: nltk in /venv/RVCD/lib/python3.9/site-packages (from PatternLite) (3.9.1)
+Requirement already satisfied: click in /venv/RVCD/lib/python3.9/site-packages (from nltk->PatternLite) (8.1.8)
+Requirement already satisfied: joblib in /venv/RVCD/lib/python3.9/site-packages (from nltk->PatternLite) (1.5.3)
+Requirement already satisfied: regex>=2021.8.3 in /venv/RVCD/lib/python3.9/site-packages (from nltk->PatternLite) (2022.10.31)
+Requirement already satisfied: tqdm in /venv/RVCD/lib/python3.9/site-packages (from nltk->PatternLite) (4.64.1)
+Using cached PatternLite-3.6-py3-none-any.whl (22.1 MB)
+Installing collected packages: PatternLite
+Successfully installed PatternLite-3.6
+WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable. It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+
+[notice] A new release of pip is available: 25.3 -> 26.0.1
+[notice] To update, run: pip install --upgrade pip
++ python -m pip install PatternLite
+Collecting PatternLite
+  Using cached PatternLite-3.6-py3-none-any.whl.metadata (5.3 kB)
+Requirement already satisfied: numpy in /venv/RVCD/lib/python3.9/site-packages (from PatternLite) (1.26.4)
+Requirement already satisfied: scipy in /venv/RVCD/lib/python3.9/site-packages (from PatternLite) (1.13.1)
+Requirement already satisfied: nltk in /venv/RVCD/lib/python3.9/site-packages (from PatternLite) (3.9.1)
+Requirement already satisfied: click in /venv/RVCD/lib/python3.9/site-packages (from nltk->PatternLite) (8.1.8)
+Requirement already satisfied: joblib in /venv/RVCD/lib/python3.9/site-packages (from nltk->PatternLite) (1.5.3)
+Requirement already satisfied: regex>=2021.8.3 in /venv/RVCD/lib/python3.9/site-packages (from nltk->PatternLite) (2022.10.31)
+Requirement already satisfied: tqdm in /venv/RVCD/lib/python3.9/site-packages (from nltk->PatternLite) (4.64.1)
+Using cached PatternLite-3.6-py3-none-any.whl (22.1 MB)
+Installing collected packages: PatternLite
+Successfully installed PatternLite-3.6
+WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable. It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+
+[notice] A new release of pip is available: 25.3 -> 26.0.1
+[notice] To update, run: pip install --upgrade pip
