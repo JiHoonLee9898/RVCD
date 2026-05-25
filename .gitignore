@@ -21,3 +21,5 @@ MAIN_CODES/generated_captions/*
 groundingdino_swint_ogc.pth
 # GroundingDINO checkpoint
 **/groundingdino_swint_ogc.pth
+
+*generated_captions*
