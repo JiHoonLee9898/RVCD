@@ -1083,12 +1083,36 @@ if __name__ == "__main__":
 
 # python eval_chair_folder_markdown_ervcd.py \
 #   --gt-caption-path /home/jihoon/jihoon/DATASETS/coco2014/val2014/annotations/captions_val2014.json \
-#   --folder /home/jihoon/jihoon/RVCD/MAIN_CODES/generated_captions_test \
+#   --folder /home/jihoon/jihoon/RVCD/MAIN_CODES/generated_captions \
 #   --only-md \
 #   --md-show-n
 
 #   python eval_chair_folder_markdown_ervcd.py \
 #   --gt-caption-path /home/jihoon/jihoon/DATASETS/coco2014/val2014/annotations/captions_val2014.json \
-#   --folder /home/jihoon/jihoon/RVCD/MAIN_CODES/generated_captions \
+#   --folder /home/jihoon/jihoon/RVCD/MAIN_CODES/generated_captions_test_blackback \
+#   --only-md \
+#   --md-show-n
+
+# python eval_chair_folder_markdown_ervcd.py \
+#   --gt-caption-path /home/jihoon/jihoon/DATASETS/coco2014/val2014/annotations/captions_val2014.json \
+#   --folder /home/jihoon/jihoon/RVCD/MAIN_CODES/generated_captions_test_blackfront \
+#   --only-md \
+#   --md-show-n
+
+#   python eval_chair_folder_markdown_ervcd.py \
+#   --gt-caption-path /home/jihoon/jihoon/DATASETS/coco2014/val2014/annotations/captions_val2014.json \
+#   --folder /home/jihoon/jihoon/RVCD/MAIN_CODES/generated_captions_test_repeat \
+#   --only-md \
+#   --md-show-n
+
+#   python eval_chair_folder_markdown_ervcd.py \
+#   --gt-caption-path /home/jihoon/jihoon/DATASETS/coco2014/val2014/annotations/captions_val2014.json \
+#   --folder /home/jihoon/jihoon/RVCD/MAIN_CODES/generated_captions_test_repeatfront \
+#   --only-md \
+#   --md-show-n
+
+#   python eval_chair_folder_markdown_ervcd.py \
+#   --gt-caption-path /home/jihoon/jihoon/DATASETS/coco2014/val2014/annotations/captions_val2014.json \
+#   --folder /home/jihoon/jihoon/RVCD/MAIN_CODES/generated_captions_test_repeatlast \
 #   --only-md \
 #   --md-show-n
