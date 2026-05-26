@@ -44,16 +44,15 @@ from typing import Any, Dict, Iterable, List, Optional, Tuple
 GENERATED_RE = re.compile(r"generated_captions\.(?:jsonl|json)$", re.IGNORECASE)
 INFO_RE = re.compile(r"(?:info|INFO)\.json$", re.IGNORECASE)
 
-SCRIPT_VERSION = "2026-05-25-v5-ervcd-method-row"
-# DEFAULT_MD_METHODS = ["Greedy", "Beam Search", "DoLA", "OPERA", "VCD", "RVCD", "eRVCD"]
+SCRIPT_VERSION = "2026-05-26-v6-ervcd-grid-mode-rows"
 
-
+# eRVCD grid fill modes used by ervcd_generation_chair_bleu.py.
+# Keep longer repeat_* names before repeat when regex matching.
 ERVCD_GRID_MODES = ["black_back", "black_front", "repeat", "repeat_front", "repeat_last"]
-ERVCD_MODE_METHODS = [f"eRVCD, {m}" for m in ERVCD_GRID_MODES]
+ERVCD_MODE_METHODS = [f"eRVCD, {mode}" for mode in ERVCD_GRID_MODES]
 
 DEFAULT_MD_METHODS = ["Greedy", "Beam Search", "DoLA", "OPERA", "VCD", "RVCD", "eRVCD"]
 DEFAULT_ERVCD_MD_METHODS = ERVCD_MODE_METHODS
-
 
 
 def is_draft(path: Path) -> bool:
@@ -410,8 +409,17 @@ def fmt_pct_md(value: Optional[float], blank: str = "", percent_symbol: bool = T
     return f"{pct:.2f}%" if percent_symbol else f"{pct:.2f}"
 
 
-def parse_csv_items(value: str) -> List[str]:
-    return [x.strip() for x in value.split(",") if x.strip()]
+def parse_csv_items(value: Optional[str]) -> List[str]:
+    """Parse user-specified Markdown row order.
+
+    The old script used comma-separated values only, but eRVCD mode labels are
+    intentionally formatted as e.g. "eRVCD, black_back". Therefore semicolon is
+    preferred whenever labels themselves contain commas.
+    """
+    if not value:
+        return []
+    sep = ";" if ";" in value else ","
+    return [x.strip() for x in value.split(sep) if x.strip()]
 
 
 def markdown_escape_cell(value: Any) -> str:
@@ -476,13 +484,50 @@ def normalize_run_component(token: str) -> str:
     return raw.strip("_")
 
 
+ERVCD_GRID_MODE_RE = re.compile(
+    # Order matters: repeat_front / repeat_last must be tried before repeat.
+    r"(?:^|_)grid_(?P<mode>black_back|black_front|repeat_front|repeat_last|repeat)(?:_|$)",
+    re.IGNORECASE,
+)
+
+
+def ervcd_label_from_norm(norm: str) -> str:
+    """Return a method label such as 'eRVCD, black_back' from a run component."""
+    m = ERVCD_GRID_MODE_RE.search(norm)
+    if m:
+        return f"eRVCD, {m.group('mode').lower()}"
+    return "eRVCD"
+
+
+def is_ervcd_run_path(path: Path) -> bool:
+    """True if this generated-caption path belongs to an eRVCD run.
+
+    This intentionally checks the leaf/run-like components only. It avoids
+    treating a top-level folder such as generated_captions_ervcd_grid_modes as
+    proof that every child run is eRVCD.
+    """
+    candidates: List[str] = [path.name, path.stem, path.parent.name]
+    try:
+        candidates.extend(path.parts[-4:])
+    except Exception:
+        pass
+
+    for comp in candidates:
+        norm = normalize_run_component(comp)
+        if not norm:
+            continue
+        if norm == "ervcd" or norm.startswith("ervcd_") or ERVCD_AB_RE.match(norm):
+            return True
+    return False
+
+
 def method_from_run_component(token: str) -> Optional[str]:
     norm = normalize_run_component(token)
     if not norm:
         return None
 
     if ERVCD_AB_RE.match(norm):
-        return "eRVCD"
+        return ervcd_label_from_norm(norm)
 
     if RVCD_AB_RE.match(norm):
         return "RVCD"
@@ -495,7 +540,7 @@ def method_from_run_component(token: str) -> Optional[str]:
     if method in {"beam", "beam_search", "beamsearch"}:
         return "Beam Search"
     if method == "ervcd":
-        return "eRVCD"
+        return ervcd_label_from_norm(norm)
     return ALIAS_TO_METHOD.get(method)
 
 
@@ -513,6 +558,8 @@ def method_from_exact_component(token: str) -> Optional[str]:
         return None
     if norm == "rvcd":
         return None
+    if norm == "ervcd":
+        return "eRVCD"
 
     return ALIAS_TO_METHOD.get(norm)
 
@@ -943,13 +990,32 @@ def eval_one(
 
 
 def write_csv(rows: List[Dict[str, Any]], path: Path) -> None:
+    """Save raw per-run results.
+
+    This is intentionally raw, not aggregated. method/seed columns are added so
+    you can also pivot/group the CSV manually if needed.
+    """
     path.parent.mkdir(parents=True, exist_ok=True)
-    keys = ["label", "chairs", "chairi", "bleu", "latency_sec", "generated_path", "chair_path", "info_path"]
+    keys = [
+        "method",
+        "seed",
+        "label",
+        "chairs",
+        "chairi",
+        "bleu",
+        "latency_sec",
+        "generated_path",
+        "chair_path",
+        "info_path",
+    ]
     with path.open("w", newline="", encoding="utf-8") as f:
         writer = csv.DictWriter(f, fieldnames=keys)
         writer.writeheader()
         for row in rows:
-            writer.writerow(row)
+            out = dict(row)
+            out["method"] = infer_method(row)
+            out["seed"] = infer_seed(row)
+            writer.writerow({k: out.get(k, "") for k in keys})
 
 
 def main() -> None:
@@ -960,12 +1026,17 @@ def main() -> None:
     parser.add_argument("--eval-output-dir", default=None, help="Writable output dir for eval_hallucination. Default: temp dir")
     parser.add_argument("--main-codes", default=None, help="Path to RVCD/MAIN_CODES. Default: auto-detect")
     parser.add_argument("--include-draft", action="store_true", help="Include DRAFT generated files")
+    parser.add_argument("--only-ervcd", action="store_true", help="Only evaluate eRVCD generated caption files")
     parser.add_argument("--force-convert", action="store_true", help="Regenerate chair files even if present")
     parser.add_argument("--verbose", action="store_true", help="Show underlying command output")
     parser.add_argument("--save-csv", default=None, help="Optional path to save compact CSV")
     parser.add_argument("--save-md", default=None, help="Optional path to save the final Markdown table")
     parser.add_argument("--md-title", default="llava 1.5 7b instruct, COCO", help="First Markdown table header cell")
-    parser.add_argument("--md-methods", default=",".join(DEFAULT_MD_METHODS), help="Comma-separated Markdown row order")
+    parser.add_argument(
+        "--md-methods",
+        default=None,
+        help="Markdown row order. Use semicolons if labels contain commas, e.g. 'eRVCD, black_back;eRVCD, black_front'",
+    )
     parser.add_argument("--md-empty", default="", help="Cell text for missing Markdown values. Default: empty cell")
     parser.add_argument("--md-append-extra", action="store_true", help="Append unmatched or duplicate runs below the fixed method rows")
     parser.add_argument("--no-md-latency", action="store_true", help="Do not add a Latency column to the Markdown table")
@@ -1000,11 +1071,15 @@ def main() -> None:
         eval_output_dir = Path(temp_ctx.name).resolve()
 
     generated_files = discover_generated_files(root, include_draft=args.include_draft)
+    if args.only_ervcd:
+        generated_files = [p for p in generated_files if is_ervcd_run_path(p)]
     if not generated_files:
-        raise SystemExit(f"No non-DRAFT *generated_captions.json/jsonl files found under: {root}")
+        kind = "eRVCD " if args.only_ervcd else ""
+        raise SystemExit(f"No non-DRAFT {kind}*generated_captions.json/jsonl files found under: {root}")
 
     if not args.only_md:
-        print(f"Found {len(generated_files)} generated caption file(s).")
+        only_text = " eRVCD" if args.only_ervcd else ""
+        print(f"Found {len(generated_files)}{only_text} generated caption file(s).")
         print(f"Root: {root}")
 
     rows: List[Dict[str, Any]] = []
@@ -1050,10 +1125,17 @@ def main() -> None:
                 row.get("latency_sec"),
             )
 
+    if args.md_methods:
+        md_methods = parse_csv_items(args.md_methods)
+    elif args.only_ervcd:
+        md_methods = DEFAULT_ERVCD_MD_METHODS
+    else:
+        md_methods = DEFAULT_MD_METHODS
+
     md_table = rows_to_markdown_table(
         rows=rows,
         title=args.md_title,
-        methods=parse_csv_items(args.md_methods),
+        methods=md_methods,
         blank=args.md_empty,
         append_extra=args.md_append_extra,
         include_latency=not args.no_md_latency,
@@ -1131,3 +1213,15 @@ if __name__ == "__main__":
 #   --folder /root/RVCD/MAIN_CODES/generated_captions \
 #   --only-md \
 #   --md-show-n
+
+
+
+
+# python eval_chair_folder_markdown_ervcd_grid_modes.py \
+#   --folder ./generated_captions_ervcd_grid_modes/chair/llava-1.5 \
+#   --gt-caption-path /home/jihoon/jihoon/DATASETS/coco2014/val2014/annotations/captions_val2014.json \
+#   --only-ervcd \
+#   --only-md \
+#   --md-show-n \
+#   --save-md ./generated_captions_ervcd_grid_modes/ervcd_grid_mode_results.md \
+#   --save-csv ./generated_captions_ervcd_grid_modes/ervcd_grid_mode_results.csv

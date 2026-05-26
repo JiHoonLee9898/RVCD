@@ -1,5 +1,7 @@
 #!/bin/bash
 
+
+####################################################################
 COMMON_DATA_PATH="/home/jihoon/jihoon/DATASETS/coco2014/val2014"
 OUT_DIR="./generated_captions/"
 NUM_SAMPLES=300
@@ -114,6 +116,157 @@ CUDA_VISIBLE_DEVICES=${GPU_ID} python prior_decodings/prior_generation_chair_ble
     --max_new_tokens ${MAX_NEW_TOKENS} \
     --chair_cache_path ${CHAIR_CACHE_PATH} \
     --beam 3
+#####################################################################################
+
+
+
+
+
+
+####################################################################
+COMMON_DATA_PATH="/home/jihoon/jihoon/DATASETS/coco2014/val2014"
+OUT_DIR="./generated_captions/"
+NUM_SAMPLES=300
+SEED=44
+GPU_ID=0
+MAX_NEW_TOKENS=64
+CHAIR_CACHE_PATH="eval/CHAIR_CACHE/chair.pkl"
+
+
+## RVCD for CHAIR/BLEU ###
+CUDA_VISIBLE_DEVICES=${GPU_ID} python rvcd_generation_chair_bleu.py \
+    --model llava-1.5 \
+    --ref_folder_path DB_single_concept_images_flux_generated/generated_images \
+    --data_path ${COMMON_DATA_PATH} \
+    --chair_cache_path ${CHAIR_CACHE_PATH} \
+    --yolo_version yolov8x.pt \
+    --num_samples ${NUM_SAMPLES} \
+    --seed ${SEED} \
+    --gpu-id ${GPU_ID} \
+    --output_dir ${OUT_DIR} \
+    --max_new_tokens ${MAX_NEW_TOKENS} \
+    --rvcd_alpha 1 \
+    --rvcd_beta 0.1 \
+ 
+
+# eRVCD for CHAIR/BLEU ###
+CUDA_VISIBLE_DEVICES=0 \
+python ervcd_generation_chair_bleu.py \
+--model llava-1.5 \
+--data_path ${COMMON_DATA_PATH} \
+--ref_folder_path DB_single_concept_images_flux_generated/generated_images \
+--chair_cache_path ${CHAIR_CACHE_PATH} \
+--num_samples ${NUM_SAMPLES} \
+--seed ${SEED} \
+--gpu-id ${GPU_ID} \
+--output_dir ${OUT_DIR} \
+--rvcd_alpha 1 \
+--rvcd_beta 0.1 \
+--ervcd_grid_fill_mode black_front \
+--ervcd_logit_scale_mode presence
+
+
+### greedy for CHAIR/BLEU ###
+CUDA_VISIBLE_DEVICES=${GPU_ID} python prior_decodings/prior_generation_chair_bleu.py \
+    --model not_rvcd_llava \
+    --data_path ${COMMON_DATA_PATH} \
+    -d greedy \
+    --num_samples ${NUM_SAMPLES} \
+    --seed ${SEED} \
+    --gpu-id ${GPU_ID} \
+    --output_dir ${OUT_DIR} \
+    --max_new_tokens ${MAX_NEW_TOKENS} \
+    --chair_cache_path ${CHAIR_CACHE_PATH}
+
+
+### dola for CHAIR/BLEU ###
+CUDA_VISIBLE_DEVICES=${GPU_ID} python prior_decodings/prior_generation_chair_bleu.py \
+    --model not_rvcd_llava \
+    --data_path ${COMMON_DATA_PATH} \
+    -d dola \
+    --num_samples ${NUM_SAMPLES} \
+    --seed ${SEED} \
+    --gpu-id ${GPU_ID} \
+    --output_dir ${OUT_DIR} \
+    --max_new_tokens ${MAX_NEW_TOKENS} \
+    --chair_cache_path ${CHAIR_CACHE_PATH}
+
+
+### opera for CHAIR/BLEU ###
+CUDA_VISIBLE_DEVICES=${GPU_ID} python prior_decodings/prior_generation_chair_bleu.py \
+    --model not_rvcd_llava \
+    --data_path ${COMMON_DATA_PATH} \
+    -d opera \
+    --num_samples ${NUM_SAMPLES} \
+    --seed ${SEED} \
+    --gpu-id ${GPU_ID} \
+    --output_dir ${OUT_DIR} \
+    --max_new_tokens ${MAX_NEW_TOKENS} \
+    --chair_cache_path ${CHAIR_CACHE_PATH} \
+    --beam 3 \
+    --scale_factor 50 \
+    --threshold 15 \
+    --num_attn_candidates 5 \
+    --penalty_weights 1.0
+
+
+### vcd for CHAIR/BLEU ###
+CUDA_VISIBLE_DEVICES=${GPU_ID} python prior_decodings/prior_generation_chair_bleu.py \
+    --model not_rvcd_llava \
+    --data_path ${COMMON_DATA_PATH} \
+    -d vcd \
+    --num_samples ${NUM_SAMPLES} \
+    --seed ${SEED} \
+    --gpu-id ${GPU_ID} \
+    --output_dir ${OUT_DIR} \
+    --max_new_tokens ${MAX_NEW_TOKENS} \
+    --chair_cache_path ${CHAIR_CACHE_PATH} \
+    --cd_alpha 1 \
+    --cd_beta 0.1 \
+    --noise_step 500
+
+
+### beam for CHAIR/BLEU ###
+CUDA_VISIBLE_DEVICES=${GPU_ID} python prior_decodings/prior_generation_chair_bleu.py \
+    --model not_rvcd_llava \
+    --data_path ${COMMON_DATA_PATH} \
+    -d beam \
+    --num_samples ${NUM_SAMPLES} \
+    --seed ${SEED} \
+    --gpu-id ${GPU_ID} \
+    --output_dir ${OUT_DIR} \
+    --max_new_tokens ${MAX_NEW_TOKENS} \
+    --chair_cache_path ${CHAIR_CACHE_PATH} \
+    --beam 3
+#####################################################################################
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
