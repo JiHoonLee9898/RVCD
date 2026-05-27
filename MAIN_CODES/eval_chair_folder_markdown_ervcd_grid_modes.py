@@ -1218,7 +1218,7 @@ if __name__ == "__main__":
 
 
 # python eval_chair_folder_markdown_ervcd_grid_modes.py \
-#   --folder ./generated_captions_ervcd_grid_modes/chair/llava-1.5 \
+#   --folder /root/RVCD/MAIN_CODES/generated_captions_ervcd_grid_modes_OPTIMIZED \
 #   --gt-caption-path /home/jihoon/jihoon/DATASETS/coco2014/val2014/annotations/captions_val2014.json \
 #   --only-ervcd \
 #   --only-md \
