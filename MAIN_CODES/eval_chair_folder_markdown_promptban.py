@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
-eval_chair_folder_markdown_ervcd.py
+eval_chair_folder_markdown_promptban.py
 
-Compact RVCD CHAIR evaluator with copy-friendly Markdown table output.
+Compact RVCD/eRVCD/PromptBan CHAIR evaluator with copy-friendly Markdown table output.
 
 Input:
   --folder can be a top-level folder such as:
@@ -44,15 +44,29 @@ from typing import Any, Dict, Iterable, List, Optional, Tuple
 GENERATED_RE = re.compile(r"generated_captions\.(?:jsonl|json)$", re.IGNORECASE)
 INFO_RE = re.compile(r"(?:info|INFO)\.json$", re.IGNORECASE)
 
-SCRIPT_VERSION = "2026-05-26-v6-ervcd-grid-mode-rows"
+SCRIPT_VERSION = "2026-05-28-v7-promptban-mode-rows"
 
 # eRVCD grid fill modes used by ervcd_generation_chair_bleu.py.
 # Keep longer repeat_* names before repeat when regex matching.
 ERVCD_GRID_MODES = ["black_back", "black_front", "repeat", "repeat_front", "repeat_last"]
 ERVCD_MODE_METHODS = [f"eRVCD, {mode}" for mode in ERVCD_GRID_MODES]
 
-DEFAULT_MD_METHODS = ["Greedy", "Beam Search", "DoLA", "OPERA", "VCD", "RVCD", "eRVCD"]
+# PromptBan modes used by promptban_generation_chair_bleu.py.
+PROMPTBAN_MODES = ["both", "positive_only", "negative_only"]
+PROMPTBAN_MODE_METHODS = [f"PromptBan, {mode}" for mode in PROMPTBAN_MODES]
+
+DEFAULT_MD_METHODS = [
+    "Greedy",
+    "Beam Search",
+    "DoLA",
+    "OPERA",
+    "VCD",
+    "RVCD",
+    "eRVCD",
+    *PROMPTBAN_MODE_METHODS,
+]
 DEFAULT_ERVCD_MD_METHODS = ERVCD_MODE_METHODS
+DEFAULT_PROMPTBAN_MD_METHODS = PROMPTBAN_MODE_METHODS
 
 
 def is_draft(path: Path) -> bool:
@@ -440,6 +454,7 @@ METHOD_ALIASES: List[Tuple[str, Tuple[str, ...]]] = [
     ("VCD", ("vcd",)),
     ("RVCD", ("rvcd",)),
     ("eRVCD", ("ervcd",)),
+    ("PromptBan", ("promptban", "prompt_ban", "prompt-ban")),
 ]
 
 ALIAS_TO_METHOD: Dict[str, str] = {}
@@ -472,6 +487,16 @@ ERVCD_AB_RE = re.compile(
     re.IGNORECASE,
 )
 
+# PromptBan runs/files may look like:
+#   promptban_both_202605281230_seed_42_samples_300_maxtokens_64
+#   promptban_llava-1.5_negative_only_202605281230_seed_42_...
+#   generated_captions_promptban_positive_only
+# Normalize first, then search for promptban + one of the known modes.
+PROMPTBAN_MODE_RE = re.compile(
+    r"(?:^|_)prompt_?ban(?:_[^_]+)*?_(?P<mode>both|positive_only|negative_only)(?:_|$)",
+    re.IGNORECASE,
+)
+
 SUFFIX_RE = re.compile(r"_(?:generated_captions|chair|info)$", re.IGNORECASE)
 
 
@@ -499,6 +524,14 @@ def ervcd_label_from_norm(norm: str) -> str:
     return "eRVCD"
 
 
+def promptban_label_from_norm(norm: str) -> str:
+    """Return a method label such as 'PromptBan, both' from a run component."""
+    m = PROMPTBAN_MODE_RE.search(norm)
+    if m:
+        return f"PromptBan, {m.group('mode').lower()}"
+    return "PromptBan"
+
+
 def is_ervcd_run_path(path: Path) -> bool:
     """True if this generated-caption path belongs to an eRVCD run.
 
@@ -521,10 +554,30 @@ def is_ervcd_run_path(path: Path) -> bool:
     return False
 
 
+def is_promptban_run_path(path: Path) -> bool:
+    """True if this generated-caption path belongs to a PromptBan run."""
+    candidates: List[str] = [path.name, path.stem, path.parent.name]
+    try:
+        candidates.extend(path.parts[-4:])
+    except Exception:
+        pass
+
+    for comp in candidates:
+        norm = normalize_run_component(comp)
+        if not norm:
+            continue
+        if norm == "promptban" or norm.startswith("promptban_") or PROMPTBAN_MODE_RE.search(norm):
+            return True
+    return False
+
+
 def method_from_run_component(token: str) -> Optional[str]:
     norm = normalize_run_component(token)
     if not norm:
         return None
+
+    if PROMPTBAN_MODE_RE.search(norm) or norm == "promptban" or norm.startswith("promptban_"):
+        return promptban_label_from_norm(norm)
 
     if ERVCD_AB_RE.match(norm):
         return ervcd_label_from_norm(norm)
@@ -554,12 +607,15 @@ def method_from_exact_component(token: str) -> Optional[str]:
     if norm in {
         "not_rvcd", "not_rvcd_llava", "non_rvcd", "non_rvcd_llava",
         "not_ervcd", "not_ervcd_llava", "non_ervcd", "non_ervcd_llava",
+        "not_promptban", "not_promptban_llava", "non_promptban", "non_promptban_llava",
     }:
         return None
     if norm == "rvcd":
         return None
     if norm == "ervcd":
         return "eRVCD"
+    if norm == "promptban":
+        return "PromptBan"
 
     return ALIAS_TO_METHOD.get(norm)
 
@@ -1027,6 +1083,7 @@ def main() -> None:
     parser.add_argument("--main-codes", default=None, help="Path to RVCD/MAIN_CODES. Default: auto-detect")
     parser.add_argument("--include-draft", action="store_true", help="Include DRAFT generated files")
     parser.add_argument("--only-ervcd", action="store_true", help="Only evaluate eRVCD generated caption files")
+    parser.add_argument("--only-promptban", action="store_true", help="Only evaluate PromptBan generated caption files")
     parser.add_argument("--force-convert", action="store_true", help="Regenerate chair files even if present")
     parser.add_argument("--verbose", action="store_true", help="Show underlying command output")
     parser.add_argument("--save-csv", default=None, help="Optional path to save compact CSV")
@@ -1070,15 +1127,20 @@ def main() -> None:
         temp_ctx = tempfile.TemporaryDirectory(prefix="rvcd_chair_eval_")
         eval_output_dir = Path(temp_ctx.name).resolve()
 
+    if args.only_ervcd and args.only_promptban:
+        raise SystemExit("Choose only one of --only-ervcd or --only-promptban.")
+
     generated_files = discover_generated_files(root, include_draft=args.include_draft)
     if args.only_ervcd:
         generated_files = [p for p in generated_files if is_ervcd_run_path(p)]
+    if args.only_promptban:
+        generated_files = [p for p in generated_files if is_promptban_run_path(p)]
     if not generated_files:
-        kind = "eRVCD " if args.only_ervcd else ""
+        kind = "eRVCD " if args.only_ervcd else ("PromptBan " if args.only_promptban else "")
         raise SystemExit(f"No non-DRAFT {kind}*generated_captions.json/jsonl files found under: {root}")
 
     if not args.only_md:
-        only_text = " eRVCD" if args.only_ervcd else ""
+        only_text = " eRVCD" if args.only_ervcd else (" PromptBan" if args.only_promptban else "")
         print(f"Found {len(generated_files)}{only_text} generated caption file(s).")
         print(f"Root: {root}")
 
@@ -1129,6 +1191,8 @@ def main() -> None:
         md_methods = parse_csv_items(args.md_methods)
     elif args.only_ervcd:
         md_methods = DEFAULT_ERVCD_MD_METHODS
+    elif args.only_promptban:
+        md_methods = DEFAULT_PROMPTBAN_MD_METHODS
     else:
         md_methods = DEFAULT_MD_METHODS
 
@@ -1171,49 +1235,83 @@ if __name__ == "__main__":
     main()
 
 
-# python eval_chair_folder_markdown_ervcd.py \
+# python eval_chair_folder_markdown_promptban.py \
 #   --gt-caption-path /home/jihoon/jihoon/DATASETS/coco2014/val2014/annotations/captions_val2014.json \
 #   --folder /home/jihoon/jihoon/RVCD/MAIN_CODES/generated_captions \
 #   --only-md \
 #   --md-show-n
 
-#   python eval_chair_folder_markdown_ervcd.py \
+#   python eval_chair_folder_markdown_promptban.py \
 #   --gt-caption-path /home/jihoon/jihoon/DATASETS/coco2014/val2014/annotations/captions_val2014.json \
 #   --folder /home/jihoon/jihoon/RVCD/MAIN_CODES/generated_captions_test_blackback \
 #   --only-md \
 #   --md-show-n
 
-# python eval_chair_folder_markdown_ervcd.py \
+# python eval_chair_folder_markdown_promptban.py \
 #   --gt-caption-path /home/jihoon/jihoon/DATASETS/coco2014/val2014/annotations/captions_val2014.json \
 #   --folder /home/jihoon/jihoon/RVCD/MAIN_CODES/generated_captions_test_blackfront \
 #   --only-md \
 #   --md-show-n
 
-#   python eval_chair_folder_markdown_ervcd.py \
+#   python eval_chair_folder_markdown_promptban.py \
 #   --gt-caption-path /home/jihoon/jihoon/DATASETS/coco2014/val2014/annotations/captions_val2014.json \
 #   --folder /home/jihoon/jihoon/RVCD/MAIN_CODES/generated_captions_test_repeat \
 #   --only-md \
 #   --md-show-n
 
-#   python eval_chair_folder_markdown_ervcd.py \
+#   python eval_chair_folder_markdown_promptban.py \
 #   --gt-caption-path /home/jihoon/jihoon/DATASETS/coco2014/val2014/annotations/captions_val2014.json \
 #   --folder /home/jihoon/jihoon/RVCD/MAIN_CODES/generated_captions_test_repeatfront \
 #   --only-md \
 #   --md-show-n
 
-#   python eval_chair_folder_markdown_ervcd.py \
+#   python eval_chair_folder_markdown_promptban.py \
 #   --gt-caption-path /home/jihoon/jihoon/DATASETS/coco2014/val2014/annotations/captions_val2014.json \
 #   --folder /home/jihoon/jihoon/RVCD/MAIN_CODES/generated_captions_test_repeatlast \
 #   --only-md \
 #   --md-show-n
 
 
-# python eval_chair_folder_markdown_ervcd.py \
+# python eval_chair_folder_markdown_promptban.py \
 #   --gt-caption-path /root/DATASETS/coco2014/val2014/annotations/captions_val2014.json \
 #   --folder /root/RVCD/MAIN_CODES/generated_captions \
+#   --only-md \
+#   --md-show-n
+
+# PromptBan examples:
+# python eval_chair_folder_markdown_promptban.py \
+#   --gt-caption-path /home/jihoon/jihoon/DATASETS/coco2014/val2014/annotations/captions_val2014.json \
+#   --folder /home/jihoon/jihoon/RVCD/MAIN_CODES/generated_captions_promptban_both \
+#   --only-promptban \
+#   --only-md \
+#   --md-show-n
+#
+# python eval_chair_folder_markdown_promptban.py \
+#   --gt-caption-path /home/jihoon/jihoon/DATASETS/coco2014/val2014/annotations/captions_val2014.json \
+#   --folder /home/jihoon/jihoon/RVCD/MAIN_CODES/generated_captions \
 #   --only-md \
 #   --md-show-n
 
 
 
 
+# python eval_chair_folder_markdown_promptban.py \
+#   --gt-caption-path /home/jihoon/jihoon/DATASETS/coco2014/val2014/annotations/captions_val2014.json \
+#   --folder /root/RVCD/MAIN_CODES/generated_captions_promptban_both \
+#   --only-promptban \
+#   --only-md \
+#   --md-show-n
+
+# python eval_chair_folder_markdown_promptban.py \
+#   --gt-caption-path /home/jihoon/jihoon/DATASETS/coco2014/val2014/annotations/captions_val2014.json \
+#   --folder /root/RVCD/MAIN_CODES/generated_captions_promptban_negative \
+#   --only-promptban \
+#   --only-md \
+#   --md-show-n
+
+# python eval_chair_folder_markdown_promptban.py \
+#   --gt-caption-path /home/jihoon/jihoon/DATASETS/coco2014/val2014/annotations/captions_val2014.json \
+#   --folder /root/RVCD/MAIN_CODES/generated_captions_promptban_positive \
+#   --only-promptban \
+#   --only-md \
+#   --md-show-n

@@ -1126,8 +1126,22 @@ if __name__ == "__main__":
 #   --md-show-n
 
 
+
+
 # python eval_chair_folder_markdown_ervcd.py \
 #   --gt-caption-path /root/DATASETS/coco2014/val2014/annotations/captions_val2014.json \
-#   --folder /root/RVCD/MAIN_CODES/generated_captions \
+#   --folder /root/RVCD/MAIN_CODES/generated_captions_promptban_both \
+#   --only-md \
+#   --md-show-n
+
+# python eval_chair_folder_markdown_ervcd.py \
+#   --gt-caption-path /root/DATASETS/coco2014/val2014/annotations/captions_val2014.json \
+#   --folder /root/RVCD/MAIN_CODES/generated_captions_promptban_negative \
+#   --only-md \
+#   --md-show-n
+
+# python eval_chair_folder_markdown_ervcd.py \
+#   --gt-caption-path /root/DATASETS/coco2014/val2014/annotations/captions_val2014.json \
+#   --folder /root/RVCD/MAIN_CODES/generated_captions_promptban_positive \
 #   --only-md \
 #   --md-show-n
