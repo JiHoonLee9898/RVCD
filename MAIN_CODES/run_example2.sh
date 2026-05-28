@@ -2,7 +2,7 @@
 set -euo pipefail
 
 COMMON_DATA_PATH="/home/jihoon/jihoon/DATASETS/coco2014/val2014"
-OUT_DIR="./generated_captions_ervcd_grid_modes_OPTIMIZED/"
+OUT_DIR="./generated_captions_ervcd_grid_modes_OPTIMIZED_no_beta/"
 NUM_SAMPLES=300
 GPU_ID=0
 MAX_NEW_TOKENS=64
@@ -29,7 +29,7 @@ for MODE in "${MODES[@]}"; do
       --output_dir "${OUT_DIR}" \
       --max_new_tokens "${MAX_NEW_TOKENS}" \
       --rvcd_alpha 1 \
-      --rvcd_beta 0.1 \
+      --rvcd_beta 0 \
       --ervcd_grid_fill_mode "${MODE}" \
       --ervcd_logit_scale_mode presence
   done
