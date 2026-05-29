@@ -45,1001 +45,6 @@ from mplug_owl2.model.builder import load_pretrained_model
 from mplug_owl2.mm_utils import process_images, tokenizer_image_token, get_model_name_from_path, KeywordsStoppingCriteria
 
 
-# ============================================================
-# Negative-signal online probe and visualization utilities
-# - embedded so this script can run generation + analysis in one file
-# ============================================================
-import argparse
-import json
-import math
-import os
-import re
-import shutil
-from collections import defaultdict
-from dataclasses import dataclass
-from typing import Any, Dict, Iterable, List, Optional, Sequence, Tuple, Union
-
-import matplotlib
-matplotlib.use("Agg")
-import matplotlib.pyplot as plt
-
-try:
-    import torch
-    import torch.nn.functional as F
-except Exception:  # pragma: no cover - allows plotting mode without torch
-    torch = None
-    F = None
-
-
-Json = Dict[str, Any]
-
-
-def _ensure_dir(path: str) -> str:
-    os.makedirs(path, exist_ok=True)
-    return path
-
-
-def _append_jsonl(path: str, row: Json) -> None:
-    _ensure_dir(os.path.dirname(path))
-    with open(path, "a", encoding="utf-8") as f:
-        json.dump(row, f, ensure_ascii=False)
-        f.write("\n")
-
-
-def _write_json(path: str, obj: Json) -> None:
-    _ensure_dir(os.path.dirname(path))
-    with open(path, "w", encoding="utf-8") as f:
-        json.dump(obj, f, ensure_ascii=False, indent=2)
-
-
-def _read_jsonl(path: str) -> List[Json]:
-    rows: List[Json] = []
-    with open(path, "r", encoding="utf-8") as f:
-        for line in f:
-            line = line.strip()
-            if line:
-                rows.append(json.loads(line))
-    return rows
-
-
-def _slug(text: Any, max_len: int = 80) -> str:
-    text = str(text)
-    text = re.sub(r"[^a-zA-Z0-9가-힣._-]+", "_", text).strip("_")
-    return text[:max_len] if text else "item"
-
-
-def _norm_text(text: str) -> str:
-    text = text.lower()
-    text = re.sub(r"\s+", " ", text)
-    return text.strip()
-
-
-def _contains_phrase(text: str, phrase: str) -> bool:
-    text_n = _norm_text(text)
-    phrase_n = _norm_text(phrase)
-    if not phrase_n:
-        return False
-    # Word-ish boundary for Latin phrases; substring fallback for other scripts.
-    if re.search(r"[a-zA-Z]", phrase_n):
-        return re.search(rf"(?<![a-zA-Z]){re.escape(phrase_n)}(?![a-zA-Z])", text_n) is not None
-    return phrase_n in text_n
-
-
-def _tensor_2d(logit: Any):
-    if torch is None:
-        raise RuntimeError("torch is required for online probing")
-    if logit is None:
-        return None
-    if isinstance(logit, (list, tuple)):
-        raise TypeError("Expected a tensor, got list/tuple")
-    if logit.dim() == 1:
-        logit = logit.unsqueeze(0)
-    return logit.detach()
-
-
-def _to_float(x: Any) -> float:
-    if x is None:
-        return float("nan")
-    if hasattr(x, "item"):
-        return float(x.item())
-    return float(x)
-
-
-def _token_id_to_text(tokenizer: Any, token_id: int) -> str:
-    try:
-        return tokenizer.decode([int(token_id)], skip_special_tokens=False)
-    except Exception:
-        try:
-            return tokenizer.convert_ids_to_tokens([int(token_id)], skip_special_tokens=False)[0]
-        except Exception:
-            return str(token_id)
-
-
-def _encode_variants(tokenizer: Any, surface: str) -> List[int]:
-    """Return plausible first-token IDs for an object surface form.
-
-    Most LLaMA/LLaVA-style tokenizers encode object mentions differently with
-    and without leading whitespace. We keep both first tokens and deduplicate.
-    """
-    ids: List[int] = []
-    for variant in (surface, " " + surface):
-        try:
-            encoded = tokenizer.encode(variant, add_special_tokens=False)
-        except TypeError:
-            encoded = tokenizer(variant, add_special_tokens=False).input_ids
-        except Exception:
-            encoded = []
-        if encoded:
-            ids.append(int(encoded[0]))
-    out: List[int] = []
-    seen = set()
-    for x in ids:
-        if x not in seen:
-            seen.add(x)
-            out.append(x)
-    return out
-
-
-def _encode_variant_sequences(tokenizer: Any, surface: str) -> List[List[int]]:
-    """Return token-id sequences for surface and leading-space surface variants."""
-    seqs: List[List[int]] = []
-    for variant in (surface, " " + surface):
-        try:
-            encoded = tokenizer.encode(variant, add_special_tokens=False)
-        except TypeError:
-            encoded = tokenizer(variant, add_special_tokens=False).input_ids
-        except Exception:
-            encoded = []
-        encoded = [int(x) for x in encoded]
-        if encoded and encoded not in seqs:
-            seqs.append(encoded)
-    return seqs
-
-
-def _normalize_hal_object(obj: Union[str, Tuple[str, str], Json]) -> Json:
-    if isinstance(obj, dict):
-        coco = obj.get("coco") or obj.get("coco_first") or obj.get("object") or obj.get("surface")
-        surface = obj.get("surface") or obj.get("synonym") or obj.get("word") or coco
-        return {"coco": str(coco), "surface": str(surface)}
-    if isinstance(obj, (tuple, list)) and len(obj) >= 2:
-        return {"coco": str(obj[0]), "surface": str(obj[1])}
-    return {"coco": str(obj), "surface": str(obj)}
-
-
-def _safe_softmax_prob(logit_2d: Any, token_id: int) -> float:
-    probs = F.softmax(logit_2d.float(), dim=-1)
-    return _to_float(probs[0, int(token_id)])
-
-
-def _safe_logit_value(logit_2d: Any, token_id: int) -> float:
-    return _to_float(logit_2d.float()[0, int(token_id)])
-
-
-def _topk(logit_2d: Any, tokenizer: Any, k: int = 20) -> List[Json]:
-    if k <= 0:
-        return []
-    probs = F.softmax(logit_2d.float(), dim=-1)
-    values, indices = torch.topk(probs[0], k=min(k, probs.shape[-1]))
-    rows: List[Json] = []
-    for rank, (prob, idx) in enumerate(zip(values.tolist(), indices.tolist()), start=1):
-        idx = int(idx)
-        rows.append(
-            {
-                "rank": rank,
-                "token_id": idx,
-                "token": _token_id_to_text(tokenizer, idx),
-                "prob": float(prob),
-                "logit": _safe_logit_value(logit_2d, idx),
-            }
-        )
-    return rows
-
-
-def _rank_of_token(logit_2d: Any, token_id: int) -> Optional[int]:
-    # Rank 1 means highest logit. This is O(vocab) but fine for probing.
-    vals = logit_2d.float()[0]
-    token_val = vals[int(token_id)]
-    return int((vals > token_val).sum().item()) + 1
-
-
-@dataclass
-class StepRecord:
-    image_id: int
-    step: int
-    selected_token_id: int
-    selected_token: str
-    negative_grid_path: Optional[str]
-    negative_grid_meta: Optional[Json]
-    selected_stats: Json
-    hal_object_stats: Dict[str, Json]
-    topk: Optional[Json]
-    prefix_token_ids: List[int]
-
-
-class NegativeSignalProbe:
-    """Online probe for eRVCD negative-signal analysis.
-
-    This class should be called inside the generation loop because logits are
-    not recoverable from final caption JSONL files alone.
-    """
-
-    def __init__(
-        self,
-        out_dir: str,
-        tokenizer: Any,
-        chair_evaluator: Optional[Any] = None,
-        top_k: int = 20,
-        save_all_steps_jsonl: bool = True,
-    ) -> None:
-        self.root = _ensure_dir(os.path.join(out_dir, "negative_signal_probe"))
-        self.fail_dir = _ensure_dir(os.path.join(self.root, "fail_cases"))
-        self.steps_jsonl = os.path.join(self.root, "step_trace.jsonl")
-        self.fail_jsonl = os.path.join(self.root, "fail_cases.jsonl")
-        self.tokenizer = tokenizer
-        self.chair_evaluator = chair_evaluator
-        self.top_k = int(top_k)
-        self.save_all_steps_jsonl = bool(save_all_steps_jsonl)
-        self._steps_by_image: Dict[int, List[StepRecord]] = defaultdict(list)
-
-    def _aggregate_negative_logits(
-        self,
-        negative_logits: Sequence[Any],
-        negative_logits_count: int,
-    ) -> Optional[Any]:
-        if not negative_logits:
-            return None
-        negs = [_tensor_2d(x).float() for x in negative_logits]
-        if len(negs) == 1:
-            # eRVCD normally has one merged negative-grid logit. In count mode,
-            # negative_logits_count becomes the raw reference count, so scale the
-            # single merged logit to match aggregate_ervcd_logits() in the main code.
-            return negs[0] * max(1, int(negative_logits_count))
-        # In the original RVCD case this is a sum.
-        return torch.stack(negs, dim=0).sum(dim=0)
-
-    def log_step(
-        self,
-        *,
-        image_id: int,
-        step: int,
-        selected_token_id: int,
-        original_logit: Any,
-        negative_logits: Sequence[Any],
-        adjusted_logits: Any,
-        hal_objects: Sequence[Union[str, Tuple[str, str], Json]],
-        negative_grid_path: Optional[str],
-        negative_grid_meta: Optional[Json],
-        alpha: float,
-        negative_logits_count: int,
-        prefix_token_ids: Optional[Sequence[int]] = None,
-        keep_topk: bool = True,
-    ) -> StepRecord:
-        """Record one decoding step.
-
-        Parameters are intentionally close to the variable names in your
-        generation script.
-        """
-        if torch is None:
-            raise RuntimeError("torch is required for NegativeSignalProbe.log_step")
-
-        image_id = int(image_id)
-        step = int(step)
-        selected_token_id = int(selected_token_id)
-        prefix_token_ids = [int(x) for x in (prefix_token_ids or [])]
-
-        O = _tensor_2d(original_logit).float()
-        A = _tensor_2d(adjusted_logits).float()
-        N = self._aggregate_negative_logits(negative_logits, negative_logits_count)
-
-        if N is None:
-            # No negative signal. Store a dummy copy so downstream fields exist.
-            N = torch.zeros_like(O)
-            A_neg_only = O.clone()
-        else:
-            # Isolated negative-only adjusted logit.
-            A_neg_only = (1.0 + float(alpha) * int(negative_logits_count)) * O - float(alpha) * N
-
-        def stats_for_token(token_id: int) -> Json:
-            token_id = int(token_id)
-            p_o = _safe_softmax_prob(O, token_id)
-            p_n = _safe_softmax_prob(N, token_id)
-            p_a_neg = _safe_softmax_prob(A_neg_only, token_id)
-            p_a = _safe_softmax_prob(A, token_id)
-            l_o = _safe_logit_value(O, token_id)
-            l_n = _safe_logit_value(N, token_id)
-            l_a_neg = _safe_logit_value(A_neg_only, token_id)
-            l_a = _safe_logit_value(A, token_id)
-            return {
-                "token_id": token_id,
-                "token": _token_id_to_text(self.tokenizer, token_id),
-                "prob_original": p_o,
-                "prob_negative_agg": p_n,
-                "prob_adjusted_neg_only": p_a_neg,
-                "prob_adjusted_actual": p_a,
-                "prob_suppression_neg_only": p_o - p_a_neg,
-                "prob_suppression_actual": p_o - p_a,
-                "logit_original": l_o,
-                "logit_negative_agg": l_n,
-                "logit_adjusted_neg_only": l_a_neg,
-                "logit_adjusted_actual": l_a,
-                "negative_pressure_logit": l_n - l_o,
-                "logit_suppression_neg_only": l_o - l_a_neg,
-                "logit_suppression_actual": l_o - l_a,
-                "rank_original": _rank_of_token(O, token_id),
-                "rank_negative_agg": _rank_of_token(N, token_id),
-                "rank_adjusted_neg_only": _rank_of_token(A_neg_only, token_id),
-                "rank_adjusted_actual": _rank_of_token(A, token_id),
-            }
-
-        selected_stats = stats_for_token(selected_token_id)
-
-        hal_object_stats: Dict[str, Json] = {}
-        for raw_obj in hal_objects:
-            obj = _normalize_hal_object(raw_obj)
-            key = f"{obj['coco']}::{obj['surface']}"
-            first_token_ids = _encode_variants(self.tokenizer, obj["surface"])
-            token_rows = [stats_for_token(tid) for tid in first_token_ids]
-            hal_object_stats[key] = {
-                "coco": obj["coco"],
-                "surface": obj["surface"],
-                "first_token_ids": first_token_ids,
-                "first_token_stats": token_rows,
-            }
-
-        topk_blob: Optional[Json] = None
-        if keep_topk:
-            suppress_delta = N - O  # high values are tokens pushed by N more than O, thus suppressed by contrast.
-            topk_blob = {
-                "original": _topk(O, self.tokenizer, self.top_k),
-                "negative_agg": _topk(N, self.tokenizer, self.top_k),
-                "adjusted_neg_only": _topk(A_neg_only, self.tokenizer, self.top_k),
-                "adjusted_actual": _topk(A, self.tokenizer, self.top_k),
-                "suppressed_by_negative_topk": _topk(suppress_delta, self.tokenizer, self.top_k),
-            }
-
-        rec = StepRecord(
-            image_id=image_id,
-            step=step,
-            selected_token_id=selected_token_id,
-            selected_token=_token_id_to_text(self.tokenizer, selected_token_id),
-            negative_grid_path=negative_grid_path,
-            negative_grid_meta=negative_grid_meta,
-            selected_stats=selected_stats,
-            hal_object_stats=hal_object_stats,
-            topk=topk_blob,
-            prefix_token_ids=prefix_token_ids,
-        )
-        self._steps_by_image[image_id].append(rec)
-
-        if self.save_all_steps_jsonl:
-            _append_jsonl(
-                self.steps_jsonl,
-                {
-                    "image_id": rec.image_id,
-                    "step": rec.step,
-                    "selected_token_id": rec.selected_token_id,
-                    "selected_token": rec.selected_token,
-                    "negative_grid_path": rec.negative_grid_path,
-                    "negative_grid_meta": rec.negative_grid_meta,
-                    "selected_stats": rec.selected_stats,
-                    "hal_object_stats": rec.hal_object_stats,
-                    "topk": rec.topk,
-                    "prefix_token_ids": rec.prefix_token_ids,
-                },
-            )
-        return rec
-
-    def _final_caption_objects(self, caption: str) -> List[Json]:
-        if self.chair_evaluator is None:
-            return []
-        try:
-            pairs = self.chair_evaluator.process_sentence_get_coco_synonyms(caption)
-            return [{"coco": str(c), "surface": str(s)} for c, s in pairs]
-        except Exception:
-            return []
-
-    def _find_first_mention_step(self, output_token_ids: Sequence[int], mention_surface: str) -> Optional[int]:
-        """Approximate first generation step where mention_surface appears.
-
-        This is tokenizer-agnostic and works by incrementally decoding prefixes.
-        For subword tokenizers, the step returned is the first step at which the
-        full surface form becomes visible. That is often the last sub-token of
-        the word, not always the first sub-token. To compensate, finalize_datapoint
-        also stores selected-token stats for that step and object first-token stats
-        logged at every step.
-        """
-        prev = ""
-        for i in range(len(output_token_ids)):
-            try:
-                cur = self.tokenizer.decode(list(map(int, output_token_ids[: i + 1])), skip_special_tokens=True)
-            except Exception:
-                cur = "".join(_token_id_to_text(self.tokenizer, tid) for tid in output_token_ids[: i + 1])
-            if _contains_phrase(cur, mention_surface) and not _contains_phrase(prev, mention_surface):
-                return i
-            prev = cur
-        return None
-
-
-    def _find_first_token_step(self, output_token_ids: Sequence[int], mention_surface: str) -> Optional[int]:
-        """Find the decoding step of the first token of a surface mention.
-
-        This first tries exact token-sequence matching for both `surface` and
-        `" " + surface`. If exact matching fails, it falls back to the first
-        occurrence of any plausible first-token id. This is the metric target
-        requested for fail cases: the probability of the first token that starts
-        the surviving object expression.
-        """
-        output_ids = [int(x) for x in output_token_ids]
-        seqs = _encode_variant_sequences(self.tokenizer, mention_surface)
-        for i in range(len(output_ids)):
-            for seq in seqs:
-                if output_ids[i : i + len(seq)] == seq:
-                    return i
-
-        first_ids = {seq[0] for seq in seqs if seq}
-        for i, tid in enumerate(output_ids):
-            if tid in first_ids:
-                return i
-        return None
-
-    def finalize_datapoint(
-        self,
-        *,
-        image_id: int,
-        draft_caption: str,
-        final_caption: str,
-        output_token_ids: Sequence[int],
-        hal_objects: Sequence[Union[str, Tuple[str, str], Json]],
-        negative_grid_path: Optional[str],
-        negative_grid_meta: Optional[Json],
-        extra: Optional[Json] = None,
-    ) -> List[Json]:
-        """Check whether suppressed objects survived in the final caption.
-
-        Returns the fail-case records saved for this image.
-        """
-        image_id = int(image_id)
-        hal_norm = [_normalize_hal_object(x) for x in hal_objects]
-        final_objs = self._final_caption_objects(final_caption)
-
-        failures: List[Json] = []
-        steps = self._steps_by_image.get(image_id, [])
-
-        for obj in hal_norm:
-            # Prefer CHAIR's final object extraction. Fall back to surface substring.
-            matching_final_mentions = [x for x in final_objs if x.get("coco") == obj.get("coco")]
-            if not matching_final_mentions and _contains_phrase(final_caption, obj["surface"]):
-                matching_final_mentions = [obj]
-
-            if not matching_final_mentions:
-                continue
-
-            # Pick the first detected final surface mention for this COCO object.
-            final_mention = matching_final_mentions[0]
-            mention_surface = final_mention.get("surface") or obj["surface"]
-            full_mention_step = self._find_first_mention_step(output_token_ids, mention_surface)
-            first_token_step = self._find_first_token_step(output_token_ids, mention_surface)
-            if first_token_step is None and obj.get("surface") != mention_surface:
-                first_token_step = self._find_first_token_step(output_token_ids, obj["surface"])
-
-            # Main analysis target: step of the first token that starts the surviving object expression.
-            mention_step = first_token_step if first_token_step is not None else full_mention_step
-
-            step_rec: Optional[StepRecord] = None
-            if mention_step is not None:
-                for rec in steps:
-                    if rec.step == int(mention_step):
-                        step_rec = rec
-                        break
-
-            # If token matching failed, store the closest info we have.
-            if step_rec is None and steps:
-                fallback_step = full_mention_step if full_mention_step is not None else len(output_token_ids) - 1
-                step_rec = steps[min(len(steps) - 1, max(0, int(fallback_step)))]
-
-            obj_key = f"{obj['coco']}::{obj['surface']}"
-            object_step_stats = step_rec.hal_object_stats.get(obj_key) if step_rec else None
-            selected_stats = step_rec.selected_stats if step_rec else None
-
-            case_id = f"image_{image_id}_obj_{_slug(obj['coco'])}_{_slug(obj['surface'])}"
-            case_dir = _ensure_dir(os.path.join(self.fail_dir, case_id))
-
-            copied_negative_grid = None
-            if negative_grid_path and os.path.exists(negative_grid_path):
-                ext = os.path.splitext(negative_grid_path)[1] or ".png"
-                copied_negative_grid = os.path.join(case_dir, "negative_grid" + ext)
-                try:
-                    shutil.copy2(negative_grid_path, copied_negative_grid)
-                except Exception:
-                    copied_negative_grid = negative_grid_path
-
-            row: Json = {
-                "case_id": case_id,
-                "image_id": image_id,
-                "failed_object": obj,
-                "final_mention": final_mention,
-                "mention_surface_used_for_step_search": mention_surface,
-                "mention_step": mention_step,
-                "first_token_step": first_token_step,
-                "full_mention_step": full_mention_step,
-                "step_metric_target": "object_first_token_step" if first_token_step is not None else "full_mention_step_or_fallback",
-                "draft_caption": draft_caption,
-                "final_caption": final_caption,
-                "negative_grid_path_original": negative_grid_path,
-                "negative_grid_path_copied": copied_negative_grid,
-                "negative_grid_meta": negative_grid_meta,
-                "selected_token_stats_at_mention_step": selected_stats,
-                "selected_token_stats_at_object_first_token_step": selected_stats,
-                "object_first_token_stats_at_mention_step": object_step_stats,
-                "extra": extra or {},
-            }
-
-            _write_json(os.path.join(case_dir, "mapping.json"), row)
-            _append_jsonl(self.fail_jsonl, row)
-            failures.append(row)
-
-        return failures
-
-
-def _metric_from_case(row: Json, metric: str) -> float:
-    stats = row.get("selected_token_stats_at_mention_step") or {}
-    value = stats.get(metric)
-    try:
-        if value is None or math.isnan(float(value)):
-            return 0.0
-        return float(value)
-    except Exception:
-        return 0.0
-
-
-def visualize_fail_cases(fail_jsonl: str, out_dir: str, top_n: int = 30) -> Json:
-    """Create simple visualizations for failed negative-signal cases."""
-    rows = _read_jsonl(fail_jsonl)
-    _ensure_dir(out_dir)
-
-    # Sort by weak negative-only probability suppression first.
-    rows_sorted = sorted(rows, key=lambda r: _metric_from_case(r, "prob_suppression_neg_only"))
-    top_rows = rows_sorted[: int(top_n)]
-
-    summary_path = os.path.join(out_dir, f"top{top_n}_weakest_suppression_fail_cases.json")
-    _write_json(summary_path, {"fail_jsonl": fail_jsonl, "top_n": top_n, "cases": top_rows})
-
-    if not top_rows:
-        return {"num_fail_cases": 0, "summary_path": summary_path}
-
-    labels = [
-        f"{r.get('image_id')}:{(r.get('failed_object') or {}).get('surface')}"
-        for r in top_rows
-    ]
-    y = list(range(len(top_rows)))
-    suppression = [_metric_from_case(r, "prob_suppression_neg_only") for r in top_rows]
-    negative_pressure = [_metric_from_case(r, "negative_pressure_logit") for r in top_rows]
-    p_orig = [_metric_from_case(r, "prob_original") for r in top_rows]
-    p_adj = [_metric_from_case(r, "prob_adjusted_neg_only") for r in top_rows]
-
-    # Plot 1: weakest suppression among failures.
-    plt.figure(figsize=(11, max(4, 0.38 * len(top_rows))))
-    plt.barh(y, suppression)
-    plt.yticks(y, labels)
-    plt.xlabel("P_original(token) - P_negative_only_adjusted(token)")
-    plt.ylabel("failed case: image_id:object")
-    plt.title(f"Top-{top_n} failed cases sorted by weakest negative-only probability suppression")
-    plt.tight_layout()
-    bar_path = os.path.join(out_dir, f"top{top_n}_weakest_suppression_bar.png")
-    plt.savefig(bar_path, dpi=200)
-    plt.close()
-
-    # Plot 2: original vs negative-only adjusted probability for surviving object token.
-    plt.figure(figsize=(7, 6))
-    plt.scatter(p_orig, p_adj)
-    lim_max = max(max(p_orig), max(p_adj), 1e-8)
-    plt.plot([0, lim_max], [0, lim_max])
-    plt.xlabel("P_original(surviving object token)")
-    plt.ylabel("P_negative_only_adjusted(surviving object token)")
-    plt.title("Failed mentions: original vs negative-only adjusted token probability")
-    plt.tight_layout()
-    scatter_path = os.path.join(out_dir, f"top{top_n}_original_vs_negonly_prob.png")
-    plt.savefig(scatter_path, dpi=200)
-    plt.close()
-
-    # Plot 3: negative pressure logit for surviving token.
-    plt.figure(figsize=(11, max(4, 0.38 * len(top_rows))))
-    plt.barh(y, negative_pressure)
-    plt.yticks(y, labels)
-    plt.xlabel("N_logit(token) - O_logit(token)")
-    plt.ylabel("failed case: image_id:object")
-    plt.title(f"Top-{top_n} failed cases: negative pressure on surviving object token")
-    plt.tight_layout()
-    pressure_path = os.path.join(out_dir, f"top{top_n}_negative_pressure_bar.png")
-    plt.savefig(pressure_path, dpi=200)
-    plt.close()
-
-    return {
-        "num_fail_cases": len(rows),
-        "num_visualized": len(top_rows),
-        "summary_path": summary_path,
-        "bar_path": bar_path,
-        "scatter_path": scatter_path,
-        "pressure_path": pressure_path,
-    }
-
-# ============================================================
-# End negative-signal probe utilities
-# ============================================================
-
-
-# ============================================================
-# Actual eRVCD grid VLM probe utilities
-# - probes the exact negative reference grid image used by eRVCD
-# ============================================================
-
-def _grid_probe_token_display(tokenizer: Any, token_id: int) -> Json:
-    raw_token = tokenizer.convert_ids_to_tokens([int(token_id)], skip_special_tokens=False)[0]
-    decoded = tokenizer.decode([int(token_id)], skip_special_tokens=False)
-    return {
-        "token_id": int(token_id),
-        "token": str(raw_token),
-        "decoded": str(decoded),
-        "decoded_clean": str(decoded).replace("\n", "\\n"),
-    }
-
-
-def _grid_probe_is_special_id(tokenizer: Any, token_id: int) -> bool:
-    special_ids = set()
-    for attr in ["bos_token_id", "eos_token_id", "pad_token_id", "unk_token_id"]:
-        val = getattr(tokenizer, attr, None)
-        if val is not None:
-            special_ids.add(int(val))
-    extra = getattr(tokenizer, "all_special_ids", None)
-    if extra is not None:
-        special_ids.update(int(x) for x in extra)
-    return int(token_id) in special_ids
-
-
-def _grid_probe_get_lm_head_matrix(model: Any, model_name: str):
-    if model_name == "mplug-owl2":
-        return model.model.lm_head.weight
-    return model.llama_model.lm_head.weight
-
-
-def _grid_probe_next_token_logits(
-    *,
-    model: Any,
-    model_name: str,
-    image: Any,
-    prompt: str,
-    image_path: str,
-    prev_tokens: Sequence[Any],
-    use_nucleus_sampling: bool = False,
-    num_beams: int = 1,
-):
-    """Return vocab logits for the next token on the given grid image.
-
-    This follows the custom LLaVA/MiniGPT generation path used in the main eRVCD code.
-    output_attentions=True is intentionally kept because the local llava.py expects it.
-    """
-    with torch.inference_mode():
-        with torch.no_grad():
-            out = model.generate(
-                {"image": image, "prompt": prompt, "img_path": str(image_path)},
-                use_nucleus_sampling=use_nucleus_sampling,
-                num_beams=num_beams,
-                max_new_tokens=1,
-                output_hidden_states=True,
-                output_attentions=True,
-                return_dict_in_generate=True,
-                nvcd=True,
-                nvcd_previous_last_ids_list=list(prev_tokens),
-            )
-
-    last_hidden = out["hidden_states"][-1][-1][:, -1, :].detach().clone()
-    lm_head = _grid_probe_get_lm_head_matrix(model, model_name).detach()
-    with torch.no_grad():
-        logits = torch.matmul(last_hidden, lm_head.T)
-    return logits.detach()
-
-
-def _grid_probe_topn_from_logits(logits: Any, tokenizer: Any, top_n: int, skip_special_tokens: bool) -> List[Json]:
-    probs = F.softmax(logits.float(), dim=-1)[0]
-    sorted_probs, sorted_ids = torch.sort(probs, descending=True)
-
-    results: List[Json] = []
-    for prob, token_id in zip(sorted_probs.tolist(), sorted_ids.tolist()):
-        token_id = int(token_id)
-        if skip_special_tokens and _grid_probe_is_special_id(tokenizer, token_id):
-            continue
-        info = _grid_probe_token_display(tokenizer, token_id)
-        info["probability"] = float(prob)
-        info["log_probability"] = float(math.log(max(float(prob), 1e-45)))
-        info["rank"] = len(results) + 1
-        results.append(info)
-        if len(results) >= int(top_n):
-            break
-    return results
-
-
-def _grid_probe_greedy_continue_from_first_token(
-    *,
-    model: Any,
-    tokenizer: Any,
-    model_name: str,
-    image: Any,
-    prompt: str,
-    image_path: str,
-    first_token_id: int,
-    total_tokens: int,
-    use_nucleus_sampling: bool = False,
-    num_beams: int = 1,
-) -> Json:
-    """Force the first token, then greedily continue until total_tokens or EOS."""
-    device = image.device
-    output_tokens = [torch.tensor(int(first_token_id), device=device)]
-
-    for _ in range(max(0, int(total_tokens) - 1)):
-        logits = _grid_probe_next_token_logits(
-            model=model,
-            model_name=model_name,
-            image=image,
-            prompt=prompt,
-            image_path=image_path,
-            prev_tokens=output_tokens,
-            use_nucleus_sampling=use_nucleus_sampling,
-            num_beams=num_beams,
-        )
-        next_id = int(torch.argmax(F.softmax(logits.float(), dim=-1), dim=-1).item())
-        output_tokens.append(torch.tensor(next_id, device=device))
-        eos_id = getattr(tokenizer, "eos_token_id", None)
-        if eos_id is not None and next_id == int(eos_id):
-            break
-
-    token_ids = [int(t.item()) for t in output_tokens]
-    decoded = tokenizer.decode(token_ids, skip_special_tokens=True).strip()
-    continuation_token_ids = token_ids[1:]
-    continuation_text = tokenizer.decode(continuation_token_ids, skip_special_tokens=True).strip()
-
-    return {
-        "forced_first_token": _grid_probe_token_display(tokenizer, first_token_id),
-        "generated_token_ids": token_ids,
-        "generated_tokens": [_grid_probe_token_display(tokenizer, tid) for tid in token_ids],
-        "generated_text": decoded,
-        "continuation_token_ids": continuation_token_ids,
-        "continuation_text": continuation_text,
-    }
-
-
-def _grid_probe_shorten_text(text: str, max_chars: int) -> str:
-    text = str(text).replace("\n", " ").strip()
-    if len(text) <= int(max_chars):
-        return text
-    if max_chars <= 1:
-        return text[:max_chars]
-    return text[: int(max_chars) - 1] + "…"
-
-
-def _grid_probe_wrap_text(text: str, width: int = 18, max_lines: int = 3) -> str:
-    text = str(text).replace("\n", " ").strip()
-    if not text:
-        return ""
-    words = text.split()
-    lines: List[str] = []
-    cur = ""
-    for word in words:
-        trial = (cur + " " + word).strip()
-        if len(trial) <= width:
-            cur = trial
-        else:
-            if cur:
-                lines.append(cur)
-            cur = word
-    if cur:
-        lines.append(cur)
-    if not lines:
-        lines = [text]
-    if len(lines) > max_lines:
-        lines = lines[:max_lines]
-        lines[-1] = _grid_probe_shorten_text(lines[-1], max(3, width))
-    return "\n".join(lines)
-
-
-def _grid_probe_save_combined_figure(
-    *,
-    grid_image_path: str,
-    topn: List[Json],
-    continuations: List[Json],
-    save_path: str,
-    title: str,
-    ref_names: Sequence[str],
-) -> None:
-    grid_img = Image.open(grid_image_path).convert("RGB")
-
-    labels: List[Json] = []
-    values: List[float] = []
-    for item, cont in zip(topn, continuations):
-        prefix = item["decoded"].replace("\n", " ").strip()
-        if not prefix:
-            prefix = item["token"]
-        labels.append({
-            "rank": item["rank"],
-            "prefix": prefix,
-            "continuation": cont.get("continuation_text", ""),
-        })
-        values.append(float(item["probability"]))
-
-    fig_w = max(17, len(labels) * 1.65 + 6)
-    fig_h = 7.1
-    fig = plt.figure(figsize=(fig_w, fig_h))
-    gs = fig.add_gridspec(1, 2, width_ratios=[1.15, max(2.0, len(labels) * 0.58)], wspace=0.18)
-
-    ax_img = fig.add_subplot(gs[0, 0])
-    ax_img.imshow(grid_img)
-    ref_title = "Actual negative ref grid"
-    if ref_names:
-        ref_title += "\n" + _grid_probe_wrap_text(", ".join(ref_names), width=38, max_lines=3)
-    ax_img.set_title(ref_title, fontsize=11)
-    ax_img.axis("off")
-
-    ax_bar = fig.add_subplot(gs[0, 1])
-    x = np.arange(len(labels))
-    bars = ax_bar.bar(x, values)
-    ax_bar.set_ylabel("Probability")
-    ax_bar.set_xlabel("Top-N first-token candidates (prefix black, continuation blue)")
-    ax_bar.set_title(title, fontsize=11)
-    ax_bar.set_xticks(x)
-    ax_bar.set_xticklabels([""] * len(labels))
-    ax_bar.set_xlim(-0.6, len(labels) - 0.4)
-
-    ymax = max(values) if values else 1.0
-    ax_bar.set_ylim(0.0, ymax * 1.20 if ymax > 0 else 1.0)
-
-    for bar, item in zip(bars, labels):
-        height = bar.get_height()
-        ax_bar.text(
-            bar.get_x() + bar.get_width() / 2.0,
-            height + max(ymax * 0.02, 1e-6),
-            f"#{item['rank']}\n{height:.3f}",
-            ha="center",
-            va="bottom",
-            fontsize=8,
-            color="black",
-        )
-
-    trans = ax_bar.get_xaxis_transform()
-    for xi, item in zip(x, labels):
-        prefix_text = _grid_probe_wrap_text(item["prefix"], width=12, max_lines=2)
-        continuation_text = _grid_probe_wrap_text(item["continuation"], width=18, max_lines=3)
-        ax_bar.text(
-            xi,
-            -0.09,
-            prefix_text,
-            ha="center",
-            va="top",
-            fontsize=9,
-            color="black",
-            transform=trans,
-            clip_on=False,
-        )
-        if continuation_text:
-            ax_bar.text(
-                xi,
-                -0.22,
-                continuation_text,
-                ha="center",
-                va="top",
-                fontsize=8,
-                color="blue",
-                transform=trans,
-                clip_on=False,
-            )
-
-    fig.subplots_adjust(left=0.04, right=0.99, top=0.88, bottom=0.36, wspace=0.16)
-    _ensure_dir(os.path.dirname(save_path))
-    fig.savefig(save_path, dpi=220)
-    plt.close(fig)
-
-
-def run_actual_grid_vlm_probe(
-    *,
-    model: Any,
-    tokenizer: Any,
-    model_name: str,
-    image: Any,
-    grid_image_path: str,
-    prompt: str,
-    question: str,
-    out_dir: str,
-    image_id: int,
-    ref_names: Sequence[str],
-    grid_meta: Optional[Json],
-    top_n: int,
-    continuation_tokens: int,
-    skip_special_tokens: bool,
-    use_nucleus_sampling: bool,
-    num_beams: int = 1,
-) -> Json:
-    """Probe the exact eRVCD negative grid image and save JSON + combined figure."""
-    case_dir = _ensure_dir(os.path.join(out_dir, f"image_{int(image_id)}"))
-    copied_grid_path = os.path.join(case_dir, "actual_negative_grid.png")
-    try:
-        shutil.copy2(grid_image_path, copied_grid_path)
-    except Exception:
-        copied_grid_path = grid_image_path
-
-    first_logits = _grid_probe_next_token_logits(
-        model=model,
-        model_name=model_name,
-        image=image,
-        prompt=prompt,
-        image_path=grid_image_path,
-        prev_tokens=[],
-        use_nucleus_sampling=use_nucleus_sampling,
-        num_beams=num_beams,
-    )
-
-    topn = _grid_probe_topn_from_logits(
-        logits=first_logits,
-        tokenizer=tokenizer,
-        top_n=top_n,
-        skip_special_tokens=skip_special_tokens,
-    )
-
-    continuations: List[Json] = []
-    for item in topn:
-        cont = _grid_probe_greedy_continue_from_first_token(
-            model=model,
-            tokenizer=tokenizer,
-            model_name=model_name,
-            image=image,
-            prompt=prompt,
-            image_path=grid_image_path,
-            first_token_id=int(item["token_id"]),
-            total_tokens=continuation_tokens,
-            use_nucleus_sampling=use_nucleus_sampling,
-            num_beams=num_beams,
-        )
-        cont["rank"] = item["rank"]
-        cont["first_token_probability"] = item["probability"]
-        continuations.append(cont)
-
-    combined_figure_path = os.path.join(case_dir, "actual_negative_grid_vlm_distribution.png")
-    _grid_probe_save_combined_figure(
-        grid_image_path=copied_grid_path,
-        topn=topn,
-        continuations=continuations,
-        save_path=combined_figure_path,
-        title=f"VLM first-token distribution for actual negative grid / image_id={int(image_id)}",
-        ref_names=ref_names,
-    )
-
-    result: Json = {
-        "image_id": int(image_id),
-        "model_name": model_name,
-        "question": question,
-        "prompt": prompt,
-        "grid_image_path_original": grid_image_path,
-        "grid_image_path_copied": copied_grid_path,
-        "combined_figure_path": combined_figure_path,
-        "ref_names": list(ref_names),
-        "grid_meta": grid_meta,
-        "top_n": int(top_n),
-        "continuation_tokens": int(continuation_tokens),
-        "topn_first_token_probs": topn,
-        "forced_continuations": continuations,
-    }
-
-    json_path = os.path.join(case_dir, "actual_negative_grid_vlm_probe.json")
-    _write_json(json_path, result)
-    result["json_path"] = json_path
-
-    _append_jsonl(os.path.join(out_dir, "actual_grid_vlm_probe_records.jsonl"), result)
-    return result
-
-
-# ============================================================
-# End actual eRVCD grid VLM probe utilities
-# ============================================================
-
-
-
 MODEL_EVAL_CONFIG_PATH = {
     "minigpt4": "eval_configs/minigpt4_eval.yaml",
     # "instructblip": "eval_configs/instructblip_eval.yaml",
@@ -1113,14 +118,24 @@ parser.add_argument(
     "--ervcd_grid_fill_mode",
     type=str,
     default="black_back",
-    choices=["black_back", "black_front", "repeat", "repeat_front", "repeat_last"],
+    choices=[
+        "black_back",
+        "black_front",
+        "repeat",
+        "repeat_front",
+        "repeat_last",
+        "concat_pad",
+        "concat_raw",
+    ],
     help=(
-        "eRVCD reference grid empty-cell fill mode. "
+        "eRVCD reference image merge mode. "
         "black_back: reference images first, black cells last. "
         "black_front: black cells first, reference images last. "
         "repeat: reference images first, then cycle references to fill. "
         "repeat_front: cycle references first, then reference images. "
-        "repeat_last: reference images first, then repeat the last reference."
+        "repeat_last: reference images first, then repeat the last reference. "
+        "concat_pad: horizontally concatenate refs, resize the concatenated image to width=canvas_size while preserving aspect ratio, then pad top/bottom on a canvas_size x canvas_size canvas. "
+        "concat_raw: horizontally concatenate refs and use/save the concatenated image without resizing."
     ),
 )
 parser.add_argument(
@@ -1140,22 +155,24 @@ parser.add_argument(
         "count: approximate original count scaling by multiplying the merged logit by the number of original refs."
     ),
 )
-
-############ negative-signal probe options #############
-parser.add_argument("--negative_probe_enabled", type=str2bool, default=True, help="Run online negative-signal fail-case analysis while generating captions.")
-parser.add_argument("--negative_probe_top_k", type=int, default=20, help="Top-k tokens to store per decoding step in the negative-signal probe.")
-parser.add_argument("--negative_probe_plot_top_n", type=int, default=30, help="Number of fail cases to visualize after generation finishes.")
-parser.add_argument("--negative_probe_save_all_steps", type=str2bool, default=True, help="Save step_trace.jsonl for every decoding step. Set False to save less disk space.")
-parser.add_argument("--negative_probe_no_plots", type=str2bool, default=False, help="If True, skip automatic plot generation at the end.")
-
-############ actual negative-grid VLM probe options #############
-parser.add_argument("--grid_vlm_probe_enabled", type=str2bool, default=True, help="Probe the exact negative grid image used by eRVCD and save a combined grid+distribution figure.")
-parser.add_argument("--grid_vlm_probe_max_images", type=int, default=20, help="Maximum number of negative grids to probe. Use 0 or negative for unlimited.")
-parser.add_argument("--grid_vlm_probe_top_n", type=int, default=10, help="Top-N first-token candidates to visualize for the actual negative grid VLM probe.")
-parser.add_argument("--grid_vlm_probe_continuation_tokens", type=int, default=10, help="Total generated tokens per forced-first-token continuation in the actual negative grid VLM probe.")
-parser.add_argument("--grid_vlm_probe_question", type=str, default="What object is shown in this image? Answer with one word.", help="Question used when probing the actual negative grid image.")
-parser.add_argument("--grid_vlm_probe_skip_special_tokens", type=str2bool, default=True, help="Skip special tokens in the actual negative grid VLM probe top-N.")
-
+parser.add_argument(
+    "--ervcd_negative_logit_mode",
+    type=str,
+    default="none",
+    choices=["none", "topk_equalize"],
+    help=(
+        "Optional post-processing for negative logits before eRVCD aggregation. "
+        "none: use negative logits as-is. "
+        "topk_equalize: set the top-k negative logit values to the top-1 negative logit value, "
+        "so the top-k tokens receive equally strong negative signal."
+    ),
+)
+parser.add_argument(
+    "--ervcd_negative_topk",
+    type=int,
+    default=5,
+    help="Top-k value used when --ervcd_negative_logit_mode topk_equalize. Default: 5.",
+)
 
 ################################
 args = parser.parse_known_args()[0]
@@ -1337,6 +354,83 @@ def _pil_resample_lanczos():
     return Image.LANCZOS
 
 
+def _make_horizontal_concat_canvas(ref_paths, background_color=(0, 0, 0)):
+    """
+    reference image들을 좌->우로 이어붙인 PIL canvas를 만든다.
+
+    - 각 reference image의 원본 width/height는 유지한다.
+    - height가 서로 다르면 max height canvas에 세로 중앙 정렬로 붙인다.
+    - 이 함수 자체는 resize를 하지 않는다.
+    """
+    ref_paths = list(ref_paths)
+    if len(ref_paths) == 0:
+        return None, {
+            "concat_width": 0,
+            "concat_height": 0,
+            "ref_sizes": [],
+        }
+
+    ref_images = [Image.open(ref_path).convert("RGB") for ref_path in ref_paths]
+    ref_sizes = [list(img.size) for img in ref_images]
+    concat_width = sum(img.width for img in ref_images)
+    concat_height = max(img.height for img in ref_images)
+
+    canvas = Image.new("RGB", (concat_width, concat_height), background_color)
+    x_offset = 0
+    for img in ref_images:
+        y_offset = (concat_height - img.height) // 2
+        canvas.paste(img, (x_offset, y_offset))
+        x_offset += img.width
+
+    return canvas, {
+        "concat_width": concat_width,
+        "concat_height": concat_height,
+        "ref_sizes": ref_sizes,
+    }
+
+
+def _concat_pad_to_square_canvas(
+    concat_canvas,
+    canvas_size=336,
+    background_color=(0, 0, 0),
+):
+    """
+    좌->우 concat 이미지를 width=canvas_size로 비율 유지 resize한 뒤,
+    canvas_size x canvas_size square canvas에 올린다.
+
+    일반적인 square reference N개 concat의 경우 최종적으로
+    width=336, height=336/N가 되고, 위/아래가 padding된다.
+    """
+    resample = _pil_resample_lanczos()
+    raw_w, raw_h = concat_canvas.size
+
+    # 기본 동작: 가로를 canvas_size에 맞추고, 세로는 비율 유지.
+    resized_w = canvas_size
+    resized_h = max(1, int(round(raw_h * canvas_size / raw_w)))
+    height_exceeded_canvas = False
+
+    # 거의 발생하지 않지만, concat 결과가 세로로 더 길어져 height가 canvas를 넘으면
+    # square canvas에 들어가도록 fallback 처리한다.
+    if resized_h > canvas_size:
+        height_exceeded_canvas = True
+        resized_h = canvas_size
+        resized_w = max(1, int(round(raw_w * canvas_size / raw_h)))
+
+    resized = concat_canvas.resize((resized_w, resized_h), resample)
+    square_canvas = Image.new("RGB", (canvas_size, canvas_size), background_color)
+    paste_x = (canvas_size - resized_w) // 2
+    paste_y = (canvas_size - resized_h) // 2
+    square_canvas.paste(resized, (paste_x, paste_y))
+
+    return square_canvas, {
+        "resized_width": resized_w,
+        "resized_height": resized_h,
+        "paste_x": paste_x,
+        "paste_y": paste_y,
+        "height_exceeded_canvas": height_exceeded_canvas,
+    }
+
+
 def _build_ervcd_grid_slots(ref_paths, total_slots, fill_mode):
     """
     ref_paths를 grid slot 수에 맞게 배치한다.
@@ -1402,6 +496,58 @@ def make_ervcd_reference_grid_image(
             "save_path": None,
         }, None
 
+    # concat_pad / concat_raw는 square grid slot을 만들지 않고,
+    # reference image들을 좌->우로 concat하는 eRVCD merge mode다.
+    if fill_mode in ["concat_pad", "concat_raw"]:
+        concat_canvas, concat_meta = _make_horizontal_concat_canvas(
+            ref_paths,
+            background_color=background_color,
+        )
+
+        if fill_mode == "concat_pad":
+            canvas, pad_meta = _concat_pad_to_square_canvas(
+                concat_canvas,
+                canvas_size=canvas_size,
+                background_color=background_color,
+            )
+            output_width, output_height = canvas.size
+            meta = {
+                "num_refs": num_refs,
+                "merge_mode": fill_mode,
+                "grid_side": None,
+                "total_slots": None,
+                "num_empty_slots": None,
+                "fill_mode": fill_mode,
+                "canvas_size": canvas_size,
+                "save_path": save_path,
+                "slot_paths": ref_paths,
+                "concat_meta": concat_meta,
+                "pad_meta": pad_meta,
+                "output_width": output_width,
+                "output_height": output_height,
+            }
+        else:  # concat_raw
+            canvas = concat_canvas
+            output_width, output_height = canvas.size
+            meta = {
+                "num_refs": num_refs,
+                "merge_mode": fill_mode,
+                "grid_side": None,
+                "total_slots": None,
+                "num_empty_slots": None,
+                "fill_mode": fill_mode,
+                "canvas_size": None,
+                "save_path": save_path,
+                "slot_paths": ref_paths,
+                "concat_meta": concat_meta,
+                "output_width": output_width,
+                "output_height": output_height,
+            }
+
+        os.makedirs(os.path.dirname(save_path), exist_ok=True)
+        canvas.save(save_path)
+        return save_path, meta, canvas
+
     grid_side = int(math.ceil(math.sqrt(num_refs)))
     total_slots = grid_side * grid_side
     slot_paths = _build_ervcd_grid_slots(ref_paths, total_slots, fill_mode)
@@ -1463,6 +609,29 @@ def aggregate_ervcd_logits(logits, raw_ref_count, logit_scale_mode):
         return logits[0] * effective_count, effective_count
 
     raise ValueError(f"Unsupported eRVCD logit scale mode: {logit_scale_mode}")
+
+
+def equalize_topk_logits_to_top1(logits, topk):
+    """
+    negative logits의 top-k 값을 top-1 값과 동일하게 만든다.
+
+    softmax 확률을 직접 수정하면 정규화 문제 때문에 "top-k 확률을 top-1 확률로"
+    만드는 것이 애매해진다. 대신 softmax 이전 logit을 동일하게 맞추면,
+    top-k 토큰들이 softmax 이후 서로 동일한 확률을 갖게 된다.
+    """
+    if topk is None or int(topk) <= 1:
+        return logits
+
+    vocab_size = logits.shape[-1]
+    k = min(int(topk), int(vocab_size))
+    if k <= 1:
+        return logits
+
+    adjusted_logits = logits.clone()
+    top_values, top_indices = torch.topk(adjusted_logits, k=k, dim=-1)
+    top1_values = top_values[..., :1].expand_as(top_values)
+    adjusted_logits.scatter_(dim=-1, index=top_indices, src=top1_values)
+    return adjusted_logits
 
 
 global_chair_evaluator = None
@@ -1593,22 +762,9 @@ current_time = datetime.now()
 formatted_time = current_time.strftime("%Y%m%d%H%M")
 result_dir = os.path.join(
     base_dir,
-    f'ervcd_a{args.rvcd_alpha}_b{args.rvcd_beta}_grid_{args.ervcd_grid_fill_mode}_scale_{args.ervcd_logit_scale_mode}_{formatted_time}_seed_{seed}_samples_{num_samples}_maxtokens_{max_new_tokens}_{true_flag_name}'
+    f'ervcd_a{args.rvcd_alpha}_b{args.rvcd_beta}_grid_{args.ervcd_grid_fill_mode}_scale_{args.ervcd_logit_scale_mode}_neglogit_{args.ervcd_negative_logit_mode}_topk_{args.ervcd_negative_topk}_{formatted_time}_seed_{seed}_samples_{num_samples}_maxtokens_{max_new_tokens}_{true_flag_name}'
 )
 if not os.path.exists(result_dir): os.makedirs(result_dir)
-
-probe = None
-if args.negative_probe_enabled:
-    probe = NegativeSignalProbe(
-        out_dir=result_dir,
-        tokenizer=model_tokenizer,
-        chair_evaluator=get_chair_evaluator(chair_cache_path, coco_path),
-        top_k=args.negative_probe_top_k,
-        save_all_steps_jsonl=args.negative_probe_save_all_steps,
-    )
-    print(f"[NegativeSignalProbe] enabled. Output dir: {probe.root}")
-
-grid_vlm_probe_saved_count = 0
 
 global_all_info = {
     'model_name' : model_name,
@@ -1624,12 +780,8 @@ global_all_info = {
     'ervcd_grid_fill_mode' : args.ervcd_grid_fill_mode,
     'ervcd_grid_canvas_size' : args.ervcd_grid_canvas_size,
     'ervcd_logit_scale_mode' : args.ervcd_logit_scale_mode,
-    'grid_vlm_probe_enabled' : args.grid_vlm_probe_enabled,
-    'grid_vlm_probe_max_images' : args.grid_vlm_probe_max_images,
-    'grid_vlm_probe_top_n' : args.grid_vlm_probe_top_n,
-    'grid_vlm_probe_continuation_tokens' : args.grid_vlm_probe_continuation_tokens,
-    'grid_vlm_probe_question' : args.grid_vlm_probe_question,
-    'grid_vlm_probe_records' : [],
+    'ervcd_negative_logit_mode' : args.ervcd_negative_logit_mode,
+    'ervcd_negative_topk' : args.ervcd_negative_topk,
     'ervcd_grid_records' : [],
     'ref_not_exist' : [],
     'chair1_detect1' : 0,
@@ -1668,10 +820,6 @@ for idx, img_id in tqdm(enumerate(range(len(img_files))), total=len(img_files)):
     img_save = {}
     img_save["image_id"] = img_id
     image_path = os.path.join(args.data_path, img_file)
-
-    # NegativeSignalProbe에서 fail-case 매핑에 사용할 객체 pair 정보.
-    hal_detected_pairs = []
-    gt_detected_pairs = []
 
     # path별 normalized image tensor cache.
     # 원본/N-grid/P-grid 이미지를 토큰마다 다시 Image.open + preprocess 하지 않도록 한다.
@@ -1816,16 +964,6 @@ for idx, img_id in tqdm(enumerate(range(len(img_files))), total=len(img_files)):
 
             print(f'detected_info : {detected_info}') 
 
-            # NegativeSignalProbe용 pair 정보: key == (COCO 대표어, draft caption surface form)
-            hal_detected_pairs = []
-            gt_detected_pairs = []
-            for key, value in detected_info.items():
-                item = {"coco": key[0], "surface": key[1]}
-                if value == 0:
-                    hal_detected_pairs.append(item)
-                else:
-                    gt_detected_pairs.append(item)
-
             #{("dog", "hound"): 1, ("cat", "feline"): 0, ("traffic light", "signal"): 1, ("chasing", "pursue"): 0}
             # print(f'draft_chair_answer_dict : {draft_chair_answer_dict}')
             #{"ground_truth": [("dog","웰시코기"), ("traffic light", "신호등")], "hallucinated": [("chasing", "pursue"]}
@@ -1935,48 +1073,6 @@ for idx, img_id in tqdm(enumerate(range(len(img_files))), total=len(img_files)):
     # 따라서 eRVCD loop에서 grid png를 다시 Image.open 하지 않는다.
     if negative_grid_path is not None and negative_grid_canvas is not None:
         get_cached_norm_image(negative_grid_path, negative_grid_canvas)
-
-        # Actual-grid VLM probe:
-        # Probe the exact negative reference grid image used by eRVCD and save
-        # a wide figure with the grid on the left and first-token top-N distribution on the right.
-        if args.grid_vlm_probe_enabled and (
-            args.grid_vlm_probe_max_images <= 0 or grid_vlm_probe_saved_count < args.grid_vlm_probe_max_images
-        ):
-            try:
-                grid_vlm_probe_dir = os.path.join(result_dir, "actual_negative_grid_vlm_probe")
-                grid_probe_prompt = template.replace("<question>", args.grid_vlm_probe_question)
-                grid_probe_ref_names = [os.path.splitext(os.path.basename(p))[0] for p in hall_ref_list]
-                grid_probe_image = get_cached_norm_image(negative_grid_path, negative_grid_canvas)
-                grid_probe_record = run_actual_grid_vlm_probe(
-                    model=model,
-                    tokenizer=model_tokenizer,
-                    model_name=model_name,
-                    image=grid_probe_image,
-                    grid_image_path=negative_grid_path,
-                    prompt=grid_probe_prompt,
-                    question=args.grid_vlm_probe_question,
-                    out_dir=grid_vlm_probe_dir,
-                    image_id=int(img_id),
-                    ref_names=grid_probe_ref_names,
-                    grid_meta=negative_grid_meta,
-                    top_n=args.grid_vlm_probe_top_n,
-                    continuation_tokens=args.grid_vlm_probe_continuation_tokens,
-                    skip_special_tokens=args.grid_vlm_probe_skip_special_tokens,
-                    use_nucleus_sampling=args.sample,
-                    num_beams=num_beams,
-                )
-                global_all_info['grid_vlm_probe_records'].append({
-                    "image_id": int(img_id),
-                    "ref_names": grid_probe_ref_names,
-                    "json_path": grid_probe_record.get("json_path"),
-                    "combined_figure_path": grid_probe_record.get("combined_figure_path"),
-                    "top1_decoded": grid_probe_record["topn_first_token_probs"][0]["decoded"] if grid_probe_record.get("topn_first_token_probs") else "",
-                    "top1_probability": grid_probe_record["topn_first_token_probs"][0]["probability"] if grid_probe_record.get("topn_first_token_probs") else None,
-                })
-                grid_vlm_probe_saved_count += 1
-                print(f"[GridVLMProbe] saved actual negative-grid distribution: {grid_probe_record.get('combined_figure_path')}")
-            except Exception as e:
-                print(f"[GridVLMProbe][WARN] failed for image_id={img_id}: {repr(e)}")
     if positive_grid_path is not None and positive_grid_canvas is not None:
         get_cached_norm_image(positive_grid_path, positive_grid_canvas)
    
@@ -2048,6 +1144,11 @@ for idx, img_id in tqdm(enumerate(range(len(img_files))), total=len(img_files)):
                     original_logit = last_logit
                     original_mature_logit = original_logit.clone()
                 else: 
+                    if args.ervcd_negative_logit_mode == "topk_equalize":
+                        last_logit = equalize_topk_logits_to_top1(
+                            last_logit,
+                            args.ervcd_negative_topk,
+                        )
                     negative_logits.append(last_logit)
 
                 if args.kv_cache_faster:
@@ -2101,6 +1202,7 @@ for idx, img_id in tqdm(enumerate(range(len(img_files))), total=len(img_files)):
             gamma = args.rvcd_gamma # 0, 0.00000001?
             
             print(f'alpha, beta, gamma : {alpha, beta, gamma}')
+            print(f'negative_logit_mode, negative_topk : {args.ervcd_negative_logit_mode}, {args.ervcd_negative_topk}')
             
             # eRVCD 핵심 변경점:
             # 기존 RVCD: N/P reference image 각각의 logits를 모두 더함.
@@ -2137,26 +1239,6 @@ for idx, img_id in tqdm(enumerate(range(len(img_files))), total=len(img_files)):
             output_first_token_index = max_index
             output_first_token_name = model_tokenizer.convert_ids_to_tokens([output_first_token_index], skip_special_tokens=False)[-1]
             print(f'output token, index : {output_first_token_name}, {output_index}')
-
-            if probe is not None:
-                probe.log_step(
-                    image_id=int(img_id),
-                    step=int(output_index),
-                    selected_token_id=int(max_index.squeeze().item()),
-                    original_logit=original_logit,
-                    negative_logits=negative_logits,
-                    adjusted_logits=adjusted_logits,
-                    hal_objects=hal_detected_pairs,
-                    negative_grid_path=negative_grid_path,
-                    negative_grid_meta=negative_grid_meta,
-                    alpha=float(alpha),
-                    negative_logits_count=int(negative_logits_count),
-                    prefix_token_ids=[
-                        int(x.item()) if hasattr(x, "item") else int(x)
-                        for x in output_tokens
-                    ],
-                    keep_topk=True,
-                )
 
             output_tokens.append(output_first_token_index.squeeze(0))
 
@@ -2197,29 +1279,6 @@ for idx, img_id in tqdm(enumerate(range(len(img_files))), total=len(img_files)):
     # now_datapoint_draft_caption
     # now_datapoint_final_caption
 
-    if probe is not None and nvcd_operate:
-        probe.finalize_datapoint(
-            image_id=int(img_id),
-            draft_caption=now_datapoint_draft_caption,
-            final_caption=now_datapoint_final_caption,
-            output_token_ids=[
-                int(x.item()) if hasattr(x, "item") else int(x)
-                for x in output_tokens
-            ],
-            hal_objects=hal_detected_pairs,
-            negative_grid_path=negative_grid_path,
-            negative_grid_meta=negative_grid_meta,
-            extra={
-                "image_path": image_path,
-                "gt_detected": gt_detected_pairs,
-                "hal_detected": hal_detected_pairs,
-                "grid_fill_mode": args.ervcd_grid_fill_mode,
-                "logit_scale_mode": args.ervcd_logit_scale_mode,
-                "rvcd_alpha": args.rvcd_alpha,
-                "rvcd_beta": args.rvcd_beta,
-            },
-        )
-
     now_draft_result = {"image_id": int(img_id),"caption": now_datapoint_draft_caption}
     draft_captions_path = os.path.join(result_dir,f"ervcd_{model_name}_{formatted_time}_DRAFT_generated_captions.jsonl")
     with open(draft_captions_path, "a") as f:
@@ -2228,7 +1287,7 @@ for idx, img_id in tqdm(enumerate(range(len(img_files))), total=len(img_files)):
 
     now_nvcd_result = {"image_id": int(img_id),"caption": now_datapoint_final_caption,"tokens": token_count}
     global_all_info['total_generated_tokens'] += token_count
-    nvcd_captions_path = os.path.join(result_dir,f'ervcd_{model_name}_a{args.rvcd_alpha}_b{args.rvcd_beta}_grid_{args.ervcd_grid_fill_mode}_scale_{args.ervcd_logit_scale_mode}_{formatted_time}_seed_{seed}_samples_{num_samples}_maxtokens_{max_new_tokens}_{true_flag_name}_generated_captions.jsonl')
+    nvcd_captions_path = os.path.join(result_dir,f'ervcd_{model_name}_a{args.rvcd_alpha}_b{args.rvcd_beta}_grid_{args.ervcd_grid_fill_mode}_scale_{args.ervcd_logit_scale_mode}_neglogit_{args.ervcd_negative_logit_mode}_topk_{args.ervcd_negative_topk}_{formatted_time}_seed_{seed}_samples_{num_samples}_maxtokens_{max_new_tokens}_{true_flag_name}_generated_captions.jsonl')
     with open(nvcd_captions_path, "a") as f:
         json.dump(now_nvcd_result, f)
         f.write("\n")
@@ -2245,26 +1304,9 @@ if check_draft_chair:
         global_all_info['latency_per_token'] = global_all_info['latency'] / global_all_info['total_generated_tokens']
 
 
-global_info_save_path = os.path.join(result_dir,f"ervcd_{model_name}_a{args.rvcd_alpha}_b{args.rvcd_beta}_grid_{args.ervcd_grid_fill_mode}_scale_{args.ervcd_logit_scale_mode}_{formatted_time}_seed_{seed}_samples_{num_samples}_maxtokens_{max_new_tokens}_{true_flag_name}_DETECTOR_info.json")
+global_info_save_path = os.path.join(result_dir,f"ervcd_{model_name}_a{args.rvcd_alpha}_b{args.rvcd_beta}_grid_{args.ervcd_grid_fill_mode}_scale_{args.ervcd_logit_scale_mode}_neglogit_{args.ervcd_negative_logit_mode}_topk_{args.ervcd_negative_topk}_{formatted_time}_seed_{seed}_samples_{num_samples}_maxtokens_{max_new_tokens}_{true_flag_name}_DETECTOR_info.json")
 with open(global_info_save_path, 'w', encoding='utf-8') as json_file:
     json.dump(global_all_info, json_file, indent=4, ensure_ascii=False)
-
-if probe is not None:
-    fail_jsonl_path = os.path.join(probe.root, "fail_cases.jsonl")
-    plots_dir = os.path.join(probe.root, "plots")
-    if os.path.exists(fail_jsonl_path):
-        num_fail_lines = sum(1 for _ in open(fail_jsonl_path, "r", encoding="utf-8"))
-        print(f"[NegativeSignalProbe] fail cases saved: {num_fail_lines} -> {fail_jsonl_path}")
-        if not args.negative_probe_no_plots:
-            viz_result = visualize_fail_cases(
-                fail_jsonl=fail_jsonl_path,
-                out_dir=plots_dir,
-                top_n=args.negative_probe_plot_top_n,
-            )
-            print("[NegativeSignalProbe] visualization result:")
-            print(json.dumps(viz_result, ensure_ascii=False, indent=2))
-    else:
-        print(f"[NegativeSignalProbe] no fail cases found. Expected path not created: {fail_jsonl_path}")
 
 
 # CUDA_VISIBLE_DEVICES=0 \
@@ -2305,24 +1347,143 @@ if probe is not None:
 # repeat_front  : 반복 이미지들을 앞에 채우고, reference 이미지들을 뒤쪽에 배치
 # repeat_last   : reference 이미지들을 먼저 넣고, 남는 칸은 마지막 reference 이미지 반복
 
-
-
-
+# ============================================================
+# eRVCD mode별 실행 예시
+# ============================================================
+# 공통 인자 예시:
 # CUDA_VISIBLE_DEVICES=0 \
-# python ervcd_generation_chair_bleu_optimized_gridprobe.py \
-#   --model llava-1.5 \
-#   --data_path /home/jihoon/jihoon/DATASETS/coco2014/val2014 \
-#   --ref_folder_path DB_single_concept_images_flux_generated/generated_images \
-#   --chair_cache_path eval/CHAIR_CACHE/chair.pkl \
-#   --num_samples 300 \
-#   --seed 42 \
-#   --gpu-id 0 \
-#   --output_dir ./generated_captions_probe_test_260529/ \
-#   --rvcd_alpha 1 \
-#   --rvcd_beta 0 \
-#   --ervcd_grid_fill_mode black_front \
-#   --ervcd_logit_scale_mode presence \
-#   --grid_vlm_probe_max_images 0 \
-#   --grid_vlm_probe_enabled false \
-#   --grid_vlm_probe_top_n 10 \
-#   --grid_vlm_probe_continuation_tokens 3
+# python ervcd_generation_chair_bleu.py \
+# --model llava-1.5 \
+# --data_path /home/jihoon/jihoon/DATASETS/coco2014 \
+# --ref_folder_path DB_single_concept_images_flux_generated/generated_images \
+# --chair_cache_path eval/CHAIR_CACHE/chair.pkl \
+# --num_samples 300 \
+# --seed 42 \
+# --gpu-id 0 \
+# --output_dir ./generated_captions_ervcd/ \
+# --rvcd_alpha 1 \
+# --rvcd_beta 0.1 \
+# --ervcd_logit_scale_mode presence \
+# --ervcd_negative_logit_mode none \
+# --ervcd_grid_fill_mode black_back
+#
+# 1) black_back
+# --ervcd_grid_fill_mode black_back
+#
+# 2) black_front
+# --ervcd_grid_fill_mode black_front
+#
+# 3) repeat
+# --ervcd_grid_fill_mode repeat
+#
+# 4) repeat_front
+# --ervcd_grid_fill_mode repeat_front
+#
+# 5) repeat_last
+# --ervcd_grid_fill_mode repeat_last
+#
+# 6) concat_pad
+# reference 이미지들을 좌->우 concat한 뒤, concat 결과의 width를 336에 맞게
+# 비율 유지 resize하고, 336x336 canvas의 위/아래를 검은 padding으로 채운다.
+# --ervcd_grid_fill_mode concat_pad \
+# --ervcd_grid_canvas_size 336
+#
+# 7) concat_raw
+# reference 이미지들을 좌->우 concat하고, resize/padding 없이 그대로 저장 및 사용한다.
+# 단, 이후 모델별 image processor에서는 자체 resize가 적용될 수 있다.
+# --ervcd_grid_fill_mode concat_raw
+#
+# 8) negative top-k equalize + 원하는 이미지 merge mode
+# negative grid/concat image에서 나온 negative logits의 top-k 값을 top-1 값으로 맞춘 뒤
+# eRVCD adjusted logits 계산에 사용한다.
+# --ervcd_negative_logit_mode topk_equalize \
+# --ervcd_negative_topk 5 \
+# --ervcd_grid_fill_mode black_back
+#
+# 예: concat_pad + negative top-k equalize
+# CUDA_VISIBLE_DEVICES=0 \
+# python ervcd_generation_chair_bleu.py \
+# --model llava-1.5 \
+# --data_path /home/jihoon/jihoon/DATASETS/coco2014 \
+# --ref_folder_path DB_single_concept_images_flux_generated/generated_images \
+# --chair_cache_path eval/CHAIR_CACHE/chair.pkl \
+# --num_samples 300 \
+# --seed 42 \
+# --gpu-id 0 \
+# --output_dir ./generated_captions_concat_pad_topk/ \
+# --rvcd_alpha 1 \
+# --rvcd_beta 0.1 \
+# --ervcd_grid_fill_mode concat_pad \
+# --ervcd_grid_canvas_size 336 \
+# --ervcd_logit_scale_mode presence \
+# --ervcd_negative_logit_mode topk_equalize \
+# --ervcd_negative_topk 5
+#
+# 예: concat_raw + 기본 negative logits
+# CUDA_VISIBLE_DEVICES=0 \
+# python ervcd_generation_chair_bleu.py \
+# --model llava-1.5 \
+# --data_path /home/jihoon/jihoon/DATASETS/coco2014 \
+# --ref_folder_path DB_single_concept_images_flux_generated/generated_images \
+# --chair_cache_path eval/CHAIR_CACHE/chair.pkl \
+# --num_samples 300 \
+# --seed 42 \
+# --gpu-id 0 \
+# --output_dir ./generated_captions_concat_raw/ \
+# --rvcd_alpha 1 \
+# --rvcd_beta 0.1 \
+# --ervcd_grid_fill_mode concat_raw \
+# --ervcd_logit_scale_mode presence \
+# --ervcd_negative_logit_mode none
+
+
+
+
+
+
+
+
+
+# python ervcd_generation_chair_bleu_ablations.py \
+# --model llava-1.5 \
+# --data_path /home/jihoon/jihoon/DATASETS/coco2014/val2014 \
+# --ref_folder_path DB_single_concept_images_flux_generated/generated_images \
+# --chair_cache_path eval/CHAIR_CACHE/chair.pkl \
+# --num_samples 300 \
+# --seed 42 \
+# --gpu-id 0 \
+# --output_dir ./generated_captions_ervcd_260529_2/ \
+# --rvcd_alpha 1 \
+# --rvcd_beta 0 \
+# --ervcd_logit_scale_mode presence \
+# --ervcd_negative_logit_mode topk_equalize \
+# --ervcd_negative_topk 10 \
+# --ervcd_grid_fill_mode black_front
+
+# python ervcd_generation_chair_bleu_ablations.py \
+# --model llava-1.5 \
+# --data_path /home/jihoon/jihoon/DATASETS/coco2014/val2014 \
+# --ref_folder_path DB_single_concept_images_flux_generated/generated_images \
+# --chair_cache_path eval/CHAIR_CACHE/chair.pkl \
+# --num_samples 300 \
+# --seed 42 \
+# --gpu-id 0 \
+# --output_dir ./generated_captions_ervcd_260529_2/ \
+# --rvcd_alpha 1 \
+# --rvcd_beta 0 \
+# --ervcd_logit_scale_mode presence \
+# --ervcd_grid_fill_mode concat_pad
+
+# python ervcd_generation_chair_bleu_ablations.py \
+# --model llava-1.5 \
+# --data_path /home/jihoon/jihoon/DATASETS/coco2014/val2014 \
+# --ref_folder_path DB_single_concept_images_flux_generated/generated_images \
+# --chair_cache_path eval/CHAIR_CACHE/chair.pkl \
+# --num_samples 300 \
+# --seed 42 \
+# --gpu-id 0 \
+# --output_dir ./generated_captions_ervcd_260529_2/ \
+# --rvcd_alpha 1 \
+# --rvcd_beta 0 \
+# --ervcd_logit_scale_mode presence \
+# --ervcd_grid_fill_mode concat_raw

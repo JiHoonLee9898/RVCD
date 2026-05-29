@@ -44,11 +44,20 @@ from typing import Any, Dict, Iterable, List, Optional, Tuple
 GENERATED_RE = re.compile(r"generated_captions\.(?:jsonl|json)$", re.IGNORECASE)
 INFO_RE = re.compile(r"(?:info|INFO)\.json$", re.IGNORECASE)
 
-SCRIPT_VERSION = "2026-05-26-v6-ervcd-grid-mode-rows"
+SCRIPT_VERSION = "2026-05-29-v7-ervcd-grid-concat-neglogit-rows"
 
-# eRVCD grid fill modes used by ervcd_generation_chair_bleu.py.
-# Keep longer repeat_* names before repeat when regex matching.
-ERVCD_GRID_MODES = ["black_back", "black_front", "repeat", "repeat_front", "repeat_last"]
+# eRVCD merge/fill modes used by ervcd_generation_chair_bleu.py.
+# Display order is table order. Regex order is defined separately below so
+# repeat_front/repeat_last are matched before repeat.
+ERVCD_GRID_MODES = [
+    "black_back",
+    "black_front",
+    "repeat",
+    "repeat_front",
+    "repeat_last",
+    "concat_pad",
+    "concat_raw",
+]
 ERVCD_MODE_METHODS = [f"eRVCD, {mode}" for mode in ERVCD_GRID_MODES]
 
 DEFAULT_MD_METHODS = ["Greedy", "Beam Search", "DoLA", "OPERA", "VCD", "RVCD", "eRVCD"]
@@ -485,18 +494,61 @@ def normalize_run_component(token: str) -> str:
 
 
 ERVCD_GRID_MODE_RE = re.compile(
-    # Order matters: repeat_front / repeat_last must be tried before repeat.
-    r"(?:^|_)grid_(?P<mode>black_back|black_front|repeat_front|repeat_last|repeat)(?:_|$)",
+    # Order matters: repeat_front/repeat_last before repeat.
+    # concat_* modes are the new left-to-right concatenation modes.
+    r"(?:^|_)grid_(?P<mode>black_back|black_front|repeat_front|repeat_last|repeat|concat_pad|concat_raw)(?:_|$)",
+    re.IGNORECASE,
+)
+
+# New eRVCD logit post-processing name saved by the generation script:
+#   ..._neglogit_none_topk_5_...
+#   ..._neglogit_topk_equalize_topk_5_...
+ERVCD_NEGLOGIT_RE = re.compile(
+    r"(?:^|_)neglogit_(?P<mode>none|topk_equalize)(?:_topk_(?P<topk>\d+))?(?:_|$)",
     re.IGNORECASE,
 )
 
 
 def ervcd_label_from_norm(norm: str) -> str:
-    """Return a method label such as 'eRVCD, black_back' from a run component."""
+    """Return a method label such as 'eRVCD, concat_pad, topk=5'."""
     m = ERVCD_GRID_MODE_RE.search(norm)
-    if m:
-        return f"eRVCD, {m.group('mode').lower()}"
-    return "eRVCD"
+    label = f"eRVCD, {m.group('mode').lower()}" if m else "eRVCD"
+
+    neg = ERVCD_NEGLOGIT_RE.search(norm)
+    if neg and neg.group("mode").lower() == "topk_equalize":
+        topk = neg.group("topk")
+        label += f", topk={topk}" if topk else ", topk_equalize"
+
+    return label
+
+
+def ervcd_base_label(method: str) -> str:
+    """Map 'eRVCD, concat_pad, topk=5' -> 'eRVCD, concat_pad'."""
+    parts = [p.strip() for p in str(method).split(",")]
+    if len(parts) >= 2 and compact_identifier(parts[0]) == "ervcd":
+        return f"eRVCD, {parts[1]}"
+    return str(method)
+
+
+def dynamic_ervcd_method_order(rows: List[Dict[str, Any]]) -> List[str]:
+    """Default eRVCD table rows plus any actually observed top-k variants.
+
+    Base grid modes are always shown for backwards compatibility. New top-k
+    variants cannot be exhaustively predeclared because k is user-selected,
+    so they are appended when present in the evaluated files.
+    """
+    order = list(DEFAULT_ERVCD_MD_METHODS)
+    seen = set(order)
+
+    extras = sorted(
+        {infer_method(row) for row in rows if compact_identifier(infer_method(row)).startswith("ervcd")},
+        key=lambda m: (ERVCD_GRID_MODES.index(ervcd_base_label(m).split(", ", 1)[1]) if ervcd_base_label(m).split(", ", 1)[-1] in ERVCD_GRID_MODES else 999, m),
+    )
+    for method in extras:
+        if method not in seen:
+            order.append(method)
+            seen.add(method)
+    return order
 
 
 def is_ervcd_run_path(path: Path) -> bool:
@@ -1128,8 +1180,11 @@ def main() -> None:
     if args.md_methods:
         md_methods = parse_csv_items(args.md_methods)
     elif args.only_ervcd:
-        md_methods = DEFAULT_ERVCD_MD_METHODS
+        md_methods = dynamic_ervcd_method_order(rows)
     else:
+        # Keep the classic overall table fixed. If you want the newly parsed
+        # eRVCD sub-modes in a mixed-method table, pass --md-append-extra or
+        # use --only-ervcd.
         md_methods = DEFAULT_MD_METHODS
 
     md_table = rows_to_markdown_table(
@@ -1214,6 +1269,35 @@ if __name__ == "__main__":
 #   --only-md \
 #   --md-show-n
 
+# ---------------------------------------------------------------------------
+# New eRVCD row examples
+# ---------------------------------------------------------------------------
+# The evaluator now recognizes generated filenames/folders containing:
+#   _grid_concat_pad_
+#   _grid_concat_raw_
+#   _neglogit_topk_equalize_topk_<K>_
+#
+# With --only-ervcd, base rows are printed for all grid modes:
+#   eRVCD, black_back
+#   eRVCD, black_front
+#   eRVCD, repeat
+#   eRVCD, repeat_front
+#   eRVCD, repeat_last
+#   eRVCD, concat_pad
+#   eRVCD, concat_raw
+#
+# Top-k variants are appended dynamically when files are found, e.g.:
+#   eRVCD, concat_pad, topk=5
+#   eRVCD, concat_raw, topk=5
+#
+# Example:
+# python eval_chair_folder_markdown_ervcd_grid_modes.py \
+#   --gt-caption-path /home/jihoon/jihoon/DATASETS/coco2014/val2014/annotations/captions_val2014.json \
+#   --folder /root/RVCD/MAIN_CODES/generated_captions_ervcd_260529_2 \
+#   --only-ervcd \
+#   --only-md \
+#   --md-show-n
 
-
-
+# If evaluating a mixed folder with Greedy/RVCD/eRVCD together and you still
+# want the eRVCD sub-mode rows to appear, add:
+#   --md-append-extra
