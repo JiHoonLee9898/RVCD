@@ -6,6 +6,7 @@ import random
 import sys
 from datetime import datetime
 from pathlib import Path
+import textwrap
 
 sys.path.append("mPLUG-Owl/mPLUG-Owl2")
 sys.path.append("./")
@@ -48,7 +49,7 @@ What it does:
    total tokens, with that first token forced.
 6. Saves:
    - the grid image
-   - a top-N probability bar plot
+   - one wide combined figure: input grid + top-N probability bars + color-coded labels
    - JSON/Markdown summaries
 
 This is meant to inspect whether a negative reference grid pushes the model's first-token
@@ -291,19 +292,22 @@ def next_token_logits(model, model_name, image, prompt, image_path, prev_tokens,
                 num_beams=num_beams,
                 max_new_tokens=1,
                 output_hidden_states=True,
-                output_attentions=False,
+                output_attentions=True,
                 return_dict_in_generate=True,
                 nvcd=True,
                 nvcd_previous_last_ids_list=prev_tokens,
             )
 
-    last_hidden = out["hidden_states"][-1][-1][:, -1, :]
-    lm_head = get_lm_head_matrix(model, model_name)
-    if model_name == "mplug-owl2":
-        last_hidden = last_hidden.clone()
-        lm_head = lm_head.clone()
-    logits = torch.matmul(last_hidden, lm_head.T)
-    return logits
+    # The custom LLaVA generate path returns tensors created inside torch.inference_mode().
+    # If we multiply an inference tensor with a trainable lm_head outside that context,
+    # PyTorch may try to save the inference tensor for backward and raise:
+    # "Inference tensors cannot be saved for backward".
+    # Clone/detach the hidden state and run the projection under no_grad.
+    last_hidden = out["hidden_states"][-1][-1][:, -1, :].detach().clone()
+    lm_head = get_lm_head_matrix(model, model_name).detach()
+    with torch.no_grad():
+        logits = torch.matmul(last_hidden, lm_head.T)
+    return logits.detach()
 
 
 def top_n_from_logits(logits, tokenizer, top_n: int, skip_special_tokens: bool):
@@ -360,38 +364,125 @@ def greedy_continue_from_first_token(
 
     token_ids = [int(t.item()) for t in output_tokens]
     decoded = tokenizer.decode(token_ids, skip_special_tokens=True).strip()
+    continuation_token_ids = token_ids[1:]
+    continuation_text = tokenizer.decode(continuation_token_ids, skip_special_tokens=True).strip()
     return {
         "forced_first_token": token_display(tokenizer, first_token_id),
         "generated_token_ids": token_ids,
         "generated_tokens": [token_display(tokenizer, tid) for tid in token_ids],
         "generated_text": decoded,
+        "continuation_token_ids": continuation_token_ids,
+        "continuation_text": continuation_text,
     }
 
 
-def save_topn_barplot(topn, save_path, title):
+def shorten_text(text: str, max_chars: int) -> str:
+    text = str(text).replace("\n", " ").strip()
+    if len(text) <= max_chars:
+        return text
+    if max_chars <= 1:
+        return text[:max_chars]
+    return text[: max_chars - 1] + "…"
+
+
+def wrap_truncate_text(text: str, width: int = 18, max_lines: int = 3) -> str:
+    text = str(text).replace("\n", " ").strip()
+    if not text:
+        return ""
+    wrapped = textwrap.wrap(text, width=width, break_long_words=True, break_on_hyphens=False)
+    if len(wrapped) > max_lines:
+        wrapped = wrapped[:max_lines]
+        wrapped[-1] = shorten_text(wrapped[-1], max(3, width))
+    return "\n".join(wrapped)
+
+
+def save_combined_probe_figure(grid_image_path, topn, continuations, save_path, title):
     import matplotlib.pyplot as plt
+
+    grid_img = Image.open(grid_image_path).convert("RGB")
 
     labels = []
     values = []
-    for item in topn:
-        label = item["decoded"].replace("\n", "\\n")
-        if not label.strip():
-            label = item["token"]
-        labels.append(f"{item['rank']}. {label}")
+    for item, cont in zip(topn, continuations):
+        prefix = item["decoded"].replace("\n", " ").strip()
+        if not prefix:
+            prefix = item["token"]
+        continuation = cont.get("continuation_text", "")
+        labels.append({
+            "rank": item["rank"],
+            "prefix": prefix,
+            "continuation": continuation,
+        })
         values.append(item["probability"])
 
-    plt.figure(figsize=(max(8, len(labels) * 0.75), 5))
-    plt.bar(labels, values)
-    plt.ylabel("Probability")
-    plt.xlabel("First-token candidate")
-    plt.title(title)
-    plt.xticks(rotation=45, ha="right")
-    plt.tight_layout()
+    fig_w = max(16, len(labels) * 1.6 + 6)
+    fig_h = 6.5
+    fig = plt.figure(figsize=(fig_w, fig_h))
+    gs = fig.add_gridspec(1, 2, width_ratios=[1.1, max(2.0, len(labels) * 0.55)], wspace=0.18)
+
+    ax_img = fig.add_subplot(gs[0, 0])
+    ax_img.imshow(grid_img)
+    ax_img.set_title("Input reference grid", fontsize=12)
+    ax_img.axis("off")
+
+    ax_bar = fig.add_subplot(gs[0, 1])
+    x = np.arange(len(labels))
+    bars = ax_bar.bar(x, values)
+    ax_bar.set_ylabel("Probability")
+    ax_bar.set_xlabel("Top-N first-token candidates (prefix black, continuation blue)")
+    ax_bar.set_title(title, fontsize=12)
+    ax_bar.set_xticks(x)
+    ax_bar.set_xticklabels([""] * len(labels))
+    ax_bar.set_xlim(-0.6, len(labels) - 0.4)
+
+    ymax = max(values) if values else 1.0
+    ax_bar.set_ylim(0.0, ymax * 1.18 if ymax > 0 else 1.0)
+
+    for bar, item in zip(bars, labels):
+        height = bar.get_height()
+        ax_bar.text(
+            bar.get_x() + bar.get_width() / 2.0,
+            height + max(ymax * 0.02, 1e-6),
+            f"#{item['rank']}\n{height:.3f}",
+            ha="center",
+            va="bottom",
+            fontsize=9,
+            color="black",
+        )
+
+    trans = ax_bar.get_xaxis_transform()
+    for xi, item in zip(x, labels):
+        prefix_text = wrap_truncate_text(item["prefix"], width=12, max_lines=2)
+        continuation_text = wrap_truncate_text(item["continuation"], width=18, max_lines=3)
+        ax_bar.text(
+            xi,
+            -0.09,
+            prefix_text,
+            ha="center",
+            va="top",
+            fontsize=10,
+            color="black",
+            transform=trans,
+            clip_on=False,
+        )
+        if continuation_text:
+            ax_bar.text(
+                xi,
+                -0.22,
+                continuation_text,
+                ha="center",
+                va="top",
+                fontsize=9,
+                color="blue",
+                transform=trans,
+                clip_on=False,
+            )
+
+    fig.subplots_adjust(left=0.04, right=0.99, top=0.90, bottom=0.34, wspace=0.16)
     save_path = Path(save_path)
     save_path.parent.mkdir(parents=True, exist_ok=True)
-    plt.savefig(save_path, dpi=200)
-    plt.close()
-
+    fig.savefig(save_path, dpi=220)
+    plt.close(fig)
 
 def write_markdown_report(path: Path, result: dict):
     lines = []
@@ -400,6 +491,8 @@ def write_markdown_report(path: Path, result: dict):
     lines.append(f"- model: `{result['model_name']}`")
     lines.append(f"- prompt: `{result['question']}`")
     lines.append(f"- grid image: `{result['grid_meta']['save_path']}`")
+    if result.get('combined_figure_path'):
+        lines.append(f"- combined figure: `{result['combined_figure_path']}`")
     lines.append(f"- fill mode: `{result['grid_meta']['fill_mode']}`")
     lines.append(f"- sampled objects: {', '.join(result['sampled_object_names'])}")
     lines.append("")
@@ -559,10 +652,12 @@ def main():
         cont["first_token_probability"] = item["probability"]
         continuations.append(cont)
 
-    plot_path = out_dir / "topn_first_token_probs.png"
-    save_topn_barplot(
+    combined_figure_path = out_dir / "combined_probe_figure.png"
+    save_combined_probe_figure(
+        grid_image_path=grid_path,
         topn=topn,
-        save_path=plot_path,
+        continuations=continuations,
+        save_path=combined_figure_path,
         title=f"Top-{args.top_n} first-token probabilities on {args.grid_fill_mode} reference grid",
     )
 
@@ -580,7 +675,7 @@ def main():
         "grid_meta": grid_meta,
         "topn_first_token_probs": topn,
         "forced_continuations": continuations,
-        "plot_path": str(plot_path),
+        "combined_figure_path": str(combined_figure_path),
     }
 
     json_path = out_dir / "result.json"
@@ -604,7 +699,7 @@ def main():
     print("=" * 80)
     print(f"Saved JSON report : {json_path}")
     print(f"Saved MD report   : {md_path}")
-    print(f"Saved bar plot    : {plot_path}")
+    print(f"Saved combined figure : {combined_figure_path}")
     print("=" * 80)
 
 
