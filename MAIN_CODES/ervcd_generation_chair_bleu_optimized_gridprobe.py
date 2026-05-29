@@ -668,6 +668,378 @@ def visualize_fail_cases(fail_jsonl: str, out_dir: str, top_n: int = 30) -> Json
 # ============================================================
 
 
+# ============================================================
+# Actual eRVCD grid VLM probe utilities
+# - probes the exact negative reference grid image used by eRVCD
+# ============================================================
+
+def _grid_probe_token_display(tokenizer: Any, token_id: int) -> Json:
+    raw_token = tokenizer.convert_ids_to_tokens([int(token_id)], skip_special_tokens=False)[0]
+    decoded = tokenizer.decode([int(token_id)], skip_special_tokens=False)
+    return {
+        "token_id": int(token_id),
+        "token": str(raw_token),
+        "decoded": str(decoded),
+        "decoded_clean": str(decoded).replace("\n", "\\n"),
+    }
+
+
+def _grid_probe_is_special_id(tokenizer: Any, token_id: int) -> bool:
+    special_ids = set()
+    for attr in ["bos_token_id", "eos_token_id", "pad_token_id", "unk_token_id"]:
+        val = getattr(tokenizer, attr, None)
+        if val is not None:
+            special_ids.add(int(val))
+    extra = getattr(tokenizer, "all_special_ids", None)
+    if extra is not None:
+        special_ids.update(int(x) for x in extra)
+    return int(token_id) in special_ids
+
+
+def _grid_probe_get_lm_head_matrix(model: Any, model_name: str):
+    if model_name == "mplug-owl2":
+        return model.model.lm_head.weight
+    return model.llama_model.lm_head.weight
+
+
+def _grid_probe_next_token_logits(
+    *,
+    model: Any,
+    model_name: str,
+    image: Any,
+    prompt: str,
+    image_path: str,
+    prev_tokens: Sequence[Any],
+    use_nucleus_sampling: bool = False,
+    num_beams: int = 1,
+):
+    """Return vocab logits for the next token on the given grid image.
+
+    This follows the custom LLaVA/MiniGPT generation path used in the main eRVCD code.
+    output_attentions=True is intentionally kept because the local llava.py expects it.
+    """
+    with torch.inference_mode():
+        with torch.no_grad():
+            out = model.generate(
+                {"image": image, "prompt": prompt, "img_path": str(image_path)},
+                use_nucleus_sampling=use_nucleus_sampling,
+                num_beams=num_beams,
+                max_new_tokens=1,
+                output_hidden_states=True,
+                output_attentions=True,
+                return_dict_in_generate=True,
+                nvcd=True,
+                nvcd_previous_last_ids_list=list(prev_tokens),
+            )
+
+    last_hidden = out["hidden_states"][-1][-1][:, -1, :].detach().clone()
+    lm_head = _grid_probe_get_lm_head_matrix(model, model_name).detach()
+    with torch.no_grad():
+        logits = torch.matmul(last_hidden, lm_head.T)
+    return logits.detach()
+
+
+def _grid_probe_topn_from_logits(logits: Any, tokenizer: Any, top_n: int, skip_special_tokens: bool) -> List[Json]:
+    probs = F.softmax(logits.float(), dim=-1)[0]
+    sorted_probs, sorted_ids = torch.sort(probs, descending=True)
+
+    results: List[Json] = []
+    for prob, token_id in zip(sorted_probs.tolist(), sorted_ids.tolist()):
+        token_id = int(token_id)
+        if skip_special_tokens and _grid_probe_is_special_id(tokenizer, token_id):
+            continue
+        info = _grid_probe_token_display(tokenizer, token_id)
+        info["probability"] = float(prob)
+        info["log_probability"] = float(math.log(max(float(prob), 1e-45)))
+        info["rank"] = len(results) + 1
+        results.append(info)
+        if len(results) >= int(top_n):
+            break
+    return results
+
+
+def _grid_probe_greedy_continue_from_first_token(
+    *,
+    model: Any,
+    tokenizer: Any,
+    model_name: str,
+    image: Any,
+    prompt: str,
+    image_path: str,
+    first_token_id: int,
+    total_tokens: int,
+    use_nucleus_sampling: bool = False,
+    num_beams: int = 1,
+) -> Json:
+    """Force the first token, then greedily continue until total_tokens or EOS."""
+    device = image.device
+    output_tokens = [torch.tensor(int(first_token_id), device=device)]
+
+    for _ in range(max(0, int(total_tokens) - 1)):
+        logits = _grid_probe_next_token_logits(
+            model=model,
+            model_name=model_name,
+            image=image,
+            prompt=prompt,
+            image_path=image_path,
+            prev_tokens=output_tokens,
+            use_nucleus_sampling=use_nucleus_sampling,
+            num_beams=num_beams,
+        )
+        next_id = int(torch.argmax(F.softmax(logits.float(), dim=-1), dim=-1).item())
+        output_tokens.append(torch.tensor(next_id, device=device))
+        eos_id = getattr(tokenizer, "eos_token_id", None)
+        if eos_id is not None and next_id == int(eos_id):
+            break
+
+    token_ids = [int(t.item()) for t in output_tokens]
+    decoded = tokenizer.decode(token_ids, skip_special_tokens=True).strip()
+    continuation_token_ids = token_ids[1:]
+    continuation_text = tokenizer.decode(continuation_token_ids, skip_special_tokens=True).strip()
+
+    return {
+        "forced_first_token": _grid_probe_token_display(tokenizer, first_token_id),
+        "generated_token_ids": token_ids,
+        "generated_tokens": [_grid_probe_token_display(tokenizer, tid) for tid in token_ids],
+        "generated_text": decoded,
+        "continuation_token_ids": continuation_token_ids,
+        "continuation_text": continuation_text,
+    }
+
+
+def _grid_probe_shorten_text(text: str, max_chars: int) -> str:
+    text = str(text).replace("\n", " ").strip()
+    if len(text) <= int(max_chars):
+        return text
+    if max_chars <= 1:
+        return text[:max_chars]
+    return text[: int(max_chars) - 1] + "…"
+
+
+def _grid_probe_wrap_text(text: str, width: int = 18, max_lines: int = 3) -> str:
+    text = str(text).replace("\n", " ").strip()
+    if not text:
+        return ""
+    words = text.split()
+    lines: List[str] = []
+    cur = ""
+    for word in words:
+        trial = (cur + " " + word).strip()
+        if len(trial) <= width:
+            cur = trial
+        else:
+            if cur:
+                lines.append(cur)
+            cur = word
+    if cur:
+        lines.append(cur)
+    if not lines:
+        lines = [text]
+    if len(lines) > max_lines:
+        lines = lines[:max_lines]
+        lines[-1] = _grid_probe_shorten_text(lines[-1], max(3, width))
+    return "\n".join(lines)
+
+
+def _grid_probe_save_combined_figure(
+    *,
+    grid_image_path: str,
+    topn: List[Json],
+    continuations: List[Json],
+    save_path: str,
+    title: str,
+    ref_names: Sequence[str],
+) -> None:
+    grid_img = Image.open(grid_image_path).convert("RGB")
+
+    labels: List[Json] = []
+    values: List[float] = []
+    for item, cont in zip(topn, continuations):
+        prefix = item["decoded"].replace("\n", " ").strip()
+        if not prefix:
+            prefix = item["token"]
+        labels.append({
+            "rank": item["rank"],
+            "prefix": prefix,
+            "continuation": cont.get("continuation_text", ""),
+        })
+        values.append(float(item["probability"]))
+
+    fig_w = max(17, len(labels) * 1.65 + 6)
+    fig_h = 7.1
+    fig = plt.figure(figsize=(fig_w, fig_h))
+    gs = fig.add_gridspec(1, 2, width_ratios=[1.15, max(2.0, len(labels) * 0.58)], wspace=0.18)
+
+    ax_img = fig.add_subplot(gs[0, 0])
+    ax_img.imshow(grid_img)
+    ref_title = "Actual negative ref grid"
+    if ref_names:
+        ref_title += "\n" + _grid_probe_wrap_text(", ".join(ref_names), width=38, max_lines=3)
+    ax_img.set_title(ref_title, fontsize=11)
+    ax_img.axis("off")
+
+    ax_bar = fig.add_subplot(gs[0, 1])
+    x = np.arange(len(labels))
+    bars = ax_bar.bar(x, values)
+    ax_bar.set_ylabel("Probability")
+    ax_bar.set_xlabel("Top-N first-token candidates (prefix black, continuation blue)")
+    ax_bar.set_title(title, fontsize=11)
+    ax_bar.set_xticks(x)
+    ax_bar.set_xticklabels([""] * len(labels))
+    ax_bar.set_xlim(-0.6, len(labels) - 0.4)
+
+    ymax = max(values) if values else 1.0
+    ax_bar.set_ylim(0.0, ymax * 1.20 if ymax > 0 else 1.0)
+
+    for bar, item in zip(bars, labels):
+        height = bar.get_height()
+        ax_bar.text(
+            bar.get_x() + bar.get_width() / 2.0,
+            height + max(ymax * 0.02, 1e-6),
+            f"#{item['rank']}\n{height:.3f}",
+            ha="center",
+            va="bottom",
+            fontsize=8,
+            color="black",
+        )
+
+    trans = ax_bar.get_xaxis_transform()
+    for xi, item in zip(x, labels):
+        prefix_text = _grid_probe_wrap_text(item["prefix"], width=12, max_lines=2)
+        continuation_text = _grid_probe_wrap_text(item["continuation"], width=18, max_lines=3)
+        ax_bar.text(
+            xi,
+            -0.09,
+            prefix_text,
+            ha="center",
+            va="top",
+            fontsize=9,
+            color="black",
+            transform=trans,
+            clip_on=False,
+        )
+        if continuation_text:
+            ax_bar.text(
+                xi,
+                -0.22,
+                continuation_text,
+                ha="center",
+                va="top",
+                fontsize=8,
+                color="blue",
+                transform=trans,
+                clip_on=False,
+            )
+
+    fig.subplots_adjust(left=0.04, right=0.99, top=0.88, bottom=0.36, wspace=0.16)
+    _ensure_dir(os.path.dirname(save_path))
+    fig.savefig(save_path, dpi=220)
+    plt.close(fig)
+
+
+def run_actual_grid_vlm_probe(
+    *,
+    model: Any,
+    tokenizer: Any,
+    model_name: str,
+    image: Any,
+    grid_image_path: str,
+    prompt: str,
+    question: str,
+    out_dir: str,
+    image_id: int,
+    ref_names: Sequence[str],
+    grid_meta: Optional[Json],
+    top_n: int,
+    continuation_tokens: int,
+    skip_special_tokens: bool,
+    use_nucleus_sampling: bool,
+    num_beams: int = 1,
+) -> Json:
+    """Probe the exact eRVCD negative grid image and save JSON + combined figure."""
+    case_dir = _ensure_dir(os.path.join(out_dir, f"image_{int(image_id)}"))
+    copied_grid_path = os.path.join(case_dir, "actual_negative_grid.png")
+    try:
+        shutil.copy2(grid_image_path, copied_grid_path)
+    except Exception:
+        copied_grid_path = grid_image_path
+
+    first_logits = _grid_probe_next_token_logits(
+        model=model,
+        model_name=model_name,
+        image=image,
+        prompt=prompt,
+        image_path=grid_image_path,
+        prev_tokens=[],
+        use_nucleus_sampling=use_nucleus_sampling,
+        num_beams=num_beams,
+    )
+
+    topn = _grid_probe_topn_from_logits(
+        logits=first_logits,
+        tokenizer=tokenizer,
+        top_n=top_n,
+        skip_special_tokens=skip_special_tokens,
+    )
+
+    continuations: List[Json] = []
+    for item in topn:
+        cont = _grid_probe_greedy_continue_from_first_token(
+            model=model,
+            tokenizer=tokenizer,
+            model_name=model_name,
+            image=image,
+            prompt=prompt,
+            image_path=grid_image_path,
+            first_token_id=int(item["token_id"]),
+            total_tokens=continuation_tokens,
+            use_nucleus_sampling=use_nucleus_sampling,
+            num_beams=num_beams,
+        )
+        cont["rank"] = item["rank"]
+        cont["first_token_probability"] = item["probability"]
+        continuations.append(cont)
+
+    combined_figure_path = os.path.join(case_dir, "actual_negative_grid_vlm_distribution.png")
+    _grid_probe_save_combined_figure(
+        grid_image_path=copied_grid_path,
+        topn=topn,
+        continuations=continuations,
+        save_path=combined_figure_path,
+        title=f"VLM first-token distribution for actual negative grid / image_id={int(image_id)}",
+        ref_names=ref_names,
+    )
+
+    result: Json = {
+        "image_id": int(image_id),
+        "model_name": model_name,
+        "question": question,
+        "prompt": prompt,
+        "grid_image_path_original": grid_image_path,
+        "grid_image_path_copied": copied_grid_path,
+        "combined_figure_path": combined_figure_path,
+        "ref_names": list(ref_names),
+        "grid_meta": grid_meta,
+        "top_n": int(top_n),
+        "continuation_tokens": int(continuation_tokens),
+        "topn_first_token_probs": topn,
+        "forced_continuations": continuations,
+    }
+
+    json_path = os.path.join(case_dir, "actual_negative_grid_vlm_probe.json")
+    _write_json(json_path, result)
+    result["json_path"] = json_path
+
+    _append_jsonl(os.path.join(out_dir, "actual_grid_vlm_probe_records.jsonl"), result)
+    return result
+
+
+# ============================================================
+# End actual eRVCD grid VLM probe utilities
+# ============================================================
+
+
+
 MODEL_EVAL_CONFIG_PATH = {
     "minigpt4": "eval_configs/minigpt4_eval.yaml",
     # "instructblip": "eval_configs/instructblip_eval.yaml",
@@ -775,6 +1147,15 @@ parser.add_argument("--negative_probe_top_k", type=int, default=20, help="Top-k 
 parser.add_argument("--negative_probe_plot_top_n", type=int, default=30, help="Number of fail cases to visualize after generation finishes.")
 parser.add_argument("--negative_probe_save_all_steps", type=str2bool, default=True, help="Save step_trace.jsonl for every decoding step. Set False to save less disk space.")
 parser.add_argument("--negative_probe_no_plots", type=str2bool, default=False, help="If True, skip automatic plot generation at the end.")
+
+############ actual negative-grid VLM probe options #############
+parser.add_argument("--grid_vlm_probe_enabled", type=str2bool, default=True, help="Probe the exact negative grid image used by eRVCD and save a combined grid+distribution figure.")
+parser.add_argument("--grid_vlm_probe_max_images", type=int, default=20, help="Maximum number of negative grids to probe. Use 0 or negative for unlimited.")
+parser.add_argument("--grid_vlm_probe_top_n", type=int, default=10, help="Top-N first-token candidates to visualize for the actual negative grid VLM probe.")
+parser.add_argument("--grid_vlm_probe_continuation_tokens", type=int, default=10, help="Total generated tokens per forced-first-token continuation in the actual negative grid VLM probe.")
+parser.add_argument("--grid_vlm_probe_question", type=str, default="What object is shown in this image? Answer with one word.", help="Question used when probing the actual negative grid image.")
+parser.add_argument("--grid_vlm_probe_skip_special_tokens", type=str2bool, default=True, help="Skip special tokens in the actual negative grid VLM probe top-N.")
+
 
 ################################
 args = parser.parse_known_args()[0]
@@ -1227,6 +1608,8 @@ if args.negative_probe_enabled:
     )
     print(f"[NegativeSignalProbe] enabled. Output dir: {probe.root}")
 
+grid_vlm_probe_saved_count = 0
+
 global_all_info = {
     'model_name' : model_name,
     'decoding_strategy' : 'ervcd',
@@ -1241,6 +1624,12 @@ global_all_info = {
     'ervcd_grid_fill_mode' : args.ervcd_grid_fill_mode,
     'ervcd_grid_canvas_size' : args.ervcd_grid_canvas_size,
     'ervcd_logit_scale_mode' : args.ervcd_logit_scale_mode,
+    'grid_vlm_probe_enabled' : args.grid_vlm_probe_enabled,
+    'grid_vlm_probe_max_images' : args.grid_vlm_probe_max_images,
+    'grid_vlm_probe_top_n' : args.grid_vlm_probe_top_n,
+    'grid_vlm_probe_continuation_tokens' : args.grid_vlm_probe_continuation_tokens,
+    'grid_vlm_probe_question' : args.grid_vlm_probe_question,
+    'grid_vlm_probe_records' : [],
     'ervcd_grid_records' : [],
     'ref_not_exist' : [],
     'chair1_detect1' : 0,
@@ -1546,6 +1935,48 @@ for idx, img_id in tqdm(enumerate(range(len(img_files))), total=len(img_files)):
     # 따라서 eRVCD loop에서 grid png를 다시 Image.open 하지 않는다.
     if negative_grid_path is not None and negative_grid_canvas is not None:
         get_cached_norm_image(negative_grid_path, negative_grid_canvas)
+
+        # Actual-grid VLM probe:
+        # Probe the exact negative reference grid image used by eRVCD and save
+        # a wide figure with the grid on the left and first-token top-N distribution on the right.
+        if args.grid_vlm_probe_enabled and (
+            args.grid_vlm_probe_max_images <= 0 or grid_vlm_probe_saved_count < args.grid_vlm_probe_max_images
+        ):
+            try:
+                grid_vlm_probe_dir = os.path.join(result_dir, "actual_negative_grid_vlm_probe")
+                grid_probe_prompt = template.replace("<question>", args.grid_vlm_probe_question)
+                grid_probe_ref_names = [os.path.splitext(os.path.basename(p))[0] for p in hall_ref_list]
+                grid_probe_image = get_cached_norm_image(negative_grid_path, negative_grid_canvas)
+                grid_probe_record = run_actual_grid_vlm_probe(
+                    model=model,
+                    tokenizer=model_tokenizer,
+                    model_name=model_name,
+                    image=grid_probe_image,
+                    grid_image_path=negative_grid_path,
+                    prompt=grid_probe_prompt,
+                    question=args.grid_vlm_probe_question,
+                    out_dir=grid_vlm_probe_dir,
+                    image_id=int(img_id),
+                    ref_names=grid_probe_ref_names,
+                    grid_meta=negative_grid_meta,
+                    top_n=args.grid_vlm_probe_top_n,
+                    continuation_tokens=args.grid_vlm_probe_continuation_tokens,
+                    skip_special_tokens=args.grid_vlm_probe_skip_special_tokens,
+                    use_nucleus_sampling=args.sample,
+                    num_beams=num_beams,
+                )
+                global_all_info['grid_vlm_probe_records'].append({
+                    "image_id": int(img_id),
+                    "ref_names": grid_probe_ref_names,
+                    "json_path": grid_probe_record.get("json_path"),
+                    "combined_figure_path": grid_probe_record.get("combined_figure_path"),
+                    "top1_decoded": grid_probe_record["topn_first_token_probs"][0]["decoded"] if grid_probe_record.get("topn_first_token_probs") else "",
+                    "top1_probability": grid_probe_record["topn_first_token_probs"][0]["probability"] if grid_probe_record.get("topn_first_token_probs") else None,
+                })
+                grid_vlm_probe_saved_count += 1
+                print(f"[GridVLMProbe] saved actual negative-grid distribution: {grid_probe_record.get('combined_figure_path')}")
+            except Exception as e:
+                print(f"[GridVLMProbe][WARN] failed for image_id={img_id}: {repr(e)}")
     if positive_grid_path is not None and positive_grid_canvas is not None:
         get_cached_norm_image(positive_grid_path, positive_grid_canvas)
    
@@ -1878,7 +2309,7 @@ if probe is not None:
 
 
 # CUDA_VISIBLE_DEVICES=0 \
-# python ervcd_generation_chair_bleu_with_negative_probe.py \
+# python ervcd_generation_chair_bleu_with_actual_grid_probe.py \
 #   --model llava-1.5 \
 #   --data_path /home/jihoon/jihoon/DATASETS/coco2014/val2014 \
 #   --ref_folder_path DB_single_concept_images_flux_generated/generated_images \
@@ -1886,10 +2317,12 @@ if probe is not None:
 #   --num_samples 300 \
 #   --seed 42 \
 #   --gpu-id 0 \
-#   --output_dir ./generated_captions_probe_test/ \
+#   --output_dir ./generated_captions_probe_test_260529/ \
 #   --rvcd_alpha 1 \
 #   --rvcd_beta 0 \
 #   --ervcd_grid_fill_mode black_front \
 #   --ervcd_logit_scale_mode presence \
-#   --negative_probe_plot_top_n 20
-
+#   --grid_vlm_probe_max_images 0 \
+#   --grid_vlm_probe_enabled true \
+#   --grid_vlm_probe_top_n 10 \
+#   --grid_vlm_probe_continuation_tokens 3
