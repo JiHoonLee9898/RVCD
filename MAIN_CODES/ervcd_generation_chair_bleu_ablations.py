@@ -173,6 +173,18 @@ parser.add_argument(
     default=5,
     help="Top-k value used when --ervcd_negative_logit_mode topk_equalize. Default: 5.",
 )
+parser.add_argument(
+    "--ervcd_token_suppression_mode",
+    type=str,
+    default="none",
+    choices=["none", "n_prefix_zero"],
+    help=(
+        "Optional hard token suppression after eRVCD logits are converted to probabilities. "
+        "none: do not directly suppress object-name tokens. "
+        "n_prefix_zero: for negative objects N, set their object-name prefix token probabilities to 0 at every decoding step. "
+        "N is taken from hal_detected, i.e., draft objects not detected by YOLO."
+    ),
+)
 
 ################################
 args = parser.parse_known_args()[0]
@@ -634,6 +646,125 @@ def equalize_topk_logits_to_top1(logits, topk):
     return adjusted_logits
 
 
+def _tokenizer_special_id_set(tokenizer):
+    """Return special token ids that should never be hard-banned."""
+    special_ids = set()
+    for attr in ("bos_token_id", "eos_token_id", "pad_token_id", "unk_token_id", "sep_token_id", "cls_token_id"):
+        val = getattr(tokenizer, attr, None)
+        if val is not None:
+            try:
+                special_ids.add(int(val))
+            except Exception:
+                pass
+
+    for val in getattr(tokenizer, "all_special_ids", []) or []:
+        try:
+            special_ids.add(int(val))
+        except Exception:
+            pass
+
+    return special_ids
+
+
+def _tokenize_no_special(tokenizer, text):
+    """Tokenize text without adding BOS/EOS or other special tokens."""
+    try:
+        ids = tokenizer(text, add_special_tokens=False).input_ids
+    except Exception:
+        ids = tokenizer.encode(text, add_special_tokens=False)
+
+    if ids is None:
+        return []
+
+    # Some tokenizers may return a nested batch-like list.
+    if len(ids) > 0 and isinstance(ids[0], (list, tuple)):
+        ids = ids[0]
+
+    return [int(x) for x in ids]
+
+
+def _object_name_prefix_variants(name):
+    """
+    Build string variants whose first token can start an object mention.
+
+    LLaMA-like tokenizers distinguish "dog" and " dog". For caption decoding,
+    the leading-space variants are especially important, but we keep no-space
+    variants too because an object can appear at the beginning of a sentence.
+    """
+    base = str(name).strip()
+    if not base:
+        return []
+
+    variants = []
+    for v in [base, base.lower(), base.capitalize(), base.title()]:
+        if v and v not in variants:
+            variants.append(v)
+        spaced = " " + v
+        if spaced not in variants:
+            variants.append(spaced)
+    return variants
+
+
+def build_object_prefix_token_ids(tokenizer, object_names):
+    """
+    For each negative object name, collect the first token id of common surface forms.
+
+    Example:
+      object = "traffic light"
+      variants = ["traffic light", " traffic light", ...]
+      banned ids = first token id of each variant.
+
+    This blocks the model from starting that object phrase, rather than trying to
+    conditionally block every later token in a multi-token phrase.
+    """
+    special_ids = _tokenizer_special_id_set(tokenizer)
+    token_to_meta = {}
+
+    for obj in object_names:
+        for variant in _object_name_prefix_variants(obj):
+            ids = _tokenize_no_special(tokenizer, variant)
+            if not ids:
+                continue
+            token_id = int(ids[0])
+            if token_id in special_ids:
+                continue
+
+            try:
+                prefix_token = tokenizer.convert_ids_to_tokens([token_id], skip_special_tokens=False)[0]
+            except Exception:
+                prefix_token = str(token_id)
+
+            token_to_meta.setdefault(token_id, {
+                "token_id": token_id,
+                "prefix_token": prefix_token,
+                "sources": [],
+            })["sources"].append({
+                "object": str(obj),
+                "variant": variant,
+                "full_token_ids": ids,
+            })
+
+    token_ids = sorted(token_to_meta.keys())
+    meta = [token_to_meta[t] for t in token_ids]
+    return token_ids, meta
+
+
+def zero_out_token_probabilities(probabilities, token_ids):
+    """Set selected token probabilities to exactly 0 for every batch row."""
+    if not token_ids:
+        return probabilities, 0
+
+    vocab_size = probabilities.shape[-1]
+    valid_ids = sorted({int(t) for t in token_ids if 0 <= int(t) < vocab_size})
+    if not valid_ids:
+        return probabilities, 0
+
+    out = probabilities.clone()
+    idx = torch.tensor(valid_ids, device=out.device, dtype=torch.long)
+    out.index_fill_(dim=-1, index=idx, value=0.0)
+    return out, len(valid_ids)
+
+
 global_chair_evaluator = None
 coco_path = os.path.join(args.data_path, 'annotations')
 def get_chair_evaluator(chair_cache_path=chair_cache_path, coco_path=coco_path):
@@ -762,7 +893,7 @@ current_time = datetime.now()
 formatted_time = current_time.strftime("%Y%m%d%H%M")
 result_dir = os.path.join(
     base_dir,
-    f'ervcd_a{args.rvcd_alpha}_b{args.rvcd_beta}_grid_{args.ervcd_grid_fill_mode}_scale_{args.ervcd_logit_scale_mode}_neglogit_{args.ervcd_negative_logit_mode}_topk_{args.ervcd_negative_topk}_{formatted_time}_seed_{seed}_samples_{num_samples}_maxtokens_{max_new_tokens}_{true_flag_name}'
+    f'ervcd_a{args.rvcd_alpha}_b{args.rvcd_beta}_grid_{args.ervcd_grid_fill_mode}_scale_{args.ervcd_logit_scale_mode}_neglogit_{args.ervcd_negative_logit_mode}_topk_{args.ervcd_negative_topk}_tokensup_{args.ervcd_token_suppression_mode}_{formatted_time}_seed_{seed}_samples_{num_samples}_maxtokens_{max_new_tokens}_{true_flag_name}'
 )
 if not os.path.exists(result_dir): os.makedirs(result_dir)
 
@@ -782,6 +913,8 @@ global_all_info = {
     'ervcd_logit_scale_mode' : args.ervcd_logit_scale_mode,
     'ervcd_negative_logit_mode' : args.ervcd_negative_logit_mode,
     'ervcd_negative_topk' : args.ervcd_negative_topk,
+    'ervcd_token_suppression_mode' : args.ervcd_token_suppression_mode,
+    'ervcd_token_suppression_records' : [],
     'ervcd_grid_records' : [],
     'ref_not_exist' : [],
     'chair1_detect1' : 0,
@@ -999,7 +1132,29 @@ for idx, img_id in tqdm(enumerate(range(len(img_files))), total=len(img_files)):
                     gt_detected.append(key[1]) # coco first word로 바뀌기 전의 synonym들을 저장
 
     ###############################
-    
+
+    # Optional hard suppression target for eRVCD decoding.
+    # N objects are the negative objects inferred above: draft-mentioned objects not detected by YOLO.
+    # This mode does not require reference images; it directly zeros the prefix-token probabilities.
+    n_prefix_token_ids = []
+    n_prefix_token_meta = []
+    if args.ervcd_token_suppression_mode == "n_prefix_zero":
+        n_prefix_token_ids, n_prefix_token_meta = build_object_prefix_token_ids(
+            model_tokenizer,
+            hal_detected,
+        )
+
+    global_all_info['ervcd_token_suppression_records'].append({
+        "image_id": int(img_id),
+        "mode": args.ervcd_token_suppression_mode,
+        "negative_objects": list(hal_detected),
+        "prefix_token_ids": list(n_prefix_token_ids),
+        "prefix_token_meta": n_prefix_token_meta,
+    })
+
+    print(f'token_suppression_mode : {args.ervcd_token_suppression_mode}')
+    print(f'n_prefix_token_ids : {n_prefix_token_ids}')
+    print(f'n_prefix_token_meta : {n_prefix_token_meta}')
 
     hall_ref_list = []
     if len(hal_detected) > 0: # draft 캡션에서 지워야하는 객체가 있다면
@@ -1021,9 +1176,14 @@ for idx, img_id in tqdm(enumerate(range(len(img_files))), total=len(img_files)):
                 gt_ref_list.pop(i)  # 존재하지 않는 경로 제거
                 
 
-    # 모든 처리 후에도 없앨 ref이미지 경로가 존재한다면 rvcd.
-    # 존재하지 않는다면 negative logit을 만들 수 없으므로 draft 캡션을 그대로 return.
-    if len(hall_ref_list) > 0:
+    # 모든 처리 후에도 없앨 ref이미지 경로가 존재한다면 eRVCD.
+    # token suppression mode는 reference 이미지가 없어도 원본 logits 위에서 동작할 수 있으므로,
+    # prefix token id가 하나 이상 있으면 token-by-token decoding을 수행한다.
+    token_suppression_operate = (
+        args.ervcd_token_suppression_mode == "n_prefix_zero"
+        and len(n_prefix_token_ids) > 0
+    )
+    if len(hall_ref_list) > 0 or token_suppression_operate:
         nvcd_operate = True
     else: 
         nvcd_operate = False
@@ -1203,6 +1363,7 @@ for idx, img_id in tqdm(enumerate(range(len(img_files))), total=len(img_files)):
             
             print(f'alpha, beta, gamma : {alpha, beta, gamma}')
             print(f'negative_logit_mode, negative_topk : {args.ervcd_negative_logit_mode}, {args.ervcd_negative_topk}')
+            print(f'token_suppression_mode, n_prefix_count : {args.ervcd_token_suppression_mode}, {len(n_prefix_token_ids)}')
             
             # eRVCD 핵심 변경점:
             # 기존 RVCD: N/P reference image 각각의 logits를 모두 더함.
@@ -1227,6 +1388,15 @@ for idx, img_id in tqdm(enumerate(range(len(img_files))), total=len(img_files)):
 
             original_probabilities = F.softmax(original_mature_logit, dim=-1)
             probabilities = F.softmax(adjusted_logits, dim=-1)
+
+            # Hard object-prefix suppression mode:
+            # hal_detected에 들어간 N 객체명들의 prefix token 확률을 매 decoding step마다 0으로 만든다.
+            if args.ervcd_token_suppression_mode == "n_prefix_zero" and len(n_prefix_token_ids) > 0:
+                probabilities, suppressed_prefix_count = zero_out_token_probabilities(
+                    probabilities,
+                    n_prefix_token_ids,
+                )
+                print(f"prefix-zero suppressed token count : {suppressed_prefix_count}")
 
             # 선행 연구들의 아이디어 : 원본 로짓의 최대확률 * gamma보다 낮은 확률을 갖는 토큰은 못나오게 규제
             # 이 연구에서는 큰 효과가 없었음.. 추가적인 하이퍼파라미터 도입을 배제하기 위해 제거. 
@@ -1287,7 +1457,7 @@ for idx, img_id in tqdm(enumerate(range(len(img_files))), total=len(img_files)):
 
     now_nvcd_result = {"image_id": int(img_id),"caption": now_datapoint_final_caption,"tokens": token_count}
     global_all_info['total_generated_tokens'] += token_count
-    nvcd_captions_path = os.path.join(result_dir,f'ervcd_{model_name}_a{args.rvcd_alpha}_b{args.rvcd_beta}_grid_{args.ervcd_grid_fill_mode}_scale_{args.ervcd_logit_scale_mode}_neglogit_{args.ervcd_negative_logit_mode}_topk_{args.ervcd_negative_topk}_{formatted_time}_seed_{seed}_samples_{num_samples}_maxtokens_{max_new_tokens}_{true_flag_name}_generated_captions.jsonl')
+    nvcd_captions_path = os.path.join(result_dir,f'ervcd_{model_name}_a{args.rvcd_alpha}_b{args.rvcd_beta}_grid_{args.ervcd_grid_fill_mode}_scale_{args.ervcd_logit_scale_mode}_neglogit_{args.ervcd_negative_logit_mode}_topk_{args.ervcd_negative_topk}_tokensup_{args.ervcd_token_suppression_mode}_{formatted_time}_seed_{seed}_samples_{num_samples}_maxtokens_{max_new_tokens}_{true_flag_name}_generated_captions.jsonl')
     with open(nvcd_captions_path, "a") as f:
         json.dump(now_nvcd_result, f)
         f.write("\n")
@@ -1304,7 +1474,7 @@ if check_draft_chair:
         global_all_info['latency_per_token'] = global_all_info['latency'] / global_all_info['total_generated_tokens']
 
 
-global_info_save_path = os.path.join(result_dir,f"ervcd_{model_name}_a{args.rvcd_alpha}_b{args.rvcd_beta}_grid_{args.ervcd_grid_fill_mode}_scale_{args.ervcd_logit_scale_mode}_neglogit_{args.ervcd_negative_logit_mode}_topk_{args.ervcd_negative_topk}_{formatted_time}_seed_{seed}_samples_{num_samples}_maxtokens_{max_new_tokens}_{true_flag_name}_DETECTOR_info.json")
+global_info_save_path = os.path.join(result_dir,f"ervcd_{model_name}_a{args.rvcd_alpha}_b{args.rvcd_beta}_grid_{args.ervcd_grid_fill_mode}_scale_{args.ervcd_logit_scale_mode}_neglogit_{args.ervcd_negative_logit_mode}_topk_{args.ervcd_negative_topk}_tokensup_{args.ervcd_token_suppression_mode}_{formatted_time}_seed_{seed}_samples_{num_samples}_maxtokens_{max_new_tokens}_{true_flag_name}_DETECTOR_info.json")
 with open(global_info_save_path, 'w', encoding='utf-8') as json_file:
     json.dump(global_all_info, json_file, indent=4, ensure_ascii=False)
 
@@ -1436,30 +1606,59 @@ with open(global_info_save_path, 'w', encoding='utf-8') as json_file:
 # --ervcd_logit_scale_mode presence \
 # --ervcd_negative_logit_mode none
 
-
-
-
-
-
-
-
-
-# python ervcd_generation_chair_bleu_ablations.py \
+# 9) object prefix token hard suppression mode
+# YOLO 기반으로 draft caption에 있지만 탐지되지 않은 N 객체(hal_detected)를 정한 뒤,
+# 그 객체명 surface form들의 prefix token 확률을 매 decoding step마다 0으로 만든다.
+# reference image가 없어도 원본 logits 위에서 동작 가능하다.
+# --ervcd_token_suppression_mode n_prefix_zero
+#
+# 예: black_back + object prefix-zero suppression
+# CUDA_VISIBLE_DEVICES=0 \
+# python ervcd_generation_chair_bleu.py \
 # --model llava-1.5 \
-# --data_path /home/jihoon/jihoon/DATASETS/coco2014/val2014 \
+# --data_path /home/jihoon/jihoon/DATASETS/coco2014 \
 # --ref_folder_path DB_single_concept_images_flux_generated/generated_images \
 # --chair_cache_path eval/CHAIR_CACHE/chair.pkl \
 # --num_samples 300 \
 # --seed 42 \
 # --gpu-id 0 \
-# --output_dir ./generated_captions_ervcd_260529_2/ \
+# --output_dir ./generated_captions_prefix_zero/ \
 # --rvcd_alpha 1 \
-# --rvcd_beta 0 \
+# --rvcd_beta 0.1 \
+# --ervcd_grid_fill_mode black_back \
+# --ervcd_logit_scale_mode presence \
+# --ervcd_negative_logit_mode none \
+# --ervcd_token_suppression_mode n_prefix_zero
+#
+# 예: concat_pad + negative top-k equalize + object prefix-zero suppression
+# CUDA_VISIBLE_DEVICES=0 \
+# python ervcd_generation_chair_bleu.py \
+# --model llava-1.5 \
+# --data_path /home/jihoon/jihoon/DATASETS/coco2014 \
+# --ref_folder_path DB_single_concept_images_flux_generated/generated_images \
+# --chair_cache_path eval/CHAIR_CACHE/chair.pkl \
+# --num_samples 300 \
+# --seed 42 \
+# --gpu-id 0 \
+# --output_dir ./generated_captions_concat_pad_topk_prefix_zero/ \
+# --rvcd_alpha 1 \
+# --rvcd_beta 0.1 \
+# --ervcd_grid_fill_mode concat_pad \
+# --ervcd_grid_canvas_size 336 \
 # --ervcd_logit_scale_mode presence \
 # --ervcd_negative_logit_mode topk_equalize \
-# --ervcd_negative_topk 10 \
-# --ervcd_grid_fill_mode black_front
+# --ervcd_negative_topk 5 \
+# --ervcd_token_suppression_mode n_prefix_zero
 
+
+
+
+
+
+
+
+
+# CUDA_VISIBLE_DEVICES=0 \
 # python ervcd_generation_chair_bleu_ablations.py \
 # --model llava-1.5 \
 # --data_path /home/jihoon/jihoon/DATASETS/coco2014/val2014 \
@@ -1468,22 +1667,44 @@ with open(global_info_save_path, 'w', encoding='utf-8') as json_file:
 # --num_samples 300 \
 # --seed 42 \
 # --gpu-id 0 \
-# --output_dir ./generated_captions_ervcd_260529_2/ \
+# --output_dir ./generated_captions_prefix_zero/ \
 # --rvcd_alpha 1 \
 # --rvcd_beta 0 \
+# --ervcd_grid_fill_mode black_front \
 # --ervcd_logit_scale_mode presence \
-# --ervcd_grid_fill_mode concat_pad
+# --ervcd_negative_logit_mode none \
+# --ervcd_token_suppression_mode n_prefix_zero
 
+# CUDA_VISIBLE_DEVICES=0 \
 # python ervcd_generation_chair_bleu_ablations.py \
 # --model llava-1.5 \
 # --data_path /home/jihoon/jihoon/DATASETS/coco2014/val2014 \
 # --ref_folder_path DB_single_concept_images_flux_generated/generated_images \
 # --chair_cache_path eval/CHAIR_CACHE/chair.pkl \
 # --num_samples 300 \
-# --seed 42 \
+# --seed 43 \
 # --gpu-id 0 \
-# --output_dir ./generated_captions_ervcd_260529_2/ \
+# --output_dir ./generated_captions_prefix_zero/ \
 # --rvcd_alpha 1 \
 # --rvcd_beta 0 \
+# --ervcd_grid_fill_mode black_front \
 # --ervcd_logit_scale_mode presence \
-# --ervcd_grid_fill_mode concat_raw
+# --ervcd_negative_logit_mode none \
+# --ervcd_token_suppression_mode n_prefix_zero
+
+# CUDA_VISIBLE_DEVICES=0 \
+# python ervcd_generation_chair_bleu_ablations.py \
+# --model llava-1.5 \
+# --data_path /home/jihoon/jihoon/DATASETS/coco2014/val2014 \
+# --ref_folder_path DB_single_concept_images_flux_generated/generated_images \
+# --chair_cache_path eval/CHAIR_CACHE/chair.pkl \
+# --num_samples 300 \
+# --seed 44 \
+# --gpu-id 0 \
+# --output_dir ./generated_captions_prefix_zero/ \
+# --rvcd_alpha 1 \
+# --rvcd_beta 0 \
+# --ervcd_grid_fill_mode black_front \
+# --ervcd_logit_scale_mode presence \
+# --ervcd_negative_logit_mode none \
+# --ervcd_token_suppression_mode n_prefix_zero

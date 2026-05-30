@@ -44,7 +44,7 @@ from typing import Any, Dict, Iterable, List, Optional, Tuple
 GENERATED_RE = re.compile(r"generated_captions\.(?:jsonl|json)$", re.IGNORECASE)
 INFO_RE = re.compile(r"(?:info|INFO)\.json$", re.IGNORECASE)
 
-SCRIPT_VERSION = "2026-05-29-v7-ervcd-grid-concat-neglogit-rows"
+SCRIPT_VERSION = "2026-05-29-v8-ervcd-token-suppression-rows"
 
 # eRVCD merge/fill modes used by ervcd_generation_chair_bleu.py.
 # Display order is table order. Regex order is defined separately below so
@@ -508,9 +508,17 @@ ERVCD_NEGLOGIT_RE = re.compile(
     re.IGNORECASE,
 )
 
+# New hard object prefix-token suppression mode saved by the generation script:
+#   ..._tokensup_none_...
+#   ..._tokensup_n_prefix_zero_...
+ERVCD_TOKEN_SUPPRESSION_RE = re.compile(
+    r"(?:^|_)tokensup_(?P<mode>none|n_prefix_zero)(?:_|$)",
+    re.IGNORECASE,
+)
+
 
 def ervcd_label_from_norm(norm: str) -> str:
-    """Return a method label such as 'eRVCD, concat_pad, topk=5'."""
+    """Return labels such as 'eRVCD, concat_pad, topk=5, prefix-zero'."""
     m = ERVCD_GRID_MODE_RE.search(norm)
     label = f"eRVCD, {m.group('mode').lower()}" if m else "eRVCD"
 
@@ -518,6 +526,10 @@ def ervcd_label_from_norm(norm: str) -> str:
     if neg and neg.group("mode").lower() == "topk_equalize":
         topk = neg.group("topk")
         label += f", topk={topk}" if topk else ", topk_equalize"
+
+    tok = ERVCD_TOKEN_SUPPRESSION_RE.search(norm)
+    if tok and tok.group("mode").lower() == "n_prefix_zero":
+        label += ", prefix-zero"
 
     return label
 
@@ -531,10 +543,10 @@ def ervcd_base_label(method: str) -> str:
 
 
 def dynamic_ervcd_method_order(rows: List[Dict[str, Any]]) -> List[str]:
-    """Default eRVCD table rows plus any actually observed top-k variants.
+    """Default eRVCD table rows plus any actually observed top-k / prefix-zero variants.
 
     Base grid modes are always shown for backwards compatibility. New top-k
-    variants cannot be exhaustively predeclared because k is user-selected,
+    variants cannot be exhaustively predeclared because k / combinations are user-selected,
     so they are appended when present in the evaluated files.
     """
     order = list(DEFAULT_ERVCD_MD_METHODS)
@@ -1291,13 +1303,22 @@ if __name__ == "__main__":
 #   eRVCD, concat_raw, topk=5
 #
 # Example:
-# python eval_chair_folder_markdown_ervcd_grid_modes.py \
+# python eval_chair_folder_markdown_ervcd_v7.py \
 #   --gt-caption-path /home/jihoon/jihoon/DATASETS/coco2014/val2014/annotations/captions_val2014.json \
-#   --folder /root/RVCD/MAIN_CODES/generated_captions_ervcd_260529_2 \
+#   --folder /home/jihoon/jihoon/RVCD/MAIN_CODES/generated_captions_concat_pad_topk \
 #   --only-ervcd \
 #   --only-md \
 #   --md-show-n
-
+#
 # If evaluating a mixed folder with Greedy/RVCD/eRVCD together and you still
 # want the eRVCD sub-mode rows to appear, add:
 #   --md-append-extra
+
+
+
+# python eval_chair_folder_markdown_ervcd.py \
+#   --gt-caption-path /home/jihoon/jihoon/DATASETS/coco2014/val2014/annotations/captions_val2014.json \
+#   --folder /root/RVCD/MAIN_CODES/generated_captions_prefix_zero \
+#   --only-ervcd \
+#   --only-md \
+#   --md-show-n
