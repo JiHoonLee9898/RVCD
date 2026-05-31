@@ -1318,7 +1318,7 @@ if __name__ == "__main__":
 
 # python eval_chair_folder_markdown_ervcd.py \
 #   --gt-caption-path /home/jihoon/jihoon/DATASETS/coco2014/val2014/annotations/captions_val2014.json \
-#   --folder /root/RVCD/MAIN_CODES/generated_captions_prefix_zero \
+#   --folder /root/RVCD/MAIN_CODES/generated_captions_multi_predefined \
 #   --only-ervcd \
 #   --only-md \
 #   --md-show-n
