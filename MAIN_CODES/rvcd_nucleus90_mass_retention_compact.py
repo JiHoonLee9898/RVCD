@@ -16,10 +16,9 @@ For each reference image:
        Overlap between original S_p and the downsized top-k_p token set,
        where k_p is the original nucleus size for that image.
 
-This script generates two main figures:
+This script generates one compact main figure:
 
-1) nucleus90_mass_retention_vs_downsizing.png
-2) nucleus90_set_overlap_vs_downsizing.png
+1) nucleus90_mass_retention_compact.png
 
 Each figure contains:
 - one faint line per image
@@ -270,7 +269,7 @@ def load_rvcd_llava(
         f"Loading arch={model_config.arch} "
         f"from {model_config.merged_ckpt}"
     )
-    model = model_cls.from_config(model_config).to(device)
+    model = model_cls.from_config(model_config)
     model.eval()
 
     processor_cfg = cfg.get_config().preprocess
@@ -487,7 +486,7 @@ def add_curve_summary(
         p10_curve,
         p90_curve,
         color="gray",
-        alpha=0.12,
+        alpha=0.6,
         label="10–90 percentile",
         zorder=1,
     )
@@ -540,103 +539,49 @@ def plot_mass_retention_figure(
     colormap: str,
     dpi: int,
 ) -> None:
-    figure, axis = plt.subplots(figsize=(13.0, 7.0))
-    figure.subplots_adjust(right=0.75)
+    """Draw one compact mass-retention figure without a side panel."""
+    figure, axis = plt.subplots(figsize=(10.5, 6.3))
 
-    median_curve, mean_curve, p10_curve, _ = add_curve_summary(
+    median_curve, mean_curve, _, _ = add_curve_summary(
         axis=axis,
         scales=scales,
         curves=curves,
         curve_alpha=curve_alpha,
         curve_line_width=curve_line_width,
         colormap=colormap,
-        ylabel=(
-            f"Probability mass retained on original "
-            f"{int(round(mass_threshold * 100))}%-nucleus (%)"
-        ),
+        ylabel="Retained probability mass (%)",
         title=(
-            f"Original {int(round(mass_threshold * 100))}%-nucleus retains "
-            "most of its mass under white-padded downsizing\n"
-            f"N={len(curves)} reference images"
+            "Retention of Original First Forward Probability Mass under Downsizing"
         ),
         y_limits=(0.0, 100.0),
     )
 
-    baseline = mass_threshold * 100.0
-    axis.axhline(
-        baseline,
-        color="steelblue",
-        linewidth=1.6,
-        linestyle=":",
-        label=f"{baseline:.0f}% reference line",
-        zorder=3,
+    # reference_percent = mass_threshold * 100.0
+    # axis.axhline(
+    #     reference_percent,
+    #     color="steelblue",
+    #     linewidth=1.5,
+    #     linestyle=":",
+    #     label=f"Original nucleus target ({reference_percent:.0f}%)",
+    #     zorder=3,
+    # )
+
+    # Keep only the essential visual elements: individual curves,
+    # percentile band, median, mean, and the 90% reference line.
+    axis.set_xlabel("Spatial downsizing factor")
+    axis.set_xticks(scales)
+    axis.set_xticklabels(
+        [
+            f"{scale:g}×\n({area_percentage(scale):.1f}% area)"
+            for scale in scales
+        ]
     )
+    axis.legend(loc="lower left", fontsize=9)
 
-    final_values = curves[:, -1]
-    final_scale = float(scales[-1])
-    final_median = float(np.median(final_values))
-    final_mean = float(np.mean(final_values))
-    final_p10 = float(np.percentile(final_values, 10))
-
-    k_median = float(np.median(k_values))
-    k_mean = float(np.mean(k_values))
-    k_p10 = float(np.percentile(k_values, 10))
-    k_p90 = float(np.percentile(k_values, 90))
-
-    threshold_080 = float(np.mean(final_values >= 80.0) * 100.0)
-    threshold_090 = float(np.mean(final_values >= 90.0) * 100.0)
-    threshold_095 = float(np.mean(final_values >= 95.0) * 100.0)
-
-    summary_text = (
-        f"At {final_scale:g}× downsizing\n"
-        f"({area_percentage(final_scale):.1f}% area retained)\n\n"
-        f"Median retained mass: {final_median:.1f}%\n"
-        f"Mean retained mass:   {final_mean:.1f}%\n"
-        f"10th pct.:            {final_p10:.1f}%\n\n"
-        f"Original nucleus size k_p\n"
-        f"Median: {k_median:.1f}\n"
-        f"Mean:   {k_mean:.1f}\n"
-        f"10–90 pct.: {k_p10:.1f}–{k_p90:.1f}\n\n"
-        f"Refs with retained mass ≥ 80%: {threshold_080:.1f}%\n"
-        f"Refs with retained mass ≥ 90%: {threshold_090:.1f}%\n"
-        f"Refs with retained mass ≥ 95%: {threshold_095:.1f}%"
-    )
-
-    axis.text(
-        1.03,
-        0.98,
-        summary_text,
-        transform=axis.transAxes,
-        va="top",
-        ha="left",
-        fontsize=9.5,
-        family="monospace",
-        bbox={
-            "boxstyle": "round,pad=0.6",
-            "facecolor": "white",
-            "edgecolor": "0.7",
-            "alpha": 0.96,
-        },
-    )
-
-    axis.annotate(
-        f"{final_scale:g}× median\n{final_median:.1f}%",
-        xy=(final_scale, median_curve[-1]),
-        xytext=(-120, 26),
-        textcoords="offset points",
-        arrowprops={"arrowstyle": "->", "linewidth": 1.0},
-        fontsize=9,
-    )
-
-    axis.legend(
-        bbox_to_anchor=(1.03, 0.35),
-        loc="upper left",
-        borderaxespad=0,
-        fontsize=9,
-    )
-
+    figure.tight_layout()
     figure.savefig(output_path, dpi=dpi, bbox_inches="tight")
     plt.close(figure)
+
 
 
 def plot_nucleus_overlap_figure(
@@ -756,8 +701,8 @@ def write_csv(
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description=(
-            "Generate two RVCD downsizing figures using the original "
-            "90%-nucleus: retained mass and set overlap."
+            "Generate one compact RVCD downsizing figure using original "
+            "90%-nucleus probability-mass retention."
         )
     )
     parser.add_argument("--ref-folder-path", type=Path, required=True)
@@ -810,7 +755,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--output-dir",
         type=Path,
-        default=Path("./rvcd_nucleus90_retention_and_overlap"),
+        default=Path("./rvcd_nucleus90_mass_retention_compact"),
     )
     parser.add_argument(
         "--fail-fast",
@@ -1053,8 +998,9 @@ def main() -> int:
             "nucleus_overlap_ge_90_percent": float(np.mean(overlap_values >= 90.0) * 100.0),
         })
 
-    mass_figure = args.output_dir / "nucleus90_mass_retention_vs_downsizing.png"
-    overlap_figure = args.output_dir / "nucleus90_set_overlap_vs_downsizing.png"
+    mass_figure = (
+        args.output_dir / "nucleus90_mass_retention_compact.png"
+    )
 
     plot_mass_retention_figure(
         scales=scale_array,
@@ -1062,18 +1008,6 @@ def main() -> int:
         mass_threshold=args.mass_threshold,
         k_values=k_array,
         output_path=mass_figure,
-        curve_alpha=args.curve_alpha,
-        curve_line_width=args.curve_line_width,
-        colormap=args.colormap,
-        dpi=args.dpi,
-    )
-
-    plot_nucleus_overlap_figure(
-        scales=scale_array,
-        curves=overlap_array,
-        mass_threshold=args.mass_threshold,
-        k_values=k_array,
-        output_path=overlap_figure,
         curve_alpha=args.curve_alpha,
         curve_line_width=args.curve_line_width,
         colormap=args.colormap,
@@ -1156,7 +1090,6 @@ def main() -> int:
     print("\nFinished.")
     print(f"Successful references: {len(mass_array)}")
     print(f"Mass-retention figure: {mass_figure}")
-    print(f"Nucleus-overlap figure: {overlap_figure}")
     print(
         f"At {final_scale:g}× ({area_percentage(final_scale):.1f}% area): "
         f"median retained mass={np.median(final_mass):.2f}%, "
@@ -1169,7 +1102,8 @@ if __name__ == "__main__":
     raise SystemExit(main())
 
 
-# CUDA_VISIBLE_DEVICES=1 python rvcd_nucleus90_retention_and_overlap.py \
+
+# CUDA_VISIBLE_DEVICES=1 python rvcd_nucleus90_mass_retention_compact.py \
 #   --ref-folder-path \
 #   ./DB_single_concept_images_flux_generated/generated_images \
 #   --cfg-path ./eval_configs/llava-1.5_eval.yaml \
@@ -1178,6 +1112,7 @@ if __name__ == "__main__":
 #   --mass-threshold 0.90 \
 #   --gpu-id 0 \
 #   --inference-batch-size 1 \
-#   --curve-alpha 0.10 \
+#   --curve-alpha 0.25 \
 #   --curve-line-width 0.45 \
-#   --output-dir ./rvcd_nucleus90_retention_and_overlap
+#   --colormap viridis \
+#   --output-dir ./rvcd_nucleus90_mass_retention_compact

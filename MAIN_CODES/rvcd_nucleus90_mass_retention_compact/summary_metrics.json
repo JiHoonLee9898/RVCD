@@ -1,0 +1,33 @@
+{
+  "num_successful_images": 427,
+  "num_failed_images": 0,
+  "scales": [
+    1.0,
+    1.5,
+    2.0,
+    2.5,
+    3.0
+  ],
+  "mass_threshold": 0.9,
+  "final_scale": 3.0,
+  "final_inner_size": 112,
+  "final_area_percent": 11.11111111111111,
+  "original_k_mean": 4.775175644028103,
+  "original_k_median": 2.0,
+  "original_k_p10": 1.0,
+  "original_k_p90": 9.400000000000034,
+  "original_realized_mass_mean_percent": 93.11469154000561,
+  "original_realized_mass_median_percent": 92.71197319030762,
+  "final_retained_mass_mean_percent": 90.77697768109465,
+  "final_retained_mass_median_percent": 92.74945259094238,
+  "final_retained_mass_p10_percent": 85.84543347358704,
+  "final_retained_mass_ge_80_percent": 96.01873536299766,
+  "final_retained_mass_ge_90_percent": 74.7072599531616,
+  "final_retained_mass_ge_95_percent": 25.76112412177986,
+  "final_nucleus_overlap_mean_percent": 89.8548727676801,
+  "final_nucleus_overlap_median_percent": 100.0,
+  "final_nucleus_overlap_p10_percent": 64.28571428571429,
+  "final_nucleus_overlap_ge_70_percent": 83.13817330210773,
+  "final_nucleus_overlap_ge_80_percent": 75.87822014051523,
+  "final_nucleus_overlap_ge_90_percent": 71.89695550351288
+}
