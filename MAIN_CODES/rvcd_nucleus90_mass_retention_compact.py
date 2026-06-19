@@ -1103,7 +1103,7 @@ if __name__ == "__main__":
 
 
 
-# CUDA_VISIBLE_DEVICES=1 python rvcd_nucleus90_mass_retention_compact.py \
+# CUDA_VISIBLE_DEVICES=0 python rvcd_nucleus90_mass_retention_compact.py \
 #   --ref-folder-path \
 #   ./DB_single_concept_images_flux_generated/generated_images \
 #   --cfg-path ./eval_configs/llava-1.5_eval.yaml \

@@ -789,3 +789,39 @@ if __name__ == "__main__":
 # --gpu-id 0 \
 # --output_dir ./generated_captions_promptban_negative/ \
 # --promptban_mode negative_only
+
+
+
+#260619
+# CUDA_VISIBLE_DEVICES=0 \
+# python promptban_generation_chair_bleu.py \
+# --model llava-1.5 \
+# --data_path /home/jihoon/jihoon/DATASETS/coco2014/val2014 \
+# --chair_cache_path eval/CHAIR_CACHE/chair.pkl \
+# --num_samples 300 \
+# --seed 44 \
+# --gpu-id 0 \
+# --output_dir ./generated_captions_promptban_both_0619/ \
+# --promptban_mode both
+
+# CUDA_VISIBLE_DEVICES=0 \
+# python promptban_generation_chair_bleu.py \
+# --model llava-1.5 \
+# --data_path /home/jihoon/jihoon/DATASETS/coco2014/val2014 \
+# --chair_cache_path eval/CHAIR_CACHE/chair.pkl \
+# --num_samples 300 \
+# --seed 44 \
+# --gpu-id 0 \
+# --output_dir ./generated_captions_promptban_positive_0619/ \
+# --promptban_mode positive_only
+
+# CUDA_VISIBLE_DEVICES=0 \
+# python promptban_generation_chair_bleu.py \
+# --model llava-1.5 \
+# --data_path /home/jihoon/jihoon/DATASETS/coco2014/val2014 \
+# --chair_cache_path eval/CHAIR_CACHE/chair.pkl \
+# --num_samples 300 \
+# --seed 44 \
+# --gpu-id 0 \
+# --output_dir ./generated_captions_promptban_negative_0619/ \
+# --promptban_mode negative_only
